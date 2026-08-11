@@ -1,0 +1,47 @@
+# Dependencies
+node_modules/
+
+# Next.js
+frontend/.next/
+frontend/out/
+frontend/.vercel/
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+htmlcov/
+.coverage
+coverage.xml
+
+# Virtual environments
+.venv/
+venv/
+env/
+backend/.venv/
+
+# Environment files and secrets
+.env
+.env.*
+!.env.example
+frontend/.env.local
+frontend/.env.*.local
+backend/.env
+
+# Build and test output
+dist/
+build/
+*.log
+*.tsbuildinfo
+.eslintcache
+
+# IDE and OS files
+.idea/
+.vscode/
+*.swp
+.DS_Store
+Thumbs.db
