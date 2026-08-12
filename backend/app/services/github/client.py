@@ -58,6 +58,55 @@ class GitHubClient:
             transport=self._transport,
         )
 
+    async def get_repository_tree_paths(
+        self,
+        owner: str,
+        repository: str,
+        ref: str,
+    ) -> list[str]:
+        async with self._create_http_client() as client:
+            response = await client.get(
+                f"repos/{owner}/{repository}/git/trees/{ref}",
+                params={"recursive": "1"},
+            )
+            response.raise_for_status()
+
+        payload = response.json()
+
+        if not isinstance(payload, dict):
+            raise TypeError("GitHub tree response must be a JSON object.")
+
+        truncated = payload.get("truncated")
+
+        if not isinstance(truncated, bool):
+            raise TypeError("GitHub tree response must include a boolean truncated field.")
+
+        if truncated:
+            raise RuntimeError("GitHub repository tree response is truncated.")
+
+        tree_entries = payload.get("tree")
+
+        if not isinstance(tree_entries, list):
+            raise TypeError("GitHub tree response must include a tree array.")
+
+        paths: list[str] = []
+
+        for entry in tree_entries:
+            if not isinstance(entry, dict):
+                raise TypeError("GitHub tree entries must be JSON objects.")
+
+            if entry.get("type") != "blob":
+                continue
+
+            path = entry.get("path")
+
+            if not isinstance(path, str):
+                raise TypeError("GitHub file tree entry must include a string path.")
+
+            paths.append(path)
+
+        return paths
+
     async def get_user(self, username: str) -> GitHubUser:
         async with self._create_http_client() as client:
             response = await client.get(f"users/{username}")
