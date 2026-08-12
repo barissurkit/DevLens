@@ -2,6 +2,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
+from app.config import get_settings
+
 
 class HealthResponse(BaseModel):
     status: str
@@ -11,6 +13,8 @@ app = FastAPI(
     title="DevLens API",
     version="0.1.0",
 )
+
+app.state.settings = get_settings()
 
 app.add_middleware(
     CORSMiddleware,

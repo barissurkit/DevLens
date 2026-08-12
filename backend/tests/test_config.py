@@ -18,8 +18,6 @@ def test_enviroment_variable_overrides_default(monkeypatch) -> None:
 
 
 def test_get_settings_returns_cached_instance() -> None:
-    get_settings.cache_clear()
-    # önceki test veya manuel çalıştırmalardan kalmış cache değerini temizler.
 
     first = get_settings()
     second = get_settings()
