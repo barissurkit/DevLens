@@ -1,3 +1,5 @@
+from typing import Literal
+
 from pydantic import BaseModel
 
 
@@ -23,3 +25,23 @@ class ReadmeAnalysis(BaseModel):
     has_requirements: bool
     has_images: bool
     has_demo_link: bool
+
+
+TechnologyCategory = Literal[
+    "Data & ML",
+    "Backend",
+    "Frontend",
+    "Testing",
+    "Database",
+]
+
+
+class DetectedTechnology(BaseModel):
+    name: str
+    category: TechnologyCategory
+    source_dependency: str
+
+
+class TechnologyAnalysis(BaseModel):
+    dependencies: list[str]
+    technologies: list[DetectedTechnology]
