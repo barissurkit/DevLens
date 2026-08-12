@@ -17,6 +17,21 @@ class GitHubUser(BaseModel):
     created_at: datetime
 
 
+class GitHubRepository(BaseModel):
+    name: str
+    description: str | None
+    html_url: str
+    primary_language: str | None = Field(validation_alias="language")
+    stars: int = Field(validation_alias="stargazers_count")
+    forks: int = Field(validation_alias="forks_count")
+    topics: list[str]
+    created_at: datetime
+    updated_at: datetime
+    archived: bool
+    fork: bool
+    default_branch: str
+
+
 """
 GitHubUser pydantic modelini tanımlar.
 
