@@ -1,12 +1,36 @@
+import base64
+import binascii
+
 import httpx
 
 from app.config import Settings
-from app.schemas.github import GitHubRepository, GitHubUser
+from app.schemas.github import GitHubFileContent, GitHubRepository, GitHubUser
 
 DEFAULT_TIMEOUT_SECONDS = 10.0
 GITHUB_API_VERSION = "2026-03-10"
 REPOSITORIES_PER_PAGE = 100
 MAX_REPOSITORY_PAGES = 10
+MAX_FILE_SIZE_BYTES = 1_048_576
+
+IMPORTANT_REPOSITORY_FILE_PATHS: tuple[str, ...] = (
+    "README.md",
+    "requirements.txt",
+    "pyproject.toml",
+    "package.json",
+)
+
+
+def decode_github_file_content(content: str, encoding: str) -> str:
+    if encoding != "base64":
+        raise ValueError(f"Unsupported GitHub file encoding: {encoding}")
+
+    compact_content = "".join(content.split())
+
+    try:
+        decoded_bytes = base64.b64decode(compact_content, validate=True)
+        return decoded_bytes.decode("utf-8")
+    except (binascii.Error, UnicodeDecodeError) as error:
+        raise ValueError("GitHub file content is not valid Base64-encoded UTF-8 text.") from error
 
 
 class GitHubClient:
@@ -40,6 +64,78 @@ class GitHubClient:
             response.raise_for_status()
 
         return GitHubUser.model_validate(response.json())
+
+    async def get_file_content(
+        self,
+        owner: str,
+        repository: str,
+        path: str,
+        ref: str | None = None,
+    ) -> GitHubFileContent | None:
+        params = {"ref": ref} if ref is not None else None
+
+        async with self._create_http_client() as client:
+            response = await client.get(
+                f"repos/{owner}/{repository}/contents/{path}",
+                params=params,
+            )
+
+            if response.status_code == httpx.codes.NOT_FOUND:
+                return None
+
+            response.raise_for_status()
+
+        payload = response.json()
+
+        if not isinstance(payload, dict) or payload.get("type") != "file":
+            raise TypeError("GitHub content response must describe a file.")
+
+        encoded_content = payload.get("content")
+        encoding = payload.get("encoding")
+
+        size = payload.get("size")
+
+        if not isinstance(size, int) or isinstance(size, bool):
+            raise TypeError("GitHub file response must include an integer size")
+
+        if size > MAX_FILE_SIZE_BYTES:
+            raise ValueError(
+                f"Github file exceeds the maximum size of {MAX_FILE_SIZE_BYTES} bytes."
+            )
+
+        if not isinstance(encoded_content, str) or not isinstance(encoding, str):
+            raise TypeError("GitHub file response must include string content and encoding.")
+
+        return GitHubFileContent.model_validate(
+            {
+                "path": payload.get("path"),
+                "name": payload.get("name"),
+                "content": decode_github_file_content(
+                    content=encoded_content,
+                    encoding=encoding,
+                ),
+                "size": size,
+                "sha": payload.get("sha"),
+            }
+        )
+
+    async def get_important_files(
+        self,
+        owner: str,
+        repository: str,
+        ref: str | None = None,
+    ) -> dict[str, GitHubFileContent | None]:
+        files: dict[str, GitHubFileContent | None] = {}
+
+        for path in IMPORTANT_REPOSITORY_FILE_PATHS:
+            files[path] = await self.get_file_content(
+                owner=owner,
+                repository=repository,
+                path=path,
+                ref=ref,
+            )
+
+        return files
 
     async def get_repositories(
         self,
