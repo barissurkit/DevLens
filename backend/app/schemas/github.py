@@ -32,6 +32,14 @@ class GitHubRepository(BaseModel):
     default_branch: str
 
 
+class GitHubFileContent(BaseModel):
+    path: str
+    name: str
+    content: str
+    size: int
+    sha: str
+
+
 """
 GitHubUser pydantic modelini tanımlar.
 

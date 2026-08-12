@@ -3,12 +3,135 @@ import asyncio
 import httpx
 import pytest
 from app.config import Settings
-from app.schemas.github import GitHubRepository, GitHubUser
+from app.schemas.github import GitHubFileContent, GitHubRepository, GitHubUser
 from app.services.github.client import (
+    IMPORTANT_REPOSITORY_FILE_PATHS,
+    MAX_FILE_SIZE_BYTES,
     MAX_REPOSITORY_PAGES,
     REPOSITORIES_PER_PAGE,
     GitHubClient,
+    decode_github_file_content,
 )
+
+
+def test_get_important_files_returns_found_and_missing_files() -> None:
+    captured_requests: list[httpx.Request] = []
+    available_files = {
+        "README.md": ("IyBEZXZMZW5z", 9),
+        "package.json": ("e30=", 2),
+    }
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        captured_requests.append(request)
+        path = request.url.path.rsplit("/", maxsplit=1)[-1]
+
+        if path not in available_files:
+            return httpx.Response(
+                404,
+                json={"message": "Not Found"},
+            )
+
+        content, size = available_files[path]
+        payload = create_github_file_payload()
+        payload.update(
+            {
+                "path": path,
+                "name": path,
+                "content": content,
+                "size": size,
+                "sha": f"sha-{path}",
+            }
+        )
+
+        return httpx.Response(200, json=payload)
+
+    client = GitHubClient(
+        create_settings(),
+        transport=httpx.MockTransport(handler),
+    )
+
+    result = asyncio.run(
+        client.get_important_files(
+            owner="octocat",
+            repository="devlens",
+            ref="main",
+        )
+    )
+
+    assert list(result) == list(IMPORTANT_REPOSITORY_FILE_PATHS)
+
+    readme = result["README.md"]
+    package_json = result["package.json"]
+
+    assert isinstance(readme, GitHubFileContent)
+    assert readme.content == "# DevLens"
+
+    assert result["requirements.txt"] is None
+    assert result["pyproject.toml"] is None
+
+    assert isinstance(package_json, GitHubFileContent)
+    assert package_json.content == "{}"
+
+    assert len(captured_requests) == 4
+    assert all(request.url.params["ref"] == "main" for request in captured_requests)
+
+
+def test_get_file_content_rejects_file_over_size_limit() -> None:
+    payload = create_github_file_payload()
+    payload["size"] = MAX_FILE_SIZE_BYTES + 1
+    payload["content"] = "not-valid-base64!"
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, json=payload)
+
+    client = GitHubClient(
+        create_settings(),
+        transport=httpx.MockTransport(handler),
+    )
+
+    with pytest.raises(
+        ValueError,
+        match="exceeds the maximum size",
+    ):
+        asyncio.run(
+            client.get_file_content(
+                owner="octocat",
+                repository="devlens",
+                path="README.md",
+                ref="main",
+            )
+        )
+
+
+def test_decode_github_file_content_returns_utf8_text() -> None:
+    result = decode_github_file_content(
+        content="IyBEZXZM\nZW5z",
+        encoding="base64",
+    )
+
+    assert result == "# DevLens"
+
+
+def test_decode_github_file_content_rejects_unsupported_encoding() -> None:
+    with pytest.raises(
+        ValueError,
+        match="Unsupported GitHub file encoding",
+    ):
+        decode_github_file_content(
+            content="# DevLens",
+            encoding="utf-8",
+        )
+
+
+def test_decode_github_file_content_rejects_invalid_base64() -> None:
+    with pytest.raises(
+        ValueError,
+        match="not valid Base64-encoded UTF-8 text",
+    ):
+        decode_github_file_content(
+            content="not-valid-base64!",
+            encoding="base64",
+        )
 
 
 def create_settings(github_token: str | None = None) -> Settings:
@@ -233,6 +356,80 @@ def test_get_repositories_rejects_non_list_response() -> None:
         match="must be a JSON array",
     ):
         asyncio.run(client.get_repositories("octocat"))
+
+
+def create_github_file_payload() -> dict[str, object]:
+    return {
+        "type": "file",
+        "path": "README.md",
+        "name": "README.md",
+        "content": "IyBEZXZMZW5z",
+        "encoding": "base64",
+        "size": 9,
+        "sha": "abc123",
+    }
+
+
+def test_get_file_content_returns_decoded_normalized_model() -> None:
+    captured_request: httpx.Request | None = None
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        nonlocal captured_request
+        captured_request = request
+
+        return httpx.Response(
+            200,
+            json=create_github_file_payload(),
+        )
+
+    client = GitHubClient(
+        create_settings(),
+        transport=httpx.MockTransport(handler),
+    )
+
+    result = asyncio.run(
+        client.get_file_content(
+            owner="octocat",
+            repository="devlens",
+            path="README.md",
+            ref="main",
+        )
+    )
+
+    assert isinstance(result, GitHubFileContent)
+    assert result.path == "README.md"
+    assert result.name == "README.md"
+    assert result.content == "# DevLens"
+    assert result.size == 9
+    assert result.sha == "abc123"
+
+    assert captured_request is not None
+    assert captured_request.url.path == ("/repos/octocat/devlens/contents/README.md")
+    assert captured_request.url.params["ref"] == "main"
+
+
+def test_get_file_content_returns_none_when_file_is_missing() -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(
+            404,
+            json={"message": "Not Found"},
+        )
+
+    client = GitHubClient(
+        create_settings(),
+        transport=httpx.MockTransport(handler),
+    )
+
+    result = asyncio.run(
+        client.get_file_content(
+            owner="octocat",
+            repository="devlens",
+            path="requirements.txt",
+            ref="main",
+        )
+    )
+
+    assert result is None
 
 
 """

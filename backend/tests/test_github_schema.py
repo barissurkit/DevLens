@@ -1,7 +1,7 @@
 from datetime import datetime
 
 import pytest
-from app.schemas.github import GitHubRepository, GitHubUser
+from app.schemas.github import GitHubFileContent, GitHubRepository, GitHubUser
 from pydantic import ValidationError
 
 
@@ -92,6 +92,22 @@ def test_github_repository_accepts_nullable_fields_and_preserves_flags() -> None
     assert repository.primary_language is None
     assert repository.archived is True
     assert repository.fork is True
+
+
+def test_github_file_content_preserves_normalized_fields() -> None:
+    github_file = GitHubFileContent(
+        path="README.md",
+        name="README.md",
+        content="# DevLens",
+        size=9,
+        sha="abc123",
+    )
+
+    assert github_file.path == "README.md"
+    assert github_file.name == "README.md"
+    assert github_file.content == "# DevLens"
+    assert github_file.size == 9
+    assert github_file.sha == "abc123"
 
 
 """
