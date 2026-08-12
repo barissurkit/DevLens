@@ -1,8 +1,7 @@
-from typing import cast
-
 import httpx
 
 from app.config import Settings
+from app.schemas.github import GitHubUser
 
 DEFAULT_TIMEOUT_SECONDS = 10.0
 GITHUB_API_VERSION = "2026-03-10"
@@ -38,4 +37,10 @@ class GitHubClient:
         if not isinstance(payload, dict):
             raise TypeError("GitHub user response must be a JSON object.")
 
-        return cast(dict[str, object], payload)
+        return GitHubUser.model_validate(response.json())
+        # model_validate() : response verisini schema'ya göre doğrular ve bir GitHubUser nesnesi oluşturur.
+
+
+"""
+GitHub API'ya HTTP request gönderen client'tır.
+"""

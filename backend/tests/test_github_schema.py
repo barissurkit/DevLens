@@ -4,8 +4,6 @@ import pytest
 from app.schemas.github import GitHubUser
 from pydantic import ValidationError
 
-# schema: uygulamanın kabul ettiği veri alanlarını ve bunların tiplerini tanımlar.
-
 
 def create_github_user_payload() -> dict[str, object]:
     return {
@@ -56,11 +54,5 @@ def test_github_user_rejects_missing_required_field() -> None:
 
 
 """
-GitHub client ile schema entegrasyonunu test eder.
-
-doğrulandı:
-    - token yoksa authorization header eklenmiyor
-    - token varsa Bearer header ekleniyor
-    - doğru URL ve HTTP header'ları kullanılıyor.
-    - Client artık raw dict yerine GitHubUser döndürüyor
+Yalnızca GitHubUser schema davranışını test eder.
 """
