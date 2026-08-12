@@ -432,6 +432,82 @@ def test_get_file_content_returns_none_when_file_is_missing() -> None:
     assert result is None
 
 
+def create_github_tree_payload(
+    *,
+    truncated: bool = False,
+) -> dict[str, object]:
+    return {
+        "sha": "tree-sha",
+        "truncated": truncated,
+        "tree": [
+            {"path": "README.md", "type": "blob"},
+            {"path": "backend", "type": "tree"},
+            {"path": "backend/tests/test_api.py", "type": "blob"},
+            {"path": "vendor/library", "type": "commit"},
+        ],
+    }
+
+
+def test_get_repository_tree_paths_returns_recursive_file_paths() -> None:
+    captured_request: httpx.Request | None = None
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        nonlocal captured_request
+        captured_request = request
+
+        return httpx.Response(
+            200,
+            json=create_github_tree_payload(),
+        )
+
+    client = GitHubClient(
+        create_settings(),
+        transport=httpx.MockTransport(handler),
+    )
+
+    result = asyncio.run(
+        client.get_repository_tree_paths(
+            owner="octocat",
+            repository="devlens",
+            ref="main",
+        )
+    )
+
+    assert result == [
+        "README.md",
+        "backend/tests/test_api.py",
+    ]
+
+    assert captured_request is not None
+    assert captured_request.url.path == ("/repos/octocat/devlens/git/trees/main")
+    assert captured_request.url.params["recursive"] == "1"
+
+
+def test_get_repository_tree_paths_rejects_truncated_response() -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(
+            200,
+            json=create_github_tree_payload(truncated=True),
+        )
+
+    client = GitHubClient(
+        create_settings(),
+        transport=httpx.MockTransport(handler),
+    )
+
+    with pytest.raises(
+        RuntimeError,
+        match="tree response is truncated",
+    ):
+        asyncio.run(
+            client.get_repository_tree_paths(
+                owner="octocat",
+                repository="devlens",
+                ref="main",
+            )
+        )
+
+
 """
 httpx: python ile HTTP request gönderen dependency.
 """
