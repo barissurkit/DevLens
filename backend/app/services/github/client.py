@@ -22,7 +22,7 @@ class GitHubClient:
         if settings.github_token:
             self._headers["Authorization"] = f"Bearer {settings.github_token}"
 
-    async def get_user(self, username: str) -> dict[str, object]:
+    async def get_user(self, username: str) -> GitHubUser:
         async with httpx.AsyncClient(
             base_url=self._base_url,
             headers=self._headers,
@@ -31,11 +31,6 @@ class GitHubClient:
         ) as client:
             response = await client.get(f"users/{username}")
             response.raise_for_status()
-
-        payload = response.json()
-
-        if not isinstance(payload, dict):
-            raise TypeError("GitHub user response must be a JSON object.")
 
         return GitHubUser.model_validate(response.json())
         # model_validate() : response verisini schema'ya göre doğrular ve bir GitHubUser nesnesi oluşturur.
