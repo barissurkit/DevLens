@@ -8,8 +8,8 @@ def test_health_check() -> None:
     assert response.model_dump() == {"status": "ok"}
 
 
-def test_only_health_endpoint_is_registered() -> None:
-    assert set(app.openapi()["paths"]) == {"/health"}
+def test_health_endpoint_is_registered() -> None:
+    assert "/health" in app.openapi()["paths"]
 
 
 def test_app_uses_cached_settings() -> None:

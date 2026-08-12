@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
+from app.api.github import router as github_router
 from app.config import get_settings
 
 
@@ -23,6 +24,8 @@ app.add_middleware(
     allow_methods=["GET"],
     allow_headers=["*"],
 )
+
+app.include_router(github_router)
 
 
 @app.get("/health", response_model=HealthResponse)
