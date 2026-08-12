@@ -1,4 +1,5 @@
 fastapi==0.115.12
-pydantic>=2.10,<3.0
+pydantic>=2.10,<3.0 # model doğrulaması için kullanılır
+pydantic-settings>=2.6,<3.0 # bu modelleri enviroment variable kaynaklı configuration değerleriyle doldurur.
 pytest>=8.3,<9.0
 uvicorn[standard]>=0.34,<1.0
