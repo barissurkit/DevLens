@@ -43,10 +43,22 @@ def use_mock_client(mock_client: AsyncMock) -> None:
     app.dependency_overrides[get_github_client] = lambda: mock_client
 
 
-@pytest.fixture(autouse=True)
+# bu fixture her testten sonra FastAPI dependency override'larını temizler.
+@pytest.fixture(
+    autouse=True  # autouse=True ile test fonksiyonuna parametre olarak yazılmasa bile her testte otomatik çalıştırır.
+)
 def clear_dependency_overrides() -> Iterator[None]:
-    yield
-    app.dependency_overrides.clear()
+    yield  # testin çalışmasına izin verir.
+    app.dependency_overrides.clear()  # test bittikten sonra bütün dependency override kayıtlarını siler
+
+
+"""
+Fixture başlar
+    → yield
+    → test çalışır
+    → test tamamlanır
+    → app.dependency_overrides.clear()
+"""
 
 
 def create_status_error(status_code: int) -> httpx.HTTPStatusError:
