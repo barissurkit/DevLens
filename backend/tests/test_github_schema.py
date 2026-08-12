@@ -1,7 +1,7 @@
 from datetime import datetime
 
 import pytest
-from app.schemas.github import GitHubUser
+from app.schemas.github import GitHubRepository, GitHubUser
 from pydantic import ValidationError
 
 
@@ -51,6 +51,47 @@ def test_github_user_rejects_missing_required_field() -> None:
         GitHubUser.model_validate(payload)
 
     assert error.value.errors()[0]["loc"] == ("login",)
+
+
+def create_github_repository_payload() -> dict[str, object]:
+    return {
+        "name": "devlens",
+        "description": "Developer portfolio intelligence",
+        "html_url": "https://github.com/octocat/devlens",
+        "language": "Python",
+        "stargazers_count": 42,
+        "forks_count": 7,
+        "topics": ["github", "portfolio"],
+        "created_at": "2025-01-10T12:00:00Z",
+        "updated_at": "2025-02-20T15:30:00Z",
+        "archived": False,
+        "fork": True,
+        "default_branch": "main",
+    }
+
+
+def test_github_repository_maps_fields_and_datetimes() -> None:
+    repository = GitHubRepository.model_validate(create_github_repository_payload())
+
+    assert repository.primary_language == "Python"
+    assert repository.stars == 42
+    assert repository.forks == 7
+    assert isinstance(repository.created_at, datetime)
+    assert isinstance(repository.updated_at, datetime)
+
+
+def test_github_repository_accepts_nullable_fields_and_preserves_flags() -> None:
+    payload = create_github_repository_payload()
+    payload["description"] = None
+    payload["language"] = None
+    payload["archived"] = True
+
+    repository = GitHubRepository.model_validate(payload)
+
+    assert repository.description is None
+    assert repository.primary_language is None
+    assert repository.archived is True
+    assert repository.fork is True
 
 
 """
