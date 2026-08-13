@@ -221,3 +221,30 @@ class PortfolioIntelligence(BaseModel):
     recurring_technologies: list[PortfolioRecurringTechnology]
     dominant_areas: list[PortfolioDominantArea]
     limitations: list[str]
+
+
+class PortfolioScoreRuleResult(BaseModel):
+    key: str = Field(min_length=1)
+    label: str = Field(min_length=1)
+    weight: int = Field(gt=0)
+    detected_repository_count: int = Field(ge=0)
+    analyzed_repository_count: int = Field(gt=0)
+
+
+class PortfolioScoreDimensionResult(BaseModel):
+    key: str = Field(min_length=1)
+    label: str = Field(min_length=1)
+    points_earned: int = Field(ge=0)
+    points_possible: int = Field(gt=0)
+    score: int = Field(ge=0, le=100)
+    rules: list[PortfolioScoreRuleResult] = Field(min_length=1)
+
+
+class PortfolioScore(BaseModel):
+    version: str = Field(min_length=1)
+    is_available: bool
+    overall_score: int | None = Field(ge=0, le=100)
+    scored_repository_count: int = Field(ge=0)
+    dimensions: list[PortfolioScoreDimensionResult]
+    is_partial: bool
+    limitations: list[str]
