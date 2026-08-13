@@ -159,3 +159,39 @@ class PortfolioRepositoryAnalysis(BaseModel):
     repositories: list[PortfolioRepositoryResult]
     failures: list[PortfolioRepositoryFailure]
     has_failures: bool
+
+
+class PortfolioTechnologyUsage(BaseModel):
+    technology: str = Field(min_length=1)
+    repository_count: int = Field(gt=0)
+
+
+class PortfolioCategoryUsage(BaseModel):
+    category: RepositoryCategory
+    repository_count: int = Field(gt=0)
+
+
+class PortfolioSignalCount(BaseModel):
+    key: str = Field(min_length=1)
+    label: str = Field(min_length=1)
+    detected_repository_count: int = Field(ge=0)
+
+
+class RepositoryScoreBucket(BaseModel):
+    min_score: int = Field(ge=0, le=100)
+    max_score: int = Field(ge=0, le=100)
+    repository_count: int = Field(ge=0)
+
+
+class PortfolioAggregation(BaseModel):
+    selection_version: str = Field(min_length=1)
+    selected_repository_count: int = Field(ge=0)
+    successful_repository_count: int = Field(ge=0)
+    failed_repository_count: int = Field(ge=0)
+    has_failures: bool
+    partial_evidence_repository_count: int = Field(ge=0)
+    technology_distribution: list[PortfolioTechnologyUsage]
+    category_distribution: list[PortfolioCategoryUsage]
+    primary_category_distribution: list[PortfolioCategoryUsage]
+    portfolio_signals: list[PortfolioSignalCount]
+    repository_score_distribution: list[RepositoryScoreBucket]
