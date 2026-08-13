@@ -4,7 +4,12 @@ import binascii
 import httpx
 
 from app.config import Settings
-from app.schemas.github import GitHubFileContent, GitHubRepository, GitHubUser
+from app.schemas.github import (
+    GitHubFileContent,
+    GitHubRepository,
+    GitHubRepositoryTree,
+    GitHubUser,
+)
 
 DEFAULT_TIMEOUT_SECONDS = 10.0
 GITHUB_API_VERSION = "2026-03-10"
@@ -58,18 +63,18 @@ class GitHubClient:
             transport=self._transport,
         )
 
-    async def get_repository_tree_paths(
+    async def get_repository_tree(
         self,
         owner: str,
         repository: str,
         ref: str,
-    ) -> list[str]:
+    ) -> GitHubRepositoryTree:
         async with self._create_http_client() as client:
             response = await client.get(
                 f"repos/{owner}/{repository}/git/trees/{ref}",
                 params={"recursive": "1"},
             )
-            response.raise_for_status()
+        response.raise_for_status()
 
         payload = response.json()
 
@@ -80,9 +85,6 @@ class GitHubClient:
 
         if not isinstance(truncated, bool):
             raise TypeError("GitHub tree response must include a boolean truncated field.")
-
-        if truncated:
-            raise RuntimeError("GitHub repository tree response is truncated.")
 
         tree_entries = payload.get("tree")
 
@@ -105,7 +107,10 @@ class GitHubClient:
 
             paths.append(path)
 
-        return paths
+        return GitHubRepositoryTree(
+            paths=paths,
+            truncated=truncated,
+        )
 
     async def get_user(self, username: str) -> GitHubUser:
         async with self._create_http_client() as client:

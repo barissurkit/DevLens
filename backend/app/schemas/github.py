@@ -40,6 +40,11 @@ class GitHubFileContent(BaseModel):
     sha: str
 
 
+class GitHubRepositoryTree(BaseModel):
+    paths: list[str]
+    truncated: bool
+
+
 """
 GitHubUser pydantic modelini tanımlar.
 

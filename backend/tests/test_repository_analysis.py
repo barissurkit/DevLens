@@ -4,7 +4,11 @@ from unittest.mock import AsyncMock
 import httpx
 import pytest
 from app.schemas.analysis import RepositoryCategory
-from app.schemas.github import GitHubFileContent, GitHubRepository
+from app.schemas.github import (
+    GitHubFileContent,
+    GitHubRepository,
+    GitHubRepositoryTree,
+)
 from app.services.github.client import (
     IMPORTANT_REPOSITORY_FILE_PATHS,
     GitHubClient,
@@ -97,13 +101,16 @@ Run the application.
 
     client = AsyncMock(spec=GitHubClient)
     client.get_important_files.return_value = important_files
-    client.get_repository_tree_paths.return_value = [
-        "README.md",
-        "backend/app/main.py",
-        "backend/tests/test_api.py",
-        ".github/workflows/ci.yml",
-        "Dockerfile",
-    ]
+    client.get_repository_tree.return_value = GitHubRepositoryTree(
+        paths=[
+            "README.md",
+            "backend/app/main.py",
+            "backend/tests/test_api.py",
+            ".github/workflows/ci.yml",
+            "Dockerfile",
+        ],
+        truncated=False,
+    )
 
     result = asyncio.run(
         analyze_repository(
@@ -137,6 +144,7 @@ Run the application.
     assert result.structure.has_tests is True
     assert result.structure.has_ci is True
     assert result.structure.has_dockerfile is True
+    assert result.tree_truncated is False
 
     assert result.classification.primary_category is RepositoryCategory.FULL_STACK
 
@@ -151,6 +159,7 @@ Run the application.
         "repository",
         "readme",
         "structure",
+        "tree_truncated",
         "technologies",
         "classification",
     }
@@ -160,7 +169,7 @@ Run the application.
         repository=repository.name,
         ref=repository.default_branch,
     )
-    client.get_repository_tree_paths.assert_awaited_once_with(
+    client.get_repository_tree.assert_awaited_once_with(
         owner="octocat",
         repository=repository.name,
         ref=repository.default_branch,
@@ -174,7 +183,10 @@ def test_analyze_repository_supports_missing_readme_and_manifests() -> None:
     )
     client = AsyncMock(spec=GitHubClient)
     client.get_important_files.return_value = create_missing_files()
-    client.get_repository_tree_paths.return_value = ["src/main.py"]
+    client.get_repository_tree.return_value = GitHubRepositoryTree(
+        paths=["src/main.py"],
+        truncated=False,
+    )
 
     result = asyncio.run(
         analyze_repository(
@@ -220,21 +232,21 @@ def test_analyze_repository_propagates_github_operational_error() -> None:
         )
 
 
-def test_analyze_repository_propagates_truncated_tree_error() -> None:
+def test_analyze_repository_preserves_partial_tree_evidence() -> None:
     client = AsyncMock(spec=GitHubClient)
     client.get_important_files.return_value = create_missing_files()
-    client.get_repository_tree_paths.side_effect = RuntimeError(
-        "GitHub repository tree response is truncated."
+    client.get_repository_tree.return_value = GitHubRepositoryTree(
+        paths=["backend/tests/test_api.py"],
+        truncated=True,
     )
 
-    with pytest.raises(
-        RuntimeError,
-        match="tree response is truncated",
-    ):
-        asyncio.run(
-            analyze_repository(
-                owner="octocat",
-                repository=create_repository(),
-                client=client,
-            )
+    result = asyncio.run(
+        analyze_repository(
+            owner="octocat",
+            repository=create_repository(),
+            client=client,
         )
+    )
+
+    assert result.tree_truncated is True
+    assert result.structure.has_tests is True
