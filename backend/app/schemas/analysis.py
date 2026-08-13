@@ -116,3 +116,19 @@ class RepositoryScore(BaseModel):
     dimensions: list[ScoreDimensionResult] = Field(min_length=1)
     is_partial: bool
     limitations: list[str]
+
+
+class PortfolioRepositoryExclusionReason(StrEnum):
+    FORK_REPOSITORY = "fork_repository"
+    ARCHIVED_REPOSITORY = "archived_repository"
+
+
+class ExcludedPortfolioRepository(BaseModel):
+    repository: GitHubRepository
+    reasons: list[PortfolioRepositoryExclusionReason] = Field(min_length=1)
+
+
+class PortfolioRepositorySelection(BaseModel):
+    version: str = Field(min_length=1)
+    selected: list[GitHubRepository]
+    excluded: list[ExcludedPortfolioRepository]
