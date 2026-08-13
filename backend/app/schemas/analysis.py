@@ -3,6 +3,8 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
+from app.schemas.github import GitHubRepository
+
 
 class RepositoryStructureSignals(BaseModel):
     has_tests: bool
@@ -79,3 +81,11 @@ class RepositoryCategoryMatch(BaseModel):
 class RepositoryClassification(BaseModel):
     categories: list[RepositoryCategoryMatch] = Field(min_length=1)
     primary_category: RepositoryCategory
+
+
+class RepositoryAnalysis(BaseModel):
+    repository: GitHubRepository
+    readme: ReadmeAnalysis
+    structure: RepositoryStructureSignals
+    technologies: TechnologyAnalysis
+    classification: RepositoryClassification
