@@ -195,3 +195,29 @@ class PortfolioAggregation(BaseModel):
     primary_category_distribution: list[PortfolioCategoryUsage]
     portfolio_signals: list[PortfolioSignalCount]
     repository_score_distribution: list[RepositoryScoreBucket]
+
+
+class PortfolioInsight(BaseModel):
+    key: str = Field(min_length=1)
+    message: str = Field(min_length=1)
+    detected_repository_count: int = Field(ge=0)
+    analyzed_repository_count: int = Field(gt=0)
+
+
+class PortfolioRecurringTechnology(BaseModel):
+    technology: str = Field(min_length=1)
+    repository_count: int = Field(ge=2)
+
+
+class PortfolioDominantArea(BaseModel):
+    category: RepositoryCategory
+    repository_count: int = Field(ge=2)
+
+
+class PortfolioIntelligence(BaseModel):
+    version: str = Field(min_length=1)
+    strength_signals: list[PortfolioInsight]
+    improvement_signals: list[PortfolioInsight]
+    recurring_technologies: list[PortfolioRecurringTechnology]
+    dominant_areas: list[PortfolioDominantArea]
+    limitations: list[str]
