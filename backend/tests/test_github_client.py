@@ -448,7 +448,7 @@ def create_github_tree_payload(
     }
 
 
-def test_get_repository_tree_paths_returns_recursive_file_paths() -> None:
+def test_get_repository_tree_returns_paths_and_completeness() -> None:
     captured_request: httpx.Request | None = None
 
     def handler(request: httpx.Request) -> httpx.Response:
@@ -466,24 +466,25 @@ def test_get_repository_tree_paths_returns_recursive_file_paths() -> None:
     )
 
     result = asyncio.run(
-        client.get_repository_tree_paths(
+        client.get_repository_tree(
             owner="octocat",
             repository="devlens",
             ref="main",
         )
     )
 
-    assert result == [
+    assert result.paths == [
         "README.md",
         "backend/tests/test_api.py",
     ]
+    assert result.truncated is False
 
     assert captured_request is not None
     assert captured_request.url.path == ("/repos/octocat/devlens/git/trees/main")
     assert captured_request.url.params["recursive"] == "1"
 
 
-def test_get_repository_tree_paths_rejects_truncated_response() -> None:
+def test_get_repository_tree_preserves_truncated_response() -> None:
     def handler(request: httpx.Request) -> httpx.Response:
         return httpx.Response(
             200,
@@ -495,17 +496,19 @@ def test_get_repository_tree_paths_rejects_truncated_response() -> None:
         transport=httpx.MockTransport(handler),
     )
 
-    with pytest.raises(
-        RuntimeError,
-        match="tree response is truncated",
-    ):
-        asyncio.run(
-            client.get_repository_tree_paths(
-                owner="octocat",
-                repository="devlens",
-                ref="main",
-            )
+    result = asyncio.run(
+        client.get_repository_tree(
+            owner="octocat",
+            repository="devlens",
+            ref="main",
         )
+    )
+
+    assert result.paths == [
+        "README.md",
+        "backend/tests/test_api.py",
+    ]
+    assert result.truncated is True
 
 
 """

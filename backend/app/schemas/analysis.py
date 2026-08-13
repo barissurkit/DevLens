@@ -87,5 +87,32 @@ class RepositoryAnalysis(BaseModel):
     repository: GitHubRepository
     readme: ReadmeAnalysis
     structure: RepositoryStructureSignals
+    tree_truncated: bool
     technologies: TechnologyAnalysis
     classification: RepositoryClassification
+
+
+class ScoreRuleResult(BaseModel):
+    key: str = Field(min_length=1)
+    label: str = Field(min_length=1)
+    passed: bool
+    points_earned: int = Field(ge=0)
+    points_possible: int = Field(gt=0)
+    evidence: str = Field(min_length=1)
+
+
+class ScoreDimensionResult(BaseModel):
+    key: str = Field(min_length=1)
+    label: str = Field(min_length=1)
+    points_earned: int = Field(ge=0)
+    points_possible: int = Field(gt=0)
+    score: int = Field(ge=0, le=100)
+    rules: list[ScoreRuleResult] = Field(min_length=1)
+
+
+class RepositoryScore(BaseModel):
+    version: str = Field(min_length=1)
+    overall_score: int = Field(ge=0, le=100)
+    dimensions: list[ScoreDimensionResult] = Field(min_length=1)
+    is_partial: bool
+    limitations: list[str]

@@ -35,7 +35,7 @@ async def analyze_repository(
         repository=repository.name,
         ref=repository.default_branch,
     )
-    tree_paths = await client.get_repository_tree_paths(
+    repository_tree = await client.get_repository_tree(
         owner=owner,
         repository=repository.name,
         ref=repository.default_branch,
@@ -58,7 +58,7 @@ async def analyze_repository(
             "package.json",
         ),
     )
-    structure_signals = detect_structure_signals(tree_paths)
+    structure_signals = detect_structure_signals(repository_tree.paths)
 
     classification = classify_repository(
         RepositoryClassificationInput(
@@ -75,6 +75,7 @@ async def analyze_repository(
         repository=repository,
         readme=readme_analysis,
         structure=structure_signals,
+        tree_truncated=repository_tree.truncated,
         technologies=technology_analysis,
         classification=classification,
     )

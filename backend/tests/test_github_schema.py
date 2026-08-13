@@ -1,7 +1,7 @@
 from datetime import datetime
 
 import pytest
-from app.schemas.github import GitHubFileContent, GitHubRepository, GitHubUser
+from app.schemas.github import GitHubFileContent, GitHubRepository, GitHubRepositoryTree, GitHubUser
 from pydantic import ValidationError
 
 
@@ -108,6 +108,24 @@ def test_github_file_content_preserves_normalized_fields() -> None:
     assert github_file.content == "# DevLens"
     assert github_file.size == 9
     assert github_file.sha == "abc123"
+
+
+def test_github_repository_tree_preserves_paths_and_completeness() -> None:
+    repository_tree = GitHubRepositoryTree(
+        paths=[
+            "README.md",
+            "backend/tests/test_api.py",
+        ],
+        truncated=True,
+    )
+
+    assert repository_tree.model_dump() == {
+        "paths": [
+            "README.md",
+            "backend/tests/test_api.py",
+        ],
+        "truncated": True,
+    }
 
 
 """
