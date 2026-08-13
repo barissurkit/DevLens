@@ -132,3 +132,30 @@ class PortfolioRepositorySelection(BaseModel):
     version: str = Field(min_length=1)
     selected: list[GitHubRepository]
     excluded: list[ExcludedPortfolioRepository]
+
+
+class PortfolioRepositoryFailureCode(StrEnum):
+    GITHUB_TIMEOUT = "github_timeout"
+    GITHUB_UNAVAILABLE = "github_unavailable"
+    GITHUB_REPOSITORY_NOT_FOUND = "github_repository_not_found"
+    GITHUB_RATE_LIMIT = "github_rate_limit"
+    GITHUB_UPSTREAM_ERROR = "github_upstream_error"
+
+
+class PortfolioRepositoryResult(BaseModel):
+    repository: GitHubRepository
+    analysis: RepositoryAnalysis
+    score: RepositoryScore
+
+
+class PortfolioRepositoryFailure(BaseModel):
+    repository: GitHubRepository
+    code: PortfolioRepositoryFailureCode
+    message: str = Field(min_length=1)
+
+
+class PortfolioRepositoryAnalysis(BaseModel):
+    selection_version: str = Field(min_length=1)
+    repositories: list[PortfolioRepositoryResult]
+    failures: list[PortfolioRepositoryFailure]
+    has_failures: bool
