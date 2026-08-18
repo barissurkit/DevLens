@@ -3,7 +3,7 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
-from app.schemas.github import GitHubRepository
+from app.schemas.github import GitHubRepository, GitHubUser
 
 
 class RepositoryStructureSignals(BaseModel):
@@ -248,3 +248,12 @@ class PortfolioScore(BaseModel):
     dimensions: list[PortfolioScoreDimensionResult]
     is_partial: bool
     limitations: list[str]
+
+
+class GitHubPortfolioAnalysis(BaseModel):
+    user: GitHubUser
+    selection: PortfolioRepositorySelection
+    repository_analysis: PortfolioRepositoryAnalysis
+    aggregation: PortfolioAggregation
+    intelligence: PortfolioIntelligence
+    score: PortfolioScore
