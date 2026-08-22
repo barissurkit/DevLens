@@ -103,7 +103,12 @@ def test_get_github_user_returns_404_when_user_does_not_exist() -> None:
     response = request_app("/api/v1/github/users/missing-user")
 
     assert response.status_code == 404
-    assert response.json() == {"detail": "GitHub user not found."}
+    assert response.json() == {
+        "detail": {
+            "code": "github_user_not_found",
+            "message": "GitHub user was not found.",
+        }
+    }
 
 
 def test_get_github_user_returns_429_for_rate_limit() -> None:
@@ -114,7 +119,12 @@ def test_get_github_user_returns_429_for_rate_limit() -> None:
     response = request_app("/api/v1/github/users/octocat")
 
     assert response.status_code == 429
-    assert response.json() == {"detail": "GitHub API rate limit exceed."}
+    assert response.json() == {
+        "detail": {
+            "code": "github_rate_limit",
+            "message": "GitHub rate limit was reached.",
+        }
+    }
 
 
 def test_get_github_user_returns_502_for_upstream_error() -> None:
@@ -125,7 +135,12 @@ def test_get_github_user_returns_502_for_upstream_error() -> None:
     response = request_app("/api/v1/github/users/octocat")
 
     assert response.status_code == 502
-    assert response.json() == {"detail": "GitHub service returned an unexpected response."}
+    assert response.json() == {
+        "detail": {
+            "code": "github_upstream_error",
+            "message": "GitHub returned an upstream error.",
+        }
+    }
 
 
 def test_get_github_user_returns_503_for_timeout() -> None:
@@ -143,4 +158,9 @@ def test_get_github_user_returns_503_for_timeout() -> None:
     response = request_app("/api/v1/github/users/octocat")
 
     assert response.status_code == 503
-    assert response.json() == {"detail": "GitHub service timed out."}
+    assert response.json() == {
+        "detail": {
+            "code": "github_timeout",
+            "message": "GitHub is temporarily unavailable.",
+        }
+    }
