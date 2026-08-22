@@ -1,3 +1,5 @@
+import { AnalysisForm } from "../components/analysis-form";
+
 export default function Home() {
   return (
     <main className="min-h-screen bg-slate-50 text-slate-950">
@@ -12,7 +14,7 @@ export default function Home() {
             </div>
             <span className="text-lg font-semibold tracking-tight">DevLens</span>
           </div>
-          <span className="text-sm text-slate-500">Yakında</span>
+          <span className="text-sm text-slate-500">Public portfolio intelligence</span>
         </header>
 
         <section className="flex flex-1 items-center py-20 sm:py-28">
@@ -21,17 +23,13 @@ export default function Home() {
               Developer Portfolio Intelligence
             </p>
             <h1 className="text-4xl font-semibold tracking-tight text-slate-950 sm:text-6xl">
-              Geliştirici portföylerine daha net bir bakış.
+              GitHub portföyündeki kanıtları daha net gör.
             </h1>
             <p className="mt-6 max-w-xl text-lg leading-8 text-slate-600">
-              DevLens, geliştirici çalışmalarını ve teknik üretimini anlamaya yardımcı
-              olacak sade ve güçlü içgörüler için hazırlanıyor.
+              DevLens, herkese açık repository&apos;lerdeki dokümantasyon ve mühendislik pratiklerini inceleyerek portföyünü anlamana yardımcı olur.
             </p>
 
-            <div className="mt-10 inline-flex items-center gap-3 rounded-full border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-600 shadow-sm">
-              <span className="h-2 w-2 rounded-full bg-amber-500" aria-hidden="true" />
-              <span>Uygulama geliştirme aşamasında</span>
-            </div>
+            <div className="mt-10 w-full max-w-xl"><AnalysisForm /></div>
           </div>
         </section>
 
