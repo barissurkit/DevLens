@@ -116,6 +116,28 @@ def test_analysis_route_is_registered_with_typed_response() -> None:
     assert route.response_model is GitHubPortfolioAnalysis
 
 
+def test_analysis_openapi_documents_public_contract() -> None:
+    operation = app.openapi()["paths"]["/api/v1/analysis"]["post"]
+
+    assert operation["tags"] == ["Analysis"]
+    assert operation["summary"] == "Analyze a GitHub portfolio"
+    assert operation["requestBody"]["content"]["application/json"]["schema"] == {
+        "$ref": "#/components/schemas/PortfolioAnalysisRequest"
+    }
+    assert operation["responses"]["200"]["content"]["application/json"]["schema"] == {
+        "$ref": "#/components/schemas/GitHubPortfolioAnalysis"
+    }
+
+    for status_code in ("404", "429", "502", "503"):
+        assert operation["responses"][status_code]["content"]["application/json"][
+            "schema"
+        ] == {"$ref": "#/components/schemas/APIErrorResponse"}
+
+    request_schema = app.openapi()["components"]["schemas"]["PortfolioAnalysisRequest"]
+    assert request_schema["additionalProperties"] is False
+    assert request_schema["properties"]["username"]["maxLength"] == 39
+
+
 def test_analysis_endpoint_calls_application_service_once() -> None:
     mock_client = AsyncMock(spec=GitHubClient)
     use_mock_client(mock_client)
@@ -146,7 +168,14 @@ def test_analysis_endpoint_calls_application_service_once() -> None:
 
 @pytest.mark.parametrize(
     ("payload", "status_code"),
-    [({}, 422), ({"username": 42}, 422), ({"username": ""}, 422)],
+    [
+        ({}, 422),
+        ({"username": 42}, 422),
+        ({"username": ""}, 422),
+        ({"username": "   "}, 422),
+        ({"username": "a" * 40}, 422),
+        ({"username": "synthetic-user", "max_concurrency": 100}, 422),
+    ],
 )
 def test_analysis_endpoint_validates_request(
     payload: object,
@@ -171,7 +200,31 @@ def test_analysis_endpoint_maps_user_not_found() -> None:
     result = request_app({"username": "missing"})
 
     assert result.status_code == 404
-    assert result.json() == {"detail": "GitHub user not found."}
+    assert result.json() == {
+        "detail": {
+            "code": "github_user_not_found",
+            "message": "GitHub user was not found.",
+        }
+    }
+
+
+def test_analysis_endpoint_normalizes_username_whitespace() -> None:
+    mock_client = AsyncMock(spec=GitHubClient)
+    use_mock_client(mock_client)
+    application_mock = AsyncMock(return_value=create_result())
+    original = analysis_api.run_github_portfolio_analysis
+    analysis_api.run_github_portfolio_analysis = application_mock
+
+    try:
+        response = request_app({"username": "  synthetic-user  "})
+    finally:
+        analysis_api.run_github_portfolio_analysis = original
+
+    assert response.status_code == 200
+    application_mock.assert_awaited_once_with(
+        username="synthetic-user",
+        client=mock_client,
+    )
 
 
 def test_analysis_endpoint_does_not_map_unexpected_internal_errors() -> None:
