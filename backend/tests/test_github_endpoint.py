@@ -40,7 +40,10 @@ def request_app(path: str) -> httpx.Response:
 
 
 def use_mock_client(mock_client: AsyncMock) -> None:
-    app.dependency_overrides[get_github_client] = lambda: mock_client
+    async def override_github_client() -> AsyncMock:
+        return mock_client
+
+    app.dependency_overrides[get_github_client] = override_github_client
 
 
 # bu fixture her testten sonra FastAPI dependency override'larını temizler.

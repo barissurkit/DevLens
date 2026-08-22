@@ -6,6 +6,10 @@ from pydantic import BaseModel, Field
 from app.schemas.github import GitHubRepository, GitHubUser
 
 
+class PortfolioAnalysisRequest(BaseModel):
+    username: str = Field(min_length=1)
+
+
 class RepositoryStructureSignals(BaseModel):
     has_tests: bool
     has_ci: bool
