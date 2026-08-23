@@ -3,6 +3,7 @@ from fastapi import APIRouter, Depends
 from pydantic import ValidationError
 
 from app.api.errors import APIErrorResponse, map_github_exception
+from app.clients.gemini import GeminiClient, GeminiNotConfiguredError
 from app.config import get_settings
 from app.schemas.github import GitHubUser
 from app.services.github.client import GitHubClient
@@ -15,6 +16,16 @@ router = APIRouter(
 
 async def get_github_client() -> GitHubClient:
     return GitHubClient(get_settings())
+
+
+async def get_gemini_client() -> GeminiClient | None:
+    settings = get_settings()
+    if not settings.gemini_api_key:
+        return None
+    try:
+        return GeminiClient(settings)
+    except GeminiNotConfiguredError:
+        return None
 
 
 @router.get(

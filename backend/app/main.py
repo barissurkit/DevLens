@@ -4,6 +4,7 @@ from pydantic import BaseModel
 
 from app.api.analysis import router as analysis_router
 from app.api.github import router as github_router
+from app.api.interpretation import router as interpretation_router
 from app.config import get_settings
 
 
@@ -28,6 +29,7 @@ app.add_middleware(
 
 app.include_router(github_router)
 app.include_router(analysis_router)
+app.include_router(interpretation_router)
 
 
 @app.get("/health", response_model=HealthResponse)

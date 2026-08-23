@@ -1,8 +1,9 @@
 from enum import StrEnum
+from typing import Annotated, Literal
 
 from pydantic import BaseModel, Field, model_validator
 
-from app.schemas.analysis import RepositoryCategory
+from app.schemas.analysis import GitHubPortfolioAnalysis, RepositoryCategory
 
 
 class InterpretationSignal(BaseModel):
@@ -92,3 +93,24 @@ class PortfolioInterpretationResult(BaseModel):
         """Compatibility name for callers that prefer an explicit field name."""
 
         return self.reason
+
+
+class PublicInterpretationAvailable(BaseModel):
+    status: Literal["available"]
+    interpretation: PortfolioInterpretation
+
+
+class PublicInterpretationUnavailable(BaseModel):
+    status: Literal["unavailable"]
+    reason: InterpretationUnavailableReason
+
+
+PublicPortfolioInterpretationResult = Annotated[
+    PublicInterpretationAvailable | PublicInterpretationUnavailable,
+    Field(discriminator="status"),
+]
+
+
+class GitHubPortfolioInterpretationResponse(BaseModel):
+    analysis: GitHubPortfolioAnalysis
+    interpretation: PublicPortfolioInterpretationResult
