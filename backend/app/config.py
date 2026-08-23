@@ -9,6 +9,8 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 class Settings(BaseSettings):
     github_token: str | None = None
     github_api_base_url: str = "https://api.github.com"
+    gemini_api_key: str | None = None
+    gemini_model: str = "gemini-2.5-flash"
 
     model_config = SettingsConfigDict(
         env_file=PROJECT_ROOT / ".env",
