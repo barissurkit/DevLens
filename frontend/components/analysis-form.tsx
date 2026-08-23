@@ -65,7 +65,6 @@ export function AnalysisForm() {
               if (validationMessage) setValidationMessage(null);
             }}
             placeholder="ör. barissurkit"
-            maxLength={MAX_USERNAME_LENGTH}
             autoComplete="username"
             disabled={isLoading}
             aria-invalid={hasValidationError}
