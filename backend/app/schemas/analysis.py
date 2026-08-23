@@ -3,6 +3,7 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
+from app.db.normalization import normalize_github_username
 from app.schemas.github import GitHubRepository, GitHubUser
 
 
@@ -14,7 +15,7 @@ class PortfolioAnalysisRequest(BaseModel):
     @field_validator("username", mode="before")
     @classmethod
     def normalize_username(cls, value: object) -> object:
-        return value.strip() if isinstance(value, str) else value
+        return normalize_github_username(value) if isinstance(value, str) else value
 
 
 class RepositoryStructureSignals(BaseModel):

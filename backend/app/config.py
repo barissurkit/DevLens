@@ -11,6 +11,7 @@ class Settings(BaseSettings):
     github_api_base_url: str = "https://api.github.com"
     gemini_api_key: str | None = None
     gemini_model: str = "gemini-2.5-flash"
+    database_url: str | None = None
 
     model_config = SettingsConfigDict(
         env_file=PROJECT_ROOT / ".env",
