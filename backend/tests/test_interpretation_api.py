@@ -7,7 +7,11 @@ import httpx
 import pytest
 
 import app.api.interpretation as interpretation_api
-from app.api.github import get_gemini_client, get_github_client
+from app.api.github import (
+    get_gemini_client,
+    get_github_client,
+    get_snapshot_persistence_service,
+)
 from app.main import app
 from app.schemas.interpretation import (
     InterpretationUnavailableReason,
@@ -41,6 +45,13 @@ def use_mock_gemini(mock_client: object) -> None:
         return mock_client
 
     app.dependency_overrides[get_gemini_client] = override
+
+
+def use_mock_persistence(mock_persistence: object) -> None:
+    async def override() -> object:
+        return mock_persistence
+
+    app.dependency_overrides[get_snapshot_persistence_service] = override
 
 
 @pytest.fixture(autouse=True)
@@ -78,6 +89,8 @@ def test_available_response_is_composite_and_publicly_discriminated() -> None:
         interpret=AsyncMock(return_value=PortfolioInterpretation(summary="Grounded."))
     )
     use_mock_gemini(fake_gemini)
+    persistence = AsyncMock()
+    use_mock_persistence(persistence)
     original = interpretation_api.analyze_and_interpret_github_portfolio
     composition = AsyncMock(
         return_value=SimpleNamespace(
@@ -108,6 +121,11 @@ def test_available_response_is_composite_and_publicly_discriminated() -> None:
         github_client=mock_github,
         gemini_client=fake_gemini,
     )
+    persistence.persist.assert_awaited_once()
+    persistence_call = persistence.persist.await_args.kwargs
+    assert persistence_call["analysis"] is composition.return_value.analysis
+    assert persistence_call["interpretation"].model_dump(mode="json") == body["interpretation"]
+    assert persistence_call["request_kind"] == "interpretation"
 
 
 def test_public_endpoint_runs_real_analysis_and_interpretation_composition() -> None:
