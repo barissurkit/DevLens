@@ -115,10 +115,14 @@ export interface RepositoryScore {
 export interface PortfolioRepositorySelection {
   version: string;
   selected: GitHubRepository[];
-  excluded: Array<{
-    repository: GitHubRepository;
-    reasons: string[];
-  }>;
+  excluded: ExcludedPortfolioRepository[];
+}
+
+export type ExclusionReason = "fork_repository" | "archived_repository";
+
+export interface ExcludedPortfolioRepository {
+  repository: GitHubRepository;
+  reasons: ExclusionReason[];
 }
 
 export interface PortfolioRepositoryResult {

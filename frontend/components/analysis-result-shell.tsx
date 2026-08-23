@@ -3,6 +3,7 @@ import type {
   PortfolioInsight,
   PortfolioScoreDimensionResult,
 } from "../lib/types";
+import { RepositoryAnalysisSection } from "./repository-analysis-section";
 
 interface AnalysisResultShellProps {
   result: GitHubPortfolioAnalysis;
@@ -84,6 +85,8 @@ export function AnalysisResultShell({ result }: AnalysisResultShellProps) {
       </div>
 
       {limitations.length > 0 && <section aria-labelledby="limitations-heading" className="rounded-2xl border border-slate-200 bg-slate-50 p-6 sm:p-8"><SectionHeading id="limitations-heading" title="Analiz notları" /><ul className="mt-4 list-disc space-y-2 pl-5 text-sm leading-6 text-slate-600">{limitations.map((limitation) => <li key={limitation}>{limitation}</li>)}</ul></section>}
+
+      <RepositoryAnalysisSection repositories={result.repository_analysis.repositories} failures={result.repository_analysis.failures} excluded={selection.excluded} />
     </section>
   );
 }
