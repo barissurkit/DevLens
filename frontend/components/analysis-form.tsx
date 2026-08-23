@@ -1,42 +1,55 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { type FormEvent, useState } from "react";
 import { analyzePortfolio, ApiError } from "../lib/api";
 import type { GitHubPortfolioAnalysis } from "../lib/types";
+import { AnalysisErrorState } from "./analysis-error-state";
+import { AnalysisLoadingState } from "./analysis-loading-state";
 import { AnalysisResultShell } from "./analysis-result-shell";
 
 const MAX_USERNAME_LENGTH = 39;
 
 export function AnalysisForm() {
   const [username, setUsername] = useState("");
-  const [result, setResult] = useState<GitHubPortfolioAnalysis | null>(null);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [state, setState] = useState<AnalysisState>({ status: "idle" });
+  const [validationMessage, setValidationMessage] = useState<string | null>(null);
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const normalizedUsername = username.trim();
-    setErrorMessage(null);
-    setResult(null);
-
-    if (!normalizedUsername) {
-      setErrorMessage("Bir GitHub kullanıcı adı girin.");
-      return;
-    }
-    if (normalizedUsername.length > MAX_USERNAME_LENGTH) {
-      setErrorMessage("GitHub kullanıcı adı 39 karakterden uzun olamaz.");
-      return;
-    }
-
-    setIsLoading(true);
+  async function submitUsername(normalizedUsername: string) {
+    setValidationMessage(null);
+    setState({ status: "loading", username: normalizedUsername });
     try {
-      setResult(await analyzePortfolio(normalizedUsername));
+      const result = await analyzePortfolio(normalizedUsername);
+      setState({ status: "success", result });
     } catch (error) {
-      setErrorMessage(error instanceof ApiError ? error.message : "Analiz tamamlanamadı.");
-    } finally {
-      setIsLoading(false);
+      const apiError = error instanceof ApiError
+        ? error
+        : new ApiError("Analiz tamamlanamadı.", 0, "unexpected_client_error");
+      setState({ status: "error", error: apiError, username: normalizedUsername });
     }
   }
+
+  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const normalizedUsername = username.trim();
+    const message = !normalizedUsername
+      ? "Bir GitHub kullanıcı adı girin."
+      : normalizedUsername.length > MAX_USERNAME_LENGTH
+        ? "GitHub kullanıcı adı 39 karakterden uzun olamaz."
+        : null;
+    setValidationMessage(message);
+    if (message) {
+      setState({ status: "idle" });
+    } else {
+      void submitUsername(normalizedUsername);
+    }
+  }
+
+  function handleRetry() {
+    if (state.status === "error") void submitUsername(state.username);
+  }
+
+  const isLoading = state.status === "loading";
+  const hasValidationError = validationMessage !== null;
 
   return (
     <div className="space-y-6">
@@ -47,12 +60,17 @@ export function AnalysisForm() {
             id="github-username"
             name="username"
             value={username}
-            onChange={(event) => setUsername(event.target.value)}
+            onChange={(event) => {
+              setUsername(event.target.value);
+              if (validationMessage) setValidationMessage(null);
+            }}
             placeholder="ör. barissurkit"
             maxLength={MAX_USERNAME_LENGTH}
             autoComplete="username"
-            aria-describedby={errorMessage ? "analysis-error" : "username-hint"}
-            className="min-h-12 flex-1 rounded-xl border border-slate-300 px-4 text-slate-950 outline-none transition placeholder:text-slate-400 focus:border-slate-950 focus:ring-2 focus:ring-slate-950/10"
+            disabled={isLoading}
+            aria-invalid={hasValidationError}
+            aria-describedby={hasValidationError ? "analysis-validation-error" : "username-hint"}
+            className="min-h-12 flex-1 rounded-xl border border-slate-300 px-4 text-slate-950 outline-none transition placeholder:text-slate-400 focus:border-slate-950 focus:ring-2 focus:ring-slate-950/10 disabled:cursor-not-allowed disabled:bg-slate-100"
           />
           <button
             type="submit"
@@ -63,14 +81,21 @@ export function AnalysisForm() {
           </button>
         </div>
         <p id="username-hint" className="mt-3 text-sm text-slate-500">Public repository kanıtlarını incelemek için kullanıcı adını girin.</p>
-        {errorMessage && (
-          <p id="analysis-error" role="alert" aria-live="polite" className="mt-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
-            {errorMessage}
+        {validationMessage && (
+          <p id="analysis-validation-error" role="alert" className="mt-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
+            {validationMessage}
           </p>
         )}
-        {isLoading && <p role="status" aria-live="polite" className="sr-only">Analiz ediliyor...</p>}
+        {isLoading && <AnalysisLoadingState />}
+        {state.status === "error" && <AnalysisErrorState error={state.error} onRetry={handleRetry} />}
       </form>
-      {result && <AnalysisResultShell result={result} />}
+      {state.status === "success" && <AnalysisResultShell result={state.result} />}
     </div>
   );
 }
+
+type AnalysisState =
+  | { status: "idle" }
+  | { status: "loading"; username: string }
+  | { status: "success"; result: GitHubPortfolioAnalysis }
+  | { status: "error"; error: ApiError; username: string };
