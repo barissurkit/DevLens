@@ -94,3 +94,21 @@ def test_unexpected_programmer_error_is_not_swallowed(monkeypatch) -> None:
 
     with pytest.raises(RuntimeError, match="programmer bug"):
         asyncio.run(service.persist(analysis=create_result(), request_kind="analysis"))
+
+
+def test_connection_refused_is_fail_open() -> None:
+    class FailingSession:
+        async def __aenter__(self):
+            raise ConnectionRefusedError("synthetic connection refused")
+
+        async def __aexit__(self, exception_type, exception, traceback) -> None:
+            return None
+
+    service = AnalysisSnapshotPersistenceService(
+        Settings(_env_file=None, database_url="postgresql+asyncpg://local/test"),
+        session_factory_provider=lambda settings: lambda: FailingSession(),
+    )
+
+    result = asyncio.run(service.persist(analysis=create_result(), request_kind="analysis"))
+
+    assert result is SnapshotPersistenceOutcome.FAILED_OPERATIONAL
