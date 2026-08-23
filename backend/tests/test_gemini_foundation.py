@@ -11,6 +11,7 @@ from app.clients.gemini import (
 )
 from app.config import Settings
 from app.prompts.portfolio_interpretation import (
+    GEMINI_INTERPRETATION_PROMPT_VERSION,
     SYSTEM_INSTRUCTION,
     build_interpretation_content,
 )
@@ -20,6 +21,7 @@ from app.schemas.interpretation import (
     InterpretationSignal,
     PortfolioInterpretation,
     PortfolioInterpretationContext,
+    NextProjectRecommendation,
 )
 from app.services.portfolio_interpretation_context import (
     build_portfolio_interpretation_context,
@@ -81,6 +83,75 @@ def test_prompt_is_deterministic_and_excludes_raw_payload_fields() -> None:
     assert "seniority" in SYSTEM_INSTRUCTION
     assert "employability" in SYSTEM_INSTRUCTION
     assert "untrusted data" in SYSTEM_INSTRUCTION
+    assert "Do not optimize for score" in SYSTEM_INSTRUCTION
+    assert "technology choice as a reason" in SYSTEM_INSTRUCTION
+    assert GEMINI_INTERPRETATION_PROMPT_VERSION == "v2"
+
+
+def recommendation(**overrides: object) -> NextProjectRecommendation:
+    values: dict[str, object] = {
+        "title": "Test ve CI odaklı API projesi",
+        "goal": "Test ve CI evidence'ını görünür hale getirmek.",
+        "rationale": "Deterministic analysis identified testing evidence as an improvement opportunity.",
+        "focus_signal_keys": ["tests_structure", "ci_workflow"],
+        "suggested_deliverables": [
+            "Automated tests",
+            "CI workflow",
+            "Installation documentation",
+        ],
+    }
+    values.update(overrides)
+    return NextProjectRecommendation.model_validate(values)
+
+
+def improvement_context() -> PortfolioInterpretationContext:
+    return context().model_copy(
+        update={
+            "improvement_signals": [
+                InterpretationSignal(
+                    key="tests_structure",
+                    message="Tests are an improvement opportunity.",
+                    detected_repository_count=0,
+                    analyzed_repository_count=2,
+                ),
+                InterpretationSignal(
+                    key="ci_workflow",
+                    message="CI is an improvement opportunity.",
+                    detected_repository_count=0,
+                    analyzed_repository_count=2,
+                ),
+            ]
+        }
+    )
+
+
+def valid_interpretation_with_recommendation() -> PortfolioInterpretation:
+    return PortfolioInterpretation(
+        summary="Grounded summary.",
+        strength_explanations=[
+            InterpretationExplanation(signal_key="tests_structure", explanation="A.")
+        ],
+        improvement_explanations=[
+            InterpretationExplanation(signal_key="tests_structure", explanation="A."),
+            InterpretationExplanation(signal_key="ci_workflow", explanation="B."),
+        ],
+        next_project_recommendation=recommendation(),
+    )
+
+
+def test_recommendation_model_is_bounded_and_serializable() -> None:
+    value = recommendation()
+
+    assert value.model_dump(mode="json")["focus_signal_keys"] == [
+        "tests_structure",
+        "ci_workflow",
+    ]
+    with pytest.raises(ValueError):
+        recommendation(focus_signal_keys=[])
+    with pytest.raises(ValueError):
+        recommendation(suggested_deliverables=["one", "two"])
+    with pytest.raises(ValueError):
+        recommendation(suggested_deliverables=["same", "same", "other"])
 
 
 def test_context_builder_preserves_order_and_zero_score_semantics() -> None:
@@ -166,6 +237,60 @@ def test_unknown_and_duplicate_signal_references_are_rejected() -> None:
     )
     with pytest.raises(GeminiInvalidResponseError, match="Duplicate"):
         validate_interpretation_references(duplicate, context())
+
+
+@pytest.mark.parametrize(
+    "focus_keys",
+    [
+        ["docker"],
+        ["tests_structure", "tests_structure"],
+        ["ci_workflow", "tests_structure"],
+    ],
+)
+def test_recommendation_focus_must_be_ordered_unique_improvement_subset(
+    focus_keys: list[str],
+) -> None:
+    value = valid_interpretation_with_recommendation()
+    value.next_project_recommendation = recommendation(focus_signal_keys=focus_keys)
+
+    with pytest.raises(GeminiInvalidResponseError, match="[Rr]ecommendation focus"):
+        validate_interpretation_references(value, improvement_context())
+
+
+def test_recommendation_requires_improvements_and_cannot_use_strength_only_signal() -> None:
+    missing = valid_interpretation_with_recommendation()
+    missing.next_project_recommendation = None
+    with pytest.raises(GeminiInvalidResponseError, match="required"):
+        validate_interpretation_references(missing, improvement_context())
+
+    value = PortfolioInterpretation(
+        summary="Grounded summary.",
+        strength_explanations=[
+            InterpretationExplanation(signal_key="tests_structure", explanation="A.")
+        ],
+        improvement_explanations=[
+            InterpretationExplanation(signal_key="tests_structure", explanation="A."),
+            InterpretationExplanation(signal_key="ci_workflow", explanation="B."),
+        ],
+        next_project_recommendation=recommendation(focus_signal_keys=["tests_structure"]),
+    )
+    with pytest.raises(GeminiInvalidResponseError):
+        validate_interpretation_references(value, improvement_context().model_copy(
+            update={"improvement_signals": []}
+        ))
+
+
+def test_no_improvement_signals_require_null_recommendation() -> None:
+    value = PortfolioInterpretation(
+        summary="Grounded summary.",
+        strength_explanations=[
+            InterpretationExplanation(signal_key="tests_structure", explanation="A.")
+        ],
+        next_project_recommendation=recommendation(),
+    )
+
+    with pytest.raises(GeminiInvalidResponseError, match="unsupported"):
+        validate_interpretation_references(value, context())
 
 
 def test_gemini_key_is_required_only_at_client_boundary() -> None:

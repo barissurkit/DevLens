@@ -83,6 +83,19 @@ function isGitHubPortfolioInterpretationResponse(value: unknown): value is GitHu
   if (interpretation.status !== "available" || !("interpretation" in interpretation)) return false;
   const content = interpretation.interpretation;
   if (typeof content !== "object" || content === null) return false;
+  const contentRecord = content as Record<string, unknown>;
+  const recommendation = contentRecord.next_project_recommendation;
+  const hasValidRecommendation = recommendation === null || (
+    typeof recommendation === "object" && recommendation !== null &&
+    ["title", "goal", "rationale", "focus_signal_keys", "suggested_deliverables"].every((key) => key in recommendation) &&
+    typeof (recommendation as Record<string, unknown>).title === "string" &&
+    typeof (recommendation as Record<string, unknown>).goal === "string" &&
+    typeof (recommendation as Record<string, unknown>).rationale === "string" &&
+    Array.isArray((recommendation as Record<string, unknown>).focus_signal_keys) &&
+    Array.isArray((recommendation as Record<string, unknown>).suggested_deliverables) &&
+    ((recommendation as Record<string, unknown>).focus_signal_keys as unknown[]).every((key: unknown) => typeof key === "string") &&
+    ((recommendation as Record<string, unknown>).suggested_deliverables as unknown[]).every((item: unknown) => typeof item === "string")
+  );
   return (
     "summary" in content && typeof content.summary === "string" &&
     "strength_explanations" in content && Array.isArray(content.strength_explanations) &&
@@ -90,6 +103,7 @@ function isGitHubPortfolioInterpretationResponse(value: unknown): value is GitHu
     "technology_context" in content && (typeof content.technology_context === "string" || content.technology_context === null) &&
     "project_area_context" in content && (typeof content.project_area_context === "string" || content.project_area_context === null) &&
     "limitations_note" in content && (typeof content.limitations_note === "string" || content.limitations_note === null) &&
+    "next_project_recommendation" in content && hasValidRecommendation &&
     [...content.strength_explanations, ...content.improvement_explanations].every((item) => (
       typeof item === "object" && item !== null && "signal_key" in item && typeof item.signal_key === "string" && "explanation" in item && typeof item.explanation === "string"
     ))

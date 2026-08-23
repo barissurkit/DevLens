@@ -7,6 +7,7 @@ from app.clients.gemini import (
     GeminiTimeoutError,
     GeminiUnavailableError,
     GeminiUpstreamError,
+    validate_interpretation_references,
 )
 from app.schemas.analysis import GitHubPortfolioAnalysis
 from app.schemas.interpretation import (
@@ -59,6 +60,11 @@ async def interpret_github_portfolio(
         return _unavailable(InterpretationUnavailableReason.UNAVAILABLE)
     except GeminiUpstreamError:
         return _unavailable(InterpretationUnavailableReason.UPSTREAM_ERROR)
+    except GeminiInvalidResponseError:
+        return _unavailable(InterpretationUnavailableReason.INVALID_RESPONSE)
+
+    try:
+        validate_interpretation_references(interpretation, context)
     except GeminiInvalidResponseError:
         return _unavailable(InterpretationUnavailableReason.INVALID_RESPONSE)
 
