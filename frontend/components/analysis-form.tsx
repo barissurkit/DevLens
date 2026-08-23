@@ -53,7 +53,7 @@ export function AnalysisForm() {
 
   return (
     <div className="space-y-6">
-      <form onSubmit={handleSubmit} noValidate className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+      <form onSubmit={handleSubmit} noValidate aria-busy={isLoading} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
         <label htmlFor="github-username" className="block text-sm font-medium text-slate-900">GitHub kullanıcı adı</label>
         <div className="mt-2 flex flex-col gap-3 sm:flex-row">
           <input
@@ -66,22 +66,24 @@ export function AnalysisForm() {
             }}
             placeholder="ör. barissurkit"
             autoComplete="username"
+            required
+            maxLength={MAX_USERNAME_LENGTH}
             disabled={isLoading}
             aria-invalid={hasValidationError}
             aria-describedby={hasValidationError ? "analysis-validation-error" : "username-hint"}
-            className="min-h-12 flex-1 rounded-xl border border-slate-300 px-4 text-slate-950 outline-none transition placeholder:text-slate-400 focus:border-slate-950 focus:ring-2 focus:ring-slate-950/10 disabled:cursor-not-allowed disabled:bg-slate-100"
+            className="min-h-12 min-w-0 flex-1 rounded-xl border border-slate-300 px-4 text-slate-950 outline-none transition placeholder:text-slate-400 focus:border-slate-950 focus:ring-2 focus:ring-slate-950/20 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-600"
           />
           <button
             type="submit"
             disabled={isLoading}
-            className="min-h-12 rounded-xl bg-slate-950 px-5 font-medium text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-400"
+            className="min-h-12 shrink-0 rounded-xl bg-slate-950 px-5 font-medium text-white transition hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-950 focus:ring-offset-2 disabled:cursor-not-allowed disabled:bg-slate-400 disabled:text-slate-100"
           >
             {isLoading ? "Analiz ediliyor..." : "Analiz et"}
           </button>
         </div>
         <p id="username-hint" className="mt-3 text-sm text-slate-500">Public repository kanıtlarını incelemek için kullanıcı adını girin.</p>
         {validationMessage && (
-          <p id="analysis-validation-error" role="alert" className="mt-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
+          <p id="analysis-validation-error" role="alert" aria-live="assertive" className="mt-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">
             {validationMessage}
           </p>
         )}

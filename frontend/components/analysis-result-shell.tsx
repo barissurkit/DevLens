@@ -64,7 +64,7 @@ export function AnalysisResultShell({ result }: AnalysisResultShellProps) {
 
       <section aria-labelledby="stats-heading" className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
         <SectionHeading id="stats-heading" title="Portfolio istatistikleri" />
-        <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+        <div className="mt-5 grid grid-cols-1 gap-3 min-[420px]:grid-cols-2 sm:grid-cols-3 lg:grid-cols-6">
           <StatItem label="Public repository" value={user.public_repos} />
           <StatItem label="Seçilen" value={aggregation.selected_repository_count} />
           <StatItem label="Hariç tutulan" value={selection.excluded.length} />
@@ -100,9 +100,9 @@ function orderDimensions(dimensions: PortfolioScoreDimensionResult[]) {
 }
 
 function ScoreDimension({ dimension }: { dimension: PortfolioScoreDimensionResult }) {
-  const progress = Math.min(100, Math.max(0, dimension.score));
+  const progress = Number.isFinite(dimension.score) ? Math.min(100, Math.max(0, dimension.score)) : 0;
   const label = DIMENSION_LABELS[dimension.key] || dimension.label;
-  return <article className="rounded-xl bg-slate-50 p-4"><div className="flex items-baseline justify-between gap-3"><h4 className="font-medium text-slate-950">{label}</h4><span className="text-sm font-semibold text-slate-700">{dimension.points_earned} / {dimension.points_possible}</span></div><p className="mt-2 text-xs leading-5 text-slate-500">{DIMENSION_DESCRIPTIONS[dimension.key] || dimension.label}</p><div role="progressbar" aria-label={`${label} skoru`} aria-valuenow={progress} aria-valuemin={0} aria-valuemax={100} className="mt-4 h-2 overflow-hidden rounded-full bg-slate-200"><div className="h-full rounded-full bg-slate-700" style={{ width: `${progress}%` }} /></div></article>;
+  return <article className="min-w-0 rounded-xl bg-slate-50 p-4"><div className="flex flex-wrap items-baseline justify-between gap-2"><h4 className="min-w-0 font-medium text-slate-950">{label}</h4><span className="shrink-0 text-sm font-semibold text-slate-700">{dimension.points_earned} / {dimension.points_possible}</span></div><p className="mt-2 text-xs leading-5 text-slate-500">{DIMENSION_DESCRIPTIONS[dimension.key] || dimension.label}</p><div role="progressbar" aria-label={`${label} skoru`} aria-valuenow={progress} aria-valuemin={0} aria-valuemax={100} className="mt-4 h-2 overflow-hidden rounded-full bg-slate-200"><div className="h-full rounded-full bg-slate-700" style={{ width: `${progress}%` }} /></div></article>;
 }
 
 function StatItem({ label, value }: { label: string; value: number }) {

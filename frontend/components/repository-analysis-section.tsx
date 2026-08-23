@@ -35,6 +35,11 @@ const README_LABELS: Array<[keyof PortfolioRepositoryResult["analysis"]["readme"
   ["has_demo_link", "Demo link"],
 ];
 
+const EXCLUSION_REASON_LABELS: Record<string, string> = {
+  fork_repository: "Fork repository",
+  archived_repository: "Arşivlenmiş repository",
+};
+
 export function RepositoryAnalysisSection({ repositories, failures, excluded }: RepositoryAnalysisSectionProps) {
   const hasAnyRepositoryState = repositories.length > 0 || failures.length > 0 || excluded.length > 0;
 
@@ -64,15 +69,16 @@ function RepositoryCard({ result }: { result: PortfolioRepositoryResult }) {
 
   return (
     <details className="group rounded-2xl border border-slate-200 bg-white shadow-sm">
-      <summary className="flex cursor-pointer list-none flex-col gap-4 rounded-2xl p-5 outline-none transition focus-visible:ring-2 focus-visible:ring-slate-950 focus-visible:ring-offset-2 sm:flex-row sm:items-center sm:justify-between sm:p-6">
-        <div className="min-w-0">
+      <summary className="flex cursor-pointer list-none items-start gap-3 rounded-2xl p-5 outline-none transition focus-visible:ring-2 focus-visible:ring-slate-950 focus-visible:ring-offset-2 sm:items-center sm:p-6">
+        <span aria-hidden="true" className="mt-1 shrink-0 text-xl leading-none text-slate-500 transition-transform group-open:rotate-90">›</span>
+        <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
             <a href={repository.html_url} target="_blank" rel="noreferrer" className="max-w-full break-words text-lg font-semibold text-slate-950 underline decoration-slate-300 underline-offset-4 hover:decoration-slate-950" onClick={(event) => event.stopPropagation()}>{repository.name}</a>
             {score.is_partial && <span className="rounded-full bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-800">Kısmi evidence</span>}
           </div>
           <p className="mt-2 break-words text-sm text-slate-600">{analysis.classification.primary_category}</p>
         </div>
-        <div className="shrink-0 sm:text-right">
+        <div className="w-full shrink-0 sm:w-auto sm:text-right">
           <p className="text-xs font-medium uppercase tracking-[0.12em] text-slate-500">Repository Evidence Score</p>
           <p className="mt-1 text-2xl font-semibold text-slate-950">{score.overall_score} / 100</p>
         </div>
@@ -97,12 +103,12 @@ function RepositoryCard({ result }: { result: PortfolioRepositoryResult }) {
 }
 
 function ScoreDimension({ dimension }: { dimension: ScoreDimensionResult }) {
-  const progress = Math.min(100, Math.max(0, dimension.score));
-  return <article className="rounded-xl bg-slate-50 p-4"><div className="flex items-baseline justify-between gap-3"><h4 className="font-medium text-slate-950">{dimension.label}</h4><span className="text-sm font-semibold text-slate-700">{dimension.points_earned} / {dimension.points_possible}</span></div><div role="progressbar" aria-label={`${dimension.label} skoru`} aria-valuenow={progress} aria-valuemin={0} aria-valuemax={100} className="mt-4 h-2 overflow-hidden rounded-full bg-slate-200"><div className="h-full rounded-full bg-slate-700" style={{ width: `${progress}%` }} /></div></article>;
+  const progress = Number.isFinite(dimension.score) ? Math.min(100, Math.max(0, dimension.score)) : 0;
+  return <article className="min-w-0 rounded-xl bg-slate-50 p-4"><div className="flex flex-wrap items-baseline justify-between gap-2"><h4 className="min-w-0 font-medium text-slate-950">{dimension.label}</h4><span className="shrink-0 text-sm font-semibold text-slate-700">{dimension.points_earned} / {dimension.points_possible}</span></div><div role="progressbar" aria-label={`${dimension.label} skoru`} aria-valuenow={progress} aria-valuemin={0} aria-valuemax={100} className="mt-4 h-2 overflow-hidden rounded-full bg-slate-200"><div className="h-full rounded-full bg-slate-700" style={{ width: `${progress}%` }} /></div></article>;
 }
 
 function RuleBreakdown({ dimensions }: { dimensions: ScoreDimensionResult[] }) {
-  return <section aria-labelledby="repository-rules-heading"><h4 id="repository-rules-heading" className="text-sm font-semibold text-slate-950">Evidence breakdown</h4><div className="mt-3 space-y-4">{dimensions.map((dimension) => <div key={dimension.key}><h5 className="text-sm font-medium text-slate-700">{dimension.label}</h5><ul className="mt-2 grid gap-2 sm:grid-cols-2">{dimension.rules.map((rule) => <li key={rule.key} className="rounded-lg border border-slate-200 p-3 text-sm"><div className="flex items-start gap-2"><span aria-hidden="true" className={rule.passed ? "text-emerald-600" : "text-slate-400"}>{rule.passed ? "✓" : "—"}</span><span className="font-medium text-slate-800">{rule.label}</span><span className="ml-auto whitespace-nowrap text-xs text-slate-500">{rule.points_earned} / {rule.points_possible}</span></div><p className="mt-1 pl-5 text-xs leading-5 text-slate-500">{rule.evidence}</p></li>)}</ul></div>)}</div></section>;
+  return <section aria-labelledby="repository-rules-heading"><h4 id="repository-rules-heading" className="text-sm font-semibold text-slate-950">Evidence breakdown</h4><div className="mt-3 space-y-4">{dimensions.map((dimension) => <div key={dimension.key}><h5 className="text-sm font-medium text-slate-700">{dimension.label}</h5><ul className="mt-2 grid gap-2 sm:grid-cols-2">{dimension.rules.map((rule) => <li key={rule.key} className="rounded-lg border border-slate-200 p-3 text-sm"><div className="flex min-w-0 items-start gap-2"><span aria-hidden="true" className={rule.passed ? "text-emerald-700" : "text-slate-500"}>{rule.passed ? "✓" : "—"}</span><span className="min-w-0 break-words font-medium text-slate-800">{rule.label}</span><span className="ml-auto shrink-0 whitespace-nowrap text-xs text-slate-500">{rule.points_earned} / {rule.points_possible}</span></div><p className="mt-1 break-words pl-5 text-xs leading-5 text-slate-500">{rule.evidence}</p></li>)}</ul></div>)}</div></section>;
 }
 
 function EvidenceList({ title, items, emptyMessage }: { title: string; items: string[]; emptyMessage: string }) {
@@ -118,7 +124,7 @@ function FailureSection({ failures }: { failures: PortfolioRepositoryFailure[] }
 }
 
 function ExcludedSection({ repositories }: { repositories: ExcludedPortfolioRepository[] }) {
-  return <section aria-labelledby="excluded-repositories-heading" className="rounded-2xl border border-slate-200 bg-slate-50 p-5 sm:p-6"><h4 id="excluded-repositories-heading" className="text-lg font-semibold text-slate-950">Excluded Repositories</h4><p className="mt-2 text-sm text-slate-600">Bu repository’ler seçim politikası nedeniyle analiz kapsamı dışındadır.</p><ul className="mt-4 space-y-2">{repositories.map((item) => <li key={item.repository.html_url} className="flex flex-wrap items-baseline justify-between gap-2 rounded-lg bg-white p-3 text-sm"><span className="break-words font-medium text-slate-800">{item.repository.name}</span><span className="text-slate-500">{item.reasons.join(" · ")}</span></li>)}</ul></section>;
+  return <section aria-labelledby="excluded-repositories-heading" className="rounded-2xl border border-slate-200 bg-slate-50 p-5 sm:p-6"><h4 id="excluded-repositories-heading" className="text-lg font-semibold text-slate-950">Excluded Repositories</h4><p className="mt-2 text-sm text-slate-600">Bu repository’ler seçim politikası nedeniyle analiz kapsamı dışındadır.</p><ul className="mt-4 space-y-2">{repositories.map((item) => <li key={item.repository.html_url} className="flex flex-wrap items-baseline justify-between gap-2 rounded-lg bg-white p-3 text-sm"><span className="break-words font-medium text-slate-800">{item.repository.name}</span><span className="break-words text-slate-500">{item.reasons.map((reason) => EXCLUSION_REASON_LABELS[reason] || "Seçim politikası").join(" · ")}</span></li>)}</ul></section>;
 }
 
 function EmptyRepositoryState({ message }: { message: string }) {
