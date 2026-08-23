@@ -81,3 +81,7 @@ docker compose down -v
 ```
 
 Compose ortamında backend `DATABASE_URL` için Docker içindeki `db` hostname'ini kullanır. Frontend build'ine yalnız browser'ın erişebileceği `NEXT_PUBLIC_API_BASE_URL` (`http://localhost:8000`) girer; GitHub/Gemini anahtarları yalnız backend runtime environment'ında bulunur. `ANALYSIS_CACHE_TTL_SECONDS` varsayılan olarak 900 saniyedir; deterministic analysis cache PostgreSQL named volume sayesinde backend process/container restart'larından sonra da korunur. Interpretation ve recommendation cache'lenmez; DB operasyonları mevcut fail-open politikasını korur.
+
+## CI quality gates
+
+Pull requests targeting `main` and pushes to `main` run the GitHub Actions `CI` workflow. It validates the backend regression suite, disposable PostgreSQL/Alembic integration, frontend lint/type-check/build and production dependency security, plus the Docker production-stack startup smoke. The stable `Required quality gates` aggregate check is required before merging to `main`. CI does not deploy and does not use production GitHub, Gemini, or database secrets.
