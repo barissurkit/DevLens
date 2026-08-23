@@ -240,3 +240,45 @@ export interface OperationalErrorDetail {
 export interface OperationalErrorResponse {
   detail: OperationalErrorDetail;
 }
+
+export type InterpretationUnavailableReason =
+  | "not_configured"
+  | "insufficient_evidence"
+  | "timeout"
+  | "unavailable"
+  | "rate_limit"
+  | "upstream_error"
+  | "invalid_response";
+
+export interface InterpretationExplanation {
+  signal_key: string;
+  explanation: string;
+}
+
+export interface PortfolioInterpretation {
+  summary: string;
+  strength_explanations: InterpretationExplanation[];
+  improvement_explanations: InterpretationExplanation[];
+  technology_context: string | null;
+  project_area_context: string | null;
+  limitations_note: string | null;
+}
+
+export interface PortfolioInterpretationAvailable {
+  status: "available";
+  interpretation: PortfolioInterpretation;
+}
+
+export interface PortfolioInterpretationUnavailable {
+  status: "unavailable";
+  reason: InterpretationUnavailableReason;
+}
+
+export type PublicPortfolioInterpretationResult =
+  | PortfolioInterpretationAvailable
+  | PortfolioInterpretationUnavailable;
+
+export interface GitHubPortfolioInterpretationResponse {
+  analysis: GitHubPortfolioAnalysis;
+  interpretation: PublicPortfolioInterpretationResult;
+}

@@ -1,8 +1,8 @@
 "use client";
 
 import { type FormEvent, useState } from "react";
-import { analyzePortfolio, ApiError } from "../lib/api";
-import type { GitHubPortfolioAnalysis } from "../lib/types";
+import { analyzePortfolioWithInterpretation, ApiError } from "../lib/api";
+import type { GitHubPortfolioInterpretationResponse } from "../lib/types";
 import { AnalysisErrorState } from "./analysis-error-state";
 import { AnalysisLoadingState } from "./analysis-loading-state";
 import { AnalysisResultShell } from "./analysis-result-shell";
@@ -18,7 +18,7 @@ export function AnalysisForm() {
     setValidationMessage(null);
     setState({ status: "loading", username: normalizedUsername });
     try {
-      const result = await analyzePortfolio(normalizedUsername);
+      const result = await analyzePortfolioWithInterpretation(normalizedUsername);
       setState({ status: "success", result });
     } catch (error) {
       const apiError = error instanceof ApiError
@@ -98,5 +98,5 @@ export function AnalysisForm() {
 type AnalysisState =
   | { status: "idle" }
   | { status: "loading"; username: string }
-  | { status: "success"; result: GitHubPortfolioAnalysis }
+  | { status: "success"; result: GitHubPortfolioInterpretationResponse }
   | { status: "error"; error: ApiError; username: string };
