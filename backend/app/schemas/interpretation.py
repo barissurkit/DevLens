@@ -1,4 +1,6 @@
-from pydantic import BaseModel, Field
+from enum import StrEnum
+
+from pydantic import BaseModel, Field, model_validator
 
 from app.schemas.analysis import RepositoryCategory
 
@@ -58,3 +60,35 @@ class PortfolioInterpretation(BaseModel):
     technology_context: str | None = Field(default=None, max_length=600)
     project_area_context: str | None = Field(default=None, max_length=600)
     limitations_note: str | None = Field(default=None, max_length=600)
+
+
+class InterpretationUnavailableReason(StrEnum):
+    NOT_CONFIGURED = "not_configured"
+    INSUFFICIENT_EVIDENCE = "insufficient_evidence"
+    TIMEOUT = "timeout"
+    UNAVAILABLE = "unavailable"
+    RATE_LIMIT = "rate_limit"
+    UPSTREAM_ERROR = "upstream_error"
+    INVALID_RESPONSE = "invalid_response"
+
+
+class PortfolioInterpretationResult(BaseModel):
+    """Internal application result separating AI availability from analysis."""
+
+    available: bool
+    interpretation: PortfolioInterpretation | None = None
+    reason: InterpretationUnavailableReason | None = None
+
+    @model_validator(mode="after")
+    def validate_state(self) -> "PortfolioInterpretationResult":
+        if self.available and (self.interpretation is None or self.reason is not None):
+            raise ValueError("Available interpretation results require an interpretation only.")
+        if not self.available and (self.interpretation is not None or self.reason is None):
+            raise ValueError("Unavailable interpretation results require a reason only.")
+        return self
+
+    @property
+    def unavailable_reason(self) -> InterpretationUnavailableReason | None:
+        """Compatibility name for callers that prefer an explicit field name."""
+
+        return self.reason

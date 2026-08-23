@@ -180,7 +180,15 @@ class FakeModels:
     async def generate_content(self, **kwargs: object) -> object:
         self.calls.append(kwargs)
         return SimpleNamespace(
-            parsed=PortfolioInterpretation(summary="Evidence-based summary.")
+            parsed=PortfolioInterpretation(
+                summary="Evidence-based summary.",
+                strength_explanations=[
+                    InterpretationExplanation(
+                        signal_key="tests_structure",
+                        explanation="Tests are present in the analyzed repositories.",
+                    )
+                ],
+            )
         )
 
 
