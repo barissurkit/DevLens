@@ -162,7 +162,11 @@ jobs:
         run: |
           set -euo pipefail
           for attempt in {1..30}; do
-            if curl --fail --silent http://127.0.0.1:8000/health >/dev/null \
+            backend_health="$(docker compose ps --format '{{.Service}} {{.Health}}' | awk '$1 == "backend" { print $2 }')"
+            frontend_health="$(docker compose ps --format '{{.Service}} {{.Health}}' | awk '$1 == "frontend" { print $2 }')"
+            if [ "$backend_health" = healthy ] \
+              && [ "$frontend_health" = healthy ] \
+              && curl --fail --silent http://127.0.0.1:8000/health >/dev/null \
               && curl --fail --silent http://127.0.0.1:3000/ >/dev/null; then
               break
             fi
