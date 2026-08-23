@@ -1,16 +1,10 @@
 # DevLens
 
-DevLens, ileride public GitHub profillerini ve repository'lerini analiz ederek geliştirici portföyleri hakkında içgörüler sunmayı hedefleyen bir Developer Portfolio Intelligence uygulamasıdır.
+DevLens, public GitHub profillerini ve repository'lerini analiz ederek geliştirici portföyleri hakkında içgörüler sunan bir Developer Portfolio Intelligence uygulamasıdır.
 
-## Mevcut aşama
+## Mevcut durum
 
-Bu ilk aşamada yalnızca temel proje mimarisi kurulmuştur:
-
-- Next.js + TypeScript + App Router + Tailwind CSS frontend iskeleti
-- FastAPI + Pydantic backend iskeleti
-- Backend'de temel `GET /health` endpoint'i
-
-GitHub API, AI/Gemini, dashboard ve scoring sistemi aşamalı olarak eklenmiştir; public persistence integration henüz sonraki aşamadadır.
+DevLens; GitHub portföy analizi, isteğe bağlı Gemini yorumu, scoring ve PostgreSQL snapshot persistence akışlarını içerir. Public API sözleşmesi `GET /health`, `POST /api/v1/analysis` ve `POST /api/v1/interpretation` endpoint'lerinden oluşur.
 
 ## Teknoloji stack'i
 
@@ -54,3 +48,7 @@ alembic upgrade head
 `DATABASE_URL` yapılandırılmışsa başarılı public analysis sonuçları snapshot olarak yazılır. `/analysis` analysis-only, `/interpretation` ise tek bir composite snapshot yazar; AI kullanılamadığında oluşan geçerli unavailable sonucu da korunur. Veritabanı yapılandırılmadığında uygulama mevcut şekilde çalışır ve beklenen persistence altyapı hataları public sonucu bozmaz.
 
 Snapshot store artık deterministic analysis için 15 dakikalık freshness cache olarak da kullanılabilir. `ANALYSIS_CACHE_TTL_SECONDS` varsayılanı 900'dür; `0` cache okumalarını kapatır ancak yeni snapshot yazımlarını kapatmaz. Yalnız deterministic analysis reuse edilir; Gemini interpretation ve recommendation cache'lenmez. Stale snapshot GitHub hatasında fallback olarak kullanılmaz. Redis veya process-memory cache yoktur.
+
+Cache yalnızca PostgreSQL-backed deterministic analysis reuse sağlar; uygulama yeniden başlatıldığında da geçerliliğini korur. Persistence ve cache veritabanı operasyonları beklenen bağlantı/SQLAlchemy hatalarında fail-open davranır; GitHub veya Gemini uygulama hataları sessizce yutulmaz.
+
+V1 sınırlamaları: manual force refresh, interpretation cache, stale-if-error, retention policy, public history/metrics, public cache metadata ve distributed request coalescing yoktur. Aynı kullanıcı için eşzamanlı cold miss'ler birden fazla GitHub analizi ve snapshot üretebilir.
