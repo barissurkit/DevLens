@@ -79,6 +79,20 @@ def validate_interpretation_references(
     if any(item.signal_key not in improvement_keys for item in improvement_output):
         raise GeminiInvalidResponseError("Unknown improvement signal reference.")
 
+    expected_strength_keys = [signal.key for signal in context.strength_signals]
+    actual_strength_keys = [item.signal_key for item in strength_output]
+    if actual_strength_keys != expected_strength_keys:
+        raise GeminiInvalidResponseError(
+            "Strength signal references do not exactly match deterministic signals."
+        )
+
+    expected_improvement_keys = [signal.key for signal in context.improvement_signals]
+    actual_improvement_keys = [item.signal_key for item in improvement_output]
+    if actual_improvement_keys != expected_improvement_keys:
+        raise GeminiInvalidResponseError(
+            "Improvement signal references do not exactly match deterministic signals."
+        )
+
     return interpretation
 
 
