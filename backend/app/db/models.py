@@ -18,6 +18,13 @@ class AnalysisSnapshot(Base):
             "github_username_normalized",
             text("created_at DESC"),
         ),
+        Index(
+            "ix_analysis_snapshots_analysis_cache",
+            "github_username_normalized",
+            "analysis_schema_version",
+            "analysis_engine_version",
+            text("analysis_generated_at DESC"),
+        ),
     )
 
     id: Mapped[UUID] = mapped_column(PostgreSQLUUID(as_uuid=True), primary_key=True, default=uuid4)
