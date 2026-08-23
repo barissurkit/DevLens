@@ -53,4 +53,4 @@ alembic upgrade head
 
 `DATABASE_URL` yapılandırılmışsa başarılı public analysis sonuçları snapshot olarak yazılır. `/analysis` analysis-only, `/interpretation` ise tek bir composite snapshot yazar; AI kullanılamadığında oluşan geçerli unavailable sonucu da korunur. Veritabanı yapılandırılmadığında uygulama mevcut şekilde çalışır ve beklenen persistence altyapı hataları public sonucu bozmaz.
 
-Bu aşamada snapshot'lar append-only yazılır; veritabanından okuma, cache ve reuse henüz yoktur (Aşama 8.3 kapsamı).
+Snapshot store artık deterministic analysis için 15 dakikalık freshness cache olarak da kullanılabilir. `ANALYSIS_CACHE_TTL_SECONDS` varsayılanı 900'dür; `0` cache okumalarını kapatır ancak yeni snapshot yazımlarını kapatmaz. Yalnız deterministic analysis reuse edilir; Gemini interpretation ve recommendation cache'lenmez. Stale snapshot GitHub hatasında fallback olarak kullanılmaz. Redis veya process-memory cache yoktur.

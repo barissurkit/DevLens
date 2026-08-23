@@ -1,5 +1,6 @@
 import logging
 from collections.abc import Callable
+from datetime import datetime
 from enum import StrEnum
 
 from sqlalchemy.exc import SQLAlchemyError
@@ -39,6 +40,7 @@ class AnalysisSnapshotPersistenceService:
         *,
         analysis: GitHubPortfolioAnalysis,
         interpretation: PublicPortfolioInterpretationResult | None = None,
+        analysis_generated_at: datetime | None = None,
         request_kind: str,
     ) -> SnapshotPersistenceOutcome:
         if not self._settings.database_url:
@@ -52,6 +54,7 @@ class AnalysisSnapshotPersistenceService:
                         github_username=analysis.user.username,
                         analysis=analysis,
                         interpretation=interpretation,
+                        analysis_generated_at=analysis_generated_at,
                     )
         except DatabaseNotConfiguredError:
             return SnapshotPersistenceOutcome.SKIPPED_NOT_CONFIGURED

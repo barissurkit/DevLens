@@ -1,6 +1,7 @@
 from functools import lru_cache
 from pathlib import Path
 
+from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
@@ -12,6 +13,7 @@ class Settings(BaseSettings):
     gemini_api_key: str | None = None
     gemini_model: str = "gemini-2.5-flash"
     database_url: str | None = None
+    analysis_cache_ttl_seconds: int = Field(default=900, ge=0)
 
     model_config = SettingsConfigDict(
         env_file=PROJECT_ROOT / ".env",

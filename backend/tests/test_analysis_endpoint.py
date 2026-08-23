@@ -6,7 +6,11 @@ import httpx
 import pytest
 
 import app.api.analysis as analysis_api
-from app.api.github import get_github_client, get_snapshot_persistence_service
+from app.api.github import (
+    get_analysis_snapshot_cache_service,
+    get_github_client,
+    get_snapshot_persistence_service,
+)
 from app.main import app
 from app.schemas.analysis import (
     GitHubPortfolioAnalysis,
@@ -106,6 +110,13 @@ def use_mock_persistence(mock_persistence: object) -> None:
     app.dependency_overrides[get_snapshot_persistence_service] = override_persistence
 
 
+def use_mock_cache(mock_cache: object) -> None:
+    async def override_cache() -> object:
+        return mock_cache
+
+    app.dependency_overrides[get_analysis_snapshot_cache_service] = override_cache
+
+
 @pytest.fixture(autouse=True)
 def clear_dependency_overrides() -> Iterator[None]:
     yield
@@ -188,10 +199,35 @@ def test_analysis_endpoint_persists_one_analysis_only_snapshot() -> None:
         analysis_api.run_github_portfolio_analysis = original
 
     assert response.status_code == 200
-    persistence.persist.assert_awaited_once_with(
-        analysis=application_mock.return_value,
-        request_kind="analysis",
-    )
+    persistence.persist.assert_awaited_once()
+    persistence_call = persistence.persist.await_args.kwargs
+    assert persistence_call["analysis"] is application_mock.return_value
+    assert persistence_call["analysis_generated_at"].tzinfo is not None
+    assert persistence_call["request_kind"] == "analysis"
+
+
+def test_analysis_endpoint_returns_fresh_cached_analysis_without_pipeline_or_write() -> None:
+    cached = create_result()
+    cache = AsyncMock()
+    cache.get_fresh_analysis.return_value = type(
+        "CachedAnalysis", (), {"analysis": cached}
+    )()
+    use_mock_cache(cache)
+    persistence = AsyncMock()
+    use_mock_persistence(persistence)
+    application_mock = AsyncMock(side_effect=AssertionError("cache hit must skip pipeline"))
+    original = analysis_api.run_github_portfolio_analysis
+    analysis_api.run_github_portfolio_analysis = application_mock
+
+    try:
+        response = request_app({"username": "synthetic-user"})
+    finally:
+        analysis_api.run_github_portfolio_analysis = original
+
+    assert response.status_code == 200
+    assert response.json() == cached.model_dump(mode="json")
+    application_mock.assert_not_awaited()
+    persistence.persist.assert_not_awaited()
 
 
 @pytest.mark.parametrize(

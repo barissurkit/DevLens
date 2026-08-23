@@ -1,10 +1,21 @@
 from app.config import Settings, get_settings
 
+import pytest
+
 
 def test_default_github_api_base_url() -> None:
     settings = Settings(_env_file=None)
 
     assert settings.github_api_base_url == "https://api.github.com"
+
+
+def test_analysis_cache_ttl_defaults_to_fifteen_minutes() -> None:
+    assert Settings(_env_file=None).analysis_cache_ttl_seconds == 900
+
+
+def test_analysis_cache_ttl_rejects_negative_values() -> None:
+    with pytest.raises(ValueError):
+        Settings(_env_file=None, analysis_cache_ttl_seconds=-1)
 
 
 def test_enviroment_variable_overrides_default(monkeypatch) -> None:

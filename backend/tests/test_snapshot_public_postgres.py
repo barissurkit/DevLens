@@ -3,7 +3,7 @@ import asyncio
 
 import httpx
 import pytest
-from sqlalchemy import func, select
+from sqlalchemy import delete, select
 
 from app.api.github import get_gemini_client, get_github_client
 from app.db.database import dispose_engine, get_engine, get_session_factory
@@ -24,6 +24,14 @@ def test_public_analysis_and_interpretation_persist_one_snapshot_each() -> None:
 
 
 async def _run_public_snapshot_flow() -> None:
+    session_factory = get_session_factory()
+    async with session_factory() as session:
+        async with session.begin():
+            await session.execute(
+                delete(AnalysisSnapshot).where(
+                    AnalysisSnapshot.github_username_normalized == "synthetic-user"
+                )
+            )
     repositories, files = portfolio_fixture()
     use_fake_github(repositories, files_by_repository=files)
 
