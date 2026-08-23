@@ -52,3 +52,32 @@ Snapshot store artık deterministic analysis için 15 dakikalık freshness cache
 Cache yalnızca PostgreSQL-backed deterministic analysis reuse sağlar; uygulama yeniden başlatıldığında da geçerliliğini korur. Persistence ve cache veritabanı operasyonları beklenen bağlantı/SQLAlchemy hatalarında fail-open davranır; GitHub veya Gemini uygulama hataları sessizce yutulmaz.
 
 V1 sınırlamaları: manual force refresh, interpretation cache, stale-if-error, retention policy, public history/metrics, public cache metadata ve distributed request coalescing yoktur. Aynı kullanıcı için eşzamanlı cold miss'ler birden fazla GitHub analizi ve snapshot üretebilir.
+
+## Docker ile local production-like ortam
+
+Docker Compose kurulumu, cloud deployment değildir; DevLens'in local production-like çalışma ortamıdır. Docker ve Docker Compose Plugin gerektirir. Varsayılan olarak yalnız frontend (`3000`) ve backend (`8000`) host'a açılır; PostgreSQL host portuna açılmaz.
+
+Güvenli yerel ayarları kopyalayıp gerektiğinde değiştirin:
+
+```bash
+cp .env.example .env
+docker compose config
+docker compose build
+docker compose up -d
+docker compose ps
+```
+
+Tarayıcıdan [http://localhost:3000](http://localhost:3000), backend sağlık kontrolünden [http://localhost:8000/health](http://localhost:8000/health) erişilebilir. Logları görmek ve ortamı durdurmak için:
+
+```bash
+docker compose logs -f backend frontend migrate
+docker compose down
+```
+
+Compose akışı PostgreSQL healthcheck'i ile başlar; `migrate` servisi ayrı bir one-shot container olarak `alembic upgrade head` çalıştırır. Migration başarılı olmadan backend başlamaz; FastAPI import/startup sırasında migration çalıştırmaz. PostgreSQL verisi `devlens-postgres-data` named volume'unda tutulur. Şemayı ve yerel cache snapshot'larını sıfırlamak isterseniz, bunun veri sileceğini bilerek:
+
+```bash
+docker compose down -v
+```
+
+Compose ortamında backend `DATABASE_URL` için Docker içindeki `db` hostname'ini kullanır. Frontend build'ine yalnız browser'ın erişebileceği `NEXT_PUBLIC_API_BASE_URL` (`http://localhost:8000`) girer; GitHub/Gemini anahtarları yalnız backend runtime environment'ında bulunur. `ANALYSIS_CACHE_TTL_SECONDS` varsayılan olarak 900 saniyedir; deterministic analysis cache PostgreSQL named volume sayesinde backend process/container restart'larından sonra da korunur. Interpretation ve recommendation cache'lenmez; DB operasyonları mevcut fail-open politikasını korur.
