@@ -1,12 +1,13 @@
 import type {
-  GitHubPortfolioAnalysis,
+  GitHubPortfolioInterpretationResponse,
   PortfolioInsight,
   PortfolioScoreDimensionResult,
 } from "../lib/types";
+import { PortfolioInterpretationSection } from "./portfolio-interpretation-section";
 import { RepositoryAnalysisSection } from "./repository-analysis-section";
 
 interface AnalysisResultShellProps {
-  result: GitHubPortfolioAnalysis;
+  result: GitHubPortfolioInterpretationResponse;
 }
 
 const DIMENSION_ORDER = ["documentation_consistency", "testing_automation_adoption", "repository_hygiene_consistency"];
@@ -22,7 +23,8 @@ const DIMENSION_DESCRIPTIONS: Record<string, string> = {
 };
 
 export function AnalysisResultShell({ result }: AnalysisResultShellProps) {
-  const { aggregation, intelligence, score, selection, user } = result;
+  const { analysis, interpretation } = result;
+  const { aggregation, intelligence, score, selection, user } = analysis;
   const dimensions = orderDimensions(score.dimensions);
   const limitations = uniqueItems([...score.limitations, ...intelligence.limitations]);
   const isPartial = score.is_partial || aggregation.has_failures || aggregation.partial_evidence_repository_count > 0;
@@ -86,7 +88,8 @@ export function AnalysisResultShell({ result }: AnalysisResultShellProps) {
 
       {limitations.length > 0 && <section aria-labelledby="limitations-heading" className="rounded-2xl border border-slate-200 bg-slate-50 p-6 sm:p-8"><SectionHeading id="limitations-heading" title="Analiz notları" /><ul className="mt-4 list-disc space-y-2 pl-5 text-sm leading-6 text-slate-600">{limitations.map((limitation) => <li key={limitation}>{limitation}</li>)}</ul></section>}
 
-      <RepositoryAnalysisSection repositories={result.repository_analysis.repositories} failures={result.repository_analysis.failures} excluded={selection.excluded} />
+      <PortfolioInterpretationSection analysis={analysis} interpretation={interpretation} />
+      <RepositoryAnalysisSection repositories={analysis.repository_analysis.repositories} failures={analysis.repository_analysis.failures} excluded={selection.excluded} />
     </section>
   );
 }
