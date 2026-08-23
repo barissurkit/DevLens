@@ -67,7 +67,6 @@ export function AnalysisForm() {
             placeholder="ör. barissurkit"
             autoComplete="username"
             required
-            maxLength={MAX_USERNAME_LENGTH}
             disabled={isLoading}
             aria-invalid={hasValidationError}
             aria-describedby={hasValidationError ? "analysis-validation-error" : "username-hint"}
