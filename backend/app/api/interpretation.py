@@ -1,4 +1,5 @@
 import httpx
+from datetime import datetime, timezone
 from fastapi import APIRouter, Depends
 from pydantic import ValidationError
 
@@ -6,6 +7,7 @@ from app.api.errors import APIErrorResponse, map_github_exception
 from app.api.github import (
     get_gemini_client,
     get_github_client,
+    get_analysis_snapshot_cache_service,
     get_snapshot_persistence_service,
 )
 from app.schemas.analysis import PortfolioAnalysisRequest
@@ -18,9 +20,12 @@ from app.schemas.interpretation import (
 )
 from app.services.github.client import GitHubClient
 from app.services.analysis_snapshot_persistence import AnalysisSnapshotPersistenceService
+from app.services.analysis_snapshot_cache import AnalysisSnapshotCacheService
+from app.services.portfolio_interpretation import interpret_github_portfolio
 from app.services.portfolio_interpretation import PortfolioInterpreter
 from app.services.portfolio_interpretation_composition import (
     analyze_and_interpret_github_portfolio,
+    PortfolioInterpretationCompositionResult,
 )
 
 router = APIRouter(
@@ -66,13 +71,29 @@ async def interpret_portfolio(
     persistence: AnalysisSnapshotPersistenceService = Depends(
         get_snapshot_persistence_service
     ),
+    cache: AnalysisSnapshotCacheService = Depends(get_analysis_snapshot_cache_service),
 ) -> GitHubPortfolioInterpretationResponse:
+    cached = await cache.get_fresh_analysis(
+        username=request.username,
+        request_kind="interpretation",
+    )
     try:
-        result = await analyze_and_interpret_github_portfolio(
-            username=request.username,
-            github_client=github_client,
-            gemini_client=gemini_client,
-        )
+        if cached is None:
+            result = await analyze_and_interpret_github_portfolio(
+                username=request.username,
+                github_client=github_client,
+                gemini_client=gemini_client,
+            )
+            analysis_generated_at = datetime.now(timezone.utc)
+        else:
+            analysis_generated_at = cached.analysis_generated_at
+            result = PortfolioInterpretationCompositionResult(
+                analysis=cached.analysis,
+                interpretation=await interpret_github_portfolio(
+                    analysis=cached.analysis,
+                    client=gemini_client,
+                ),
+            )
     except (
         httpx.TimeoutException,
         httpx.RequestError,
@@ -89,6 +110,7 @@ async def interpret_portfolio(
     await persistence.persist(
         analysis=response.analysis,
         interpretation=response.interpretation,
+        analysis_generated_at=analysis_generated_at,
         request_kind="interpretation",
     )
     return response

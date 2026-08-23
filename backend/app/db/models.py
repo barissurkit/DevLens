@@ -24,9 +24,13 @@ class AnalysisSnapshot(Base):
     github_username: Mapped[str] = mapped_column(String(39), nullable=False)
     github_username_normalized: Mapped[str] = mapped_column(String(39), nullable=False)
     analysis_schema_version: Mapped[str] = mapped_column(String(32), nullable=False)
+    analysis_engine_version: Mapped[str] = mapped_column(String(32), nullable=False)
     interpretation_schema_version: Mapped[str | None] = mapped_column(String(32), nullable=True)
     analysis_payload: Mapped[dict[str, object]] = mapped_column(JSONB, nullable=False)
     interpretation_payload: Mapped[dict[str, object] | None] = mapped_column(JSONB, nullable=True)
+    analysis_generated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )

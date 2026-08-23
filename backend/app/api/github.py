@@ -7,6 +7,7 @@ from app.clients.gemini import GeminiClient, GeminiNotConfiguredError
 from app.config import get_settings
 from app.schemas.github import GitHubUser
 from app.services.analysis_snapshot_persistence import AnalysisSnapshotPersistenceService
+from app.services.analysis_snapshot_cache import AnalysisSnapshotCacheService
 from app.services.github.client import GitHubClient
 
 router = APIRouter(
@@ -31,6 +32,10 @@ async def get_gemini_client() -> GeminiClient | None:
 
 async def get_snapshot_persistence_service() -> AnalysisSnapshotPersistenceService:
     return AnalysisSnapshotPersistenceService(get_settings())
+
+
+async def get_analysis_snapshot_cache_service() -> AnalysisSnapshotCacheService:
+    return AnalysisSnapshotCacheService(get_settings())
 
 
 @router.get(
