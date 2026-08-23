@@ -18,7 +18,7 @@ export default function Home() {
         </header>
 
         <section className="flex flex-1 items-center py-20 sm:py-28">
-          <div className="max-w-2xl">
+          <div className="w-full min-w-0 max-w-2xl">
             <p className="mb-5 text-sm font-medium uppercase tracking-[0.18em] text-slate-500">
               Developer Portfolio Intelligence
             </p>
