@@ -64,5 +64,14 @@ class AnalysisSnapshotPersistenceService:
                 },
             )
             return SnapshotPersistenceOutcome.FAILED_OPERATIONAL
+        except OSError as exc:
+            logger.warning(
+                "snapshot persistence failed",
+                extra={
+                    "request_kind": request_kind,
+                    "exception_type": type(exc).__name__,
+                },
+            )
+            return SnapshotPersistenceOutcome.FAILED_OPERATIONAL
 
         return SnapshotPersistenceOutcome.PERSISTED
