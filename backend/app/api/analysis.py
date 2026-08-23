@@ -3,8 +3,9 @@ from fastapi import APIRouter, Depends
 from pydantic import ValidationError
 
 from app.api.errors import APIErrorResponse, map_github_exception
-from app.api.github import get_github_client
+from app.api.github import get_github_client, get_snapshot_persistence_service
 from app.schemas.analysis import GitHubPortfolioAnalysis, PortfolioAnalysisRequest
+from app.services.analysis_snapshot_persistence import AnalysisSnapshotPersistenceService
 from app.services.github.client import GitHubClient
 from app.services.github_portfolio_analysis import (
     analyze_github_portfolio as run_github_portfolio_analysis,
@@ -33,9 +34,12 @@ router = APIRouter(
 async def analyze_portfolio(
     request: PortfolioAnalysisRequest,
     client: GitHubClient = Depends(get_github_client),
+    persistence: AnalysisSnapshotPersistenceService = Depends(
+        get_snapshot_persistence_service
+    ),
 ) -> GitHubPortfolioAnalysis:
     try:
-        return await run_github_portfolio_analysis(
+        analysis = await run_github_portfolio_analysis(
             username=request.username,
             client=client,
         )
@@ -46,3 +50,9 @@ async def analyze_portfolio(
         ValidationError,
     ) as exc:
         raise map_github_exception(exc) from exc
+
+    await persistence.persist(
+        analysis=analysis,
+        request_kind="analysis",
+    )
+    return analysis

@@ -6,7 +6,7 @@ import httpx
 import pytest
 
 import app.api.analysis as analysis_api
-from app.api.github import get_github_client
+from app.api.github import get_github_client, get_snapshot_persistence_service
 from app.main import app
 from app.schemas.analysis import (
     GitHubPortfolioAnalysis,
@@ -99,6 +99,13 @@ def use_mock_client(mock_client: AsyncMock) -> None:
     app.dependency_overrides[get_github_client] = override_github_client
 
 
+def use_mock_persistence(mock_persistence: object) -> None:
+    async def override_persistence() -> object:
+        return mock_persistence
+
+    app.dependency_overrides[get_snapshot_persistence_service] = override_persistence
+
+
 @pytest.fixture(autouse=True)
 def clear_dependency_overrides() -> Iterator[None]:
     yield
@@ -163,6 +170,27 @@ def test_analysis_endpoint_calls_application_service_once() -> None:
     application_mock.assert_awaited_once_with(
         username="synthetic-user",
         client=mock_client,
+    )
+
+
+def test_analysis_endpoint_persists_one_analysis_only_snapshot() -> None:
+    mock_client = AsyncMock(spec=GitHubClient)
+    use_mock_client(mock_client)
+    persistence = AsyncMock()
+    use_mock_persistence(persistence)
+    application_mock = AsyncMock(return_value=create_result())
+    original = analysis_api.run_github_portfolio_analysis
+    analysis_api.run_github_portfolio_analysis = application_mock
+
+    try:
+        response = request_app({"username": "synthetic-user"})
+    finally:
+        analysis_api.run_github_portfolio_analysis = original
+
+    assert response.status_code == 200
+    persistence.persist.assert_awaited_once_with(
+        analysis=application_mock.return_value,
+        request_kind="analysis",
     )
 
 

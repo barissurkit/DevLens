@@ -51,4 +51,6 @@ cd backend
 alembic upgrade head
 ```
 
-Aşama 8.1'de public analysis ve interpretation akışları henüz veritabanına yazmaz veya veritabanından okumaz.
+`DATABASE_URL` yapılandırılmışsa başarılı public analysis sonuçları snapshot olarak yazılır. `/analysis` analysis-only, `/interpretation` ise tek bir composite snapshot yazar; AI kullanılamadığında oluşan geçerli unavailable sonucu da korunur. Veritabanı yapılandırılmadığında uygulama mevcut şekilde çalışır ve beklenen persistence altyapı hataları public sonucu bozmaz.
+
+Bu aşamada snapshot'lar append-only yazılır; veritabanından okuma, cache ve reuse henüz yoktur (Aşama 8.3 kapsamı).
