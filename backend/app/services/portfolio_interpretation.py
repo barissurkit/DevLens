@@ -1,7 +1,6 @@
 from typing import Protocol
 
 from app.clients.gemini import (
-    GeminiClient,
     GeminiInvalidResponseError,
     GeminiNotConfiguredError,
     GeminiRateLimitError,
@@ -34,7 +33,7 @@ def _unavailable(reason: InterpretationUnavailableReason) -> PortfolioInterpreta
 async def interpret_github_portfolio(
     *,
     analysis: GitHubPortfolioAnalysis,
-    client: PortfolioInterpreter | GeminiClient,
+    client: PortfolioInterpreter | None,
 ) -> PortfolioInterpretationResult:
     """Interpret an already-computed deterministic portfolio analysis.
 
@@ -45,6 +44,8 @@ async def interpret_github_portfolio(
     context = build_portfolio_interpretation_context(analysis)
     if context.successful_repository_count == 0:
         return _unavailable(InterpretationUnavailableReason.INSUFFICIENT_EVIDENCE)
+    if client is None:
+        return _unavailable(InterpretationUnavailableReason.NOT_CONFIGURED)
 
     try:
         interpretation = await client.interpret(context)
