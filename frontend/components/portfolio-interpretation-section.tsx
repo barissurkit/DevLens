@@ -45,8 +45,41 @@ function AvailableInterpretation({ analysis, interpretation }: { analysis: GitHu
       <ExplanationGroup title="İyileştirme Fırsatları" explanations={interpretation.improvement_explanations} signalLabels={signalLabels} emptyMessage="Bu analiz için AI açıklamalı iyileştirme sinyali bulunmuyor." />
       {interpretation.technology_context && <ContextBlock title="Technology Context" text={interpretation.technology_context} />}
       {interpretation.project_area_context && <ContextBlock title="Project Area Context" text={interpretation.project_area_context} />}
+      <RecommendationBlock recommendation={interpretation.next_project_recommendation} signalLabels={signalLabels} />
       {interpretation.limitations_note && <ContextBlock title="AI interpretation note" text={interpretation.limitations_note} />}
     </div>
+  );
+}
+
+function RecommendationBlock({ recommendation, signalLabels }: { recommendation: Extract<PublicPortfolioInterpretationResult, { status: "available" }>['interpretation']['next_project_recommendation']; signalLabels: Map<string, string> }) {
+  return (
+    <section aria-labelledby="next-project-recommendation-heading" className="rounded-xl border border-emerald-200 bg-emerald-50/50 p-4 sm:p-5">
+      <h4 id="next-project-recommendation-heading" className="text-base font-semibold text-slate-950">Bir Sonraki Proje Önerisi</h4>
+      <p className="mt-2 text-sm leading-6 text-slate-600">Bu öneri, DevLens&apos;in belirlediği iyileştirme sinyallerine dayanır; skill veya işe uygunluk değerlendirmesi değildir.</p>
+      {recommendation ? (
+        <div className="mt-5 space-y-4">
+          <div>
+            <h5 className="text-lg font-semibold break-words text-slate-950">{recommendation.title}</h5>
+            <p className="mt-2 break-words text-slate-700">{recommendation.goal}</p>
+          </div>
+          <p className="break-words text-slate-700">{recommendation.rationale}</p>
+          <div>
+            <h5 className="font-semibold text-slate-950">Odak alanları</h5>
+            <ul className="mt-2 list-disc space-y-1 pl-5 text-slate-700">
+              {recommendation.focus_signal_keys.map((key) => <li key={key} className="break-words">{signalLabels.get(key) || "Evidence sinyali"}</li>)}
+            </ul>
+          </div>
+          <div>
+            <h5 className="font-semibold text-slate-950">Önerilen çıktılar</h5>
+            <ul className="mt-2 list-disc space-y-1 pl-5 text-slate-700">
+              {recommendation.suggested_deliverables.map((deliverable) => <li key={deliverable} className="break-words">{deliverable}</li>)}
+            </ul>
+          </div>
+        </div>
+      ) : (
+        <p className="mt-5 text-sm leading-6 text-slate-600">Bu analizde evidence-grounded bir sonraki proje önerisi oluşturmak için deterministic improvement sinyali bulunmuyor.</p>
+      )}
+    </section>
   );
 }
 

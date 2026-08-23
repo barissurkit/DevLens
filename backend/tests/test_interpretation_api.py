@@ -100,7 +100,7 @@ def test_available_response_is_composite_and_publicly_discriminated() -> None:
     assert set(body) == {"analysis", "interpretation"}
     assert body["interpretation"] == {
         "status": "available",
-        "interpretation": {"summary": "Grounded.", "strength_explanations": [], "improvement_explanations": [], "technology_context": None, "project_area_context": None, "limitations_note": None},
+        "interpretation": {"summary": "Grounded.", "strength_explanations": [], "improvement_explanations": [], "technology_context": None, "project_area_context": None, "limitations_note": None, "next_project_recommendation": None},
     }
     assert "score" in body["analysis"]
     composition.assert_awaited_once_with(

@@ -255,6 +255,14 @@ export interface InterpretationExplanation {
   explanation: string;
 }
 
+export interface NextProjectRecommendation {
+  title: string;
+  goal: string;
+  rationale: string;
+  focus_signal_keys: string[];
+  suggested_deliverables: string[];
+}
+
 export interface PortfolioInterpretation {
   summary: string;
   strength_explanations: InterpretationExplanation[];
@@ -262,6 +270,7 @@ export interface PortfolioInterpretation {
   technology_context: string | null;
   project_area_context: string | null;
   limitations_note: string | null;
+  next_project_recommendation: NextProjectRecommendation | null;
 }
 
 export interface PortfolioInterpretationAvailable {

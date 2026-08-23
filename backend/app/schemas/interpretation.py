@@ -54,6 +54,23 @@ class InterpretationExplanation(BaseModel):
     explanation: str = Field(min_length=1, max_length=600)
 
 
+RecommendationText = Annotated[str, Field(min_length=1, max_length=240)]
+
+
+class NextProjectRecommendation(BaseModel):
+    title: str = Field(min_length=1, max_length=200)
+    goal: str = Field(min_length=1, max_length=600)
+    rationale: str = Field(min_length=1, max_length=800)
+    focus_signal_keys: list[RecommendationText] = Field(min_length=1, max_length=3)
+    suggested_deliverables: list[RecommendationText] = Field(min_length=3, max_length=5)
+
+    @model_validator(mode="after")
+    def validate_deliverables(self) -> "NextProjectRecommendation":
+        if len(set(self.suggested_deliverables)) != len(self.suggested_deliverables):
+            raise ValueError("Suggested deliverables must be unique.")
+        return self
+
+
 class PortfolioInterpretation(BaseModel):
     summary: str = Field(min_length=1, max_length=1600)
     strength_explanations: list[InterpretationExplanation] = Field(default_factory=list, max_length=50)
@@ -61,6 +78,7 @@ class PortfolioInterpretation(BaseModel):
     technology_context: str | None = Field(default=None, max_length=600)
     project_area_context: str | None = Field(default=None, max_length=600)
     limitations_note: str | None = Field(default=None, max_length=600)
+    next_project_recommendation: NextProjectRecommendation | None = None
 
 
 class InterpretationUnavailableReason(StrEnum):

@@ -93,6 +93,30 @@ def validate_interpretation_references(
             "Improvement signal references do not exactly match deterministic signals."
         )
 
+    recommendation = interpretation.next_project_recommendation
+    if not context.improvement_signals and recommendation is not None:
+        raise GeminiInvalidResponseError(
+            "A recommendation is unsupported without deterministic improvements."
+        )
+    if context.improvement_signals and recommendation is None:
+        raise GeminiInvalidResponseError(
+            "A recommendation is required when deterministic improvements exist."
+        )
+    if recommendation is not None:
+        expected_keys = [signal.key for signal in context.improvement_signals]
+        focus_keys = recommendation.focus_signal_keys
+        if len(set(focus_keys)) != len(focus_keys):
+            raise GeminiInvalidResponseError("Duplicate recommendation focus signals.")
+        if any(key not in expected_keys for key in focus_keys):
+            raise GeminiInvalidResponseError(
+                "Unknown recommendation focus signal reference."
+            )
+        expected_positions = [expected_keys.index(key) for key in focus_keys]
+        if expected_positions != sorted(expected_positions):
+            raise GeminiInvalidResponseError(
+                "Recommendation focus signals do not preserve deterministic order."
+            )
+
     return interpretation
 
 
