@@ -34,14 +34,14 @@ export function AnalysisErrorState({ error, onRetry }: AnalysisErrorStateProps) 
   const presentation = getErrorPresentation(error);
 
   return (
-    <div role="alert" aria-live="assertive" className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-4 text-sm text-amber-950">
+    <div role="alert" aria-live="assertive" aria-atomic="true" className="mt-4 rounded-xl border border-amber-300 bg-amber-50 px-4 py-4 text-sm text-amber-950">
       <p className="font-semibold">{presentation.title}</p>
       <p className="mt-1 text-amber-900">{presentation.message}</p>
       {presentation.canRetry && (
         <button
           type="button"
           onClick={onRetry}
-          className="mt-3 rounded-lg border border-amber-300 bg-white px-3 py-2 font-medium text-amber-950 transition hover:bg-amber-100 focus:outline-none focus:ring-2 focus:ring-amber-700/30"
+          className="mt-3 min-h-11 rounded-lg border border-amber-300 bg-white px-3 py-2 font-medium text-amber-950 transition hover:bg-amber-100 focus:outline-none focus:ring-2 focus:ring-amber-800 focus:ring-offset-2"
         >
           Tekrar dene
         </button>
