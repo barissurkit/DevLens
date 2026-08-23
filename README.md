@@ -10,12 +10,13 @@ Bu ilk aşamada yalnızca temel proje mimarisi kurulmuştur:
 - FastAPI + Pydantic backend iskeleti
 - Backend'de temel `GET /health` endpoint'i
 
-GitHub API entegrasyonu, AI/Gemini, veritabanı, dashboard ve scoring sistemi henüz eklenmemiştir.
+GitHub API, AI/Gemini, dashboard ve scoring sistemi aşamalı olarak eklenmiştir; public persistence integration henüz sonraki aşamadadır.
 
 ## Teknoloji stack'i
 
 - **Frontend:** Next.js, TypeScript, Tailwind CSS
 - **Backend:** Python, FastAPI, Pydantic, Uvicorn
+- **Persistence:** PostgreSQL, async SQLAlchemy, asyncpg, Alembic
 
 ## Frontend'i çalıştırma
 
@@ -42,3 +43,12 @@ Sağlık kontrolü için [http://localhost:8000/health](http://localhost:8000/he
 ```json
 {"status":"ok"}
 ```
+
+`DATABASE_URL` persistence foundation için isteğe bağlıdır; örnek değer `.env.example` içindedir. Migration çalıştırmak için PostgreSQL erişilebilirken:
+
+```bash
+cd backend
+alembic upgrade head
+```
+
+Aşama 8.1'de public analysis ve interpretation akışları henüz veritabanına yazmaz veya veritabanından okumaz.

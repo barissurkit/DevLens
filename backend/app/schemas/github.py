@@ -1,11 +1,13 @@
 from datetime import datetime
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 # BaseModel: Pydantic'İn type hintlere göre veri doğrulayan ve proje nesnesi oluşturan temel sınıfıdır.
 
 
 class GitHubUser(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
     username: str = Field(validation_alias="login")  # login -> username
     name: str | None
     avatar_url: str
@@ -18,6 +20,8 @@ class GitHubUser(BaseModel):
 
 
 class GitHubRepository(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
     name: str
     description: str | None
     html_url: str
