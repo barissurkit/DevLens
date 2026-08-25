@@ -97,7 +97,14 @@ def build_gemini_response_schema() -> object:
                 if definition is not None:
                     return inline(definition)
             return {
-                key: inline(nested)
+                key: (
+                    {
+                        property_name: inline(property_schema)
+                        for property_name, property_schema in nested.items()
+                    }
+                    if key == "properties" and isinstance(nested, dict)
+                    else inline(nested)
+                )
                 for key, nested in value.items()
                 if key in supported_keys
             }

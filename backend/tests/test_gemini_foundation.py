@@ -96,13 +96,27 @@ def test_prompt_is_deterministic_and_excludes_raw_payload_fields() -> None:
 
 
 def test_gemini_response_schema_removes_unsupported_constraint_keywords() -> None:
-    schema_text = str(build_gemini_response_schema())
+    schema = build_gemini_response_schema()
+    schema_text = str(schema)
 
     assert "'default'" not in schema_text
     assert "'minLength'" not in schema_text
     assert "'maxLength'" not in schema_text
     assert "'$defs'" not in schema_text
     assert "'$ref'" not in schema_text
+    assert set(schema["properties"]) == {
+        "summary",
+        "strength_explanations",
+        "improvement_explanations",
+        "technology_context",
+        "project_area_context",
+        "limitations_note",
+        "next_project_recommendation",
+    }
+    assert set(schema["properties"]["strength_explanations"]["items"]["properties"]) == {
+        "signal_key",
+        "explanation",
+    }
 
 
 def recommendation(**overrides: object) -> NextProjectRecommendation:
