@@ -98,7 +98,7 @@ Do not automatically run `alembic downgrade` during rollback. Application rollba
 - `/health` is a fast non-sensitive liveness endpoint returning `{"status":"ok"}`.
 - No `/ready` endpoint was added; migration ordering provides schema readiness.
 - Production images use Uvicorn and `next start`; no reload/dev command is present.
-- Logs go to stdout/stderr. Existing warning logs include request kind and exception type, not DSNs or provider payloads.
+- Application logs go to stdout as one JSON object per event. HTTP requests receive a server-generated `X-Request-ID`; the `request.completed` event includes the normalized route, status and duration. Provider and cache events expose only allowlisted operational metadata. Request/response bodies, prompts, provider payloads, DSNs and secrets are never logged.
 - Public errors do not expose SQL, DSNs, stack traces or credentials.
 - No broad forwarded-header trust or TrustedHostMiddleware was added without a provider requirement.
 - TLS termination belongs to the selected platform edge. Production frontend and backend URLs must both be HTTPS.

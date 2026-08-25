@@ -1,15 +1,21 @@
 import base64
 import binascii
+import logging
+import time
+from typing import Any
 
 import httpx
 
 from app.config import Settings
+from app.observability import emit_event
 from app.schemas.github import (
     GitHubFileContent,
     GitHubRepository,
     GitHubRepositoryTree,
     GitHubUser,
 )
+
+logger = logging.getLogger(__name__)
 
 DEFAULT_TIMEOUT_SECONDS = 10.0
 GITHUB_API_VERSION = "2026-03-10"
@@ -63,6 +69,79 @@ class GitHubClient:
             transport=self._transport,
         )
 
+    async def _request(
+        self,
+        client: httpx.AsyncClient,
+        *,
+        operation: str,
+        method: str,
+        url: str,
+        **kwargs: Any,
+    ) -> httpx.Response:
+        started_at = time.monotonic()
+        try:
+            response = await client.request(method, url, **kwargs)
+        except httpx.TimeoutException:
+            emit_event(
+                logger,
+                "github.request.completed",
+                level=logging.WARNING,
+                provider="github",
+                operation=operation,
+                duration_ms=max(0, round((time.monotonic() - started_at) * 1000)),
+                error_category="timeout",
+            )
+            raise
+        except httpx.RequestError:
+            emit_event(
+                logger,
+                "github.request.completed",
+                level=logging.WARNING,
+                provider="github",
+                operation=operation,
+                duration_ms=max(0, round((time.monotonic() - started_at) * 1000)),
+                error_category="transport_error",
+            )
+            raise
+
+        headers = response.headers
+        rate_fields: dict[str, int | str] = {}
+        for header, field in (
+            ("x-ratelimit-limit", "rate_limit_limit"),
+            ("x-ratelimit-remaining", "rate_limit_remaining"),
+            ("x-ratelimit-reset", "rate_limit_reset"),
+            ("x-ratelimit-used", "rate_limit_used"),
+        ):
+            value = headers.get(header)
+            if value is not None:
+                try:
+                    rate_fields[field] = int(value)
+                except ValueError:
+                    continue
+        resource = headers.get("x-ratelimit-resource")
+        if resource is not None and len(resource) <= 64:
+            rate_fields["rate_limit_resource"] = resource
+
+        error_category = None
+        if response.status_code == httpx.codes.NOT_FOUND:
+            error_category = "not_found"
+        elif response.status_code in {httpx.codes.FORBIDDEN, httpx.codes.TOO_MANY_REQUESTS}:
+            error_category = "rate_limit"
+        elif response.status_code >= 400:
+            error_category = "upstream_error"
+        emit_event(
+            logger,
+            "github.request.completed",
+            level=logging.WARNING if error_category else logging.INFO,
+            provider="github",
+            operation=operation,
+            duration_ms=max(0, round((time.monotonic() - started_at) * 1000)),
+            upstream_status=response.status_code,
+            error_category=error_category,
+            **rate_fields,
+        )
+        return response
+
     async def get_repository_tree(
         self,
         owner: str,
@@ -70,8 +149,11 @@ class GitHubClient:
         ref: str,
     ) -> GitHubRepositoryTree:
         async with self._create_http_client() as client:
-            response = await client.get(
-                f"repos/{owner}/{repository}/git/trees/{ref}",
+            response = await self._request(
+                client,
+                operation="tree",
+                method="GET",
+                url=f"repos/{owner}/{repository}/git/trees/{ref}",
                 params={"recursive": "1"},
             )
         response.raise_for_status()
@@ -114,7 +196,9 @@ class GitHubClient:
 
     async def get_user(self, username: str) -> GitHubUser:
         async with self._create_http_client() as client:
-            response = await client.get(f"users/{username}")
+            response = await self._request(
+                client, operation="user", method="GET", url=f"users/{username}"
+            )
             response.raise_for_status()
 
         return GitHubUser.model_validate(response.json())
@@ -129,8 +213,11 @@ class GitHubClient:
         params = {"ref": ref} if ref is not None else None
 
         async with self._create_http_client() as client:
-            response = await client.get(
-                f"repos/{owner}/{repository}/contents/{path}",
+            response = await self._request(
+                client,
+                operation="file",
+                method="GET",
+                url=f"repos/{owner}/{repository}/contents/{path}",
                 params=params,
             )
 
@@ -199,8 +286,11 @@ class GitHubClient:
 
         async with self._create_http_client() as client:
             for page in range(1, MAX_REPOSITORY_PAGES + 1):
-                response = await client.get(
-                    f"users/{username}/repos",
+                response = await self._request(
+                    client,
+                    operation="repos",
+                    method="GET",
+                    url=f"users/{username}/repos",
                     params={
                         "per_page": REPOSITORIES_PER_PAGE,
                         "page": page,

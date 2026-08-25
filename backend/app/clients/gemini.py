@@ -13,6 +13,7 @@ from google.genai import types
 from pydantic import ValidationError
 
 from app.config import Settings
+from app.observability import current_request_id, emit_event
 from app.prompts.portfolio_interpretation import (
     SYSTEM_INSTRUCTION,
     build_interpretation_content,
@@ -231,6 +232,7 @@ def _log_gemini_failure(
     error: Exception,
     model: str,
     elapsed_ms: int,
+    attempt: int = 1,
 ) -> None:
     if isinstance(error, genai_errors.APIError):
         google_status = _safe_google_status(error)
@@ -243,6 +245,18 @@ def _log_gemini_failure(
             google_status,
             elapsed_ms,
             category,
+            extra={
+                "event": "gemini.request.completed",
+                "provider": "gemini",
+                "operation": "interpret",
+                "model": model,
+                "attempt": attempt,
+                "duration_ms": elapsed_ms,
+                "upstream_status": error.code,
+                "error_category": category,
+                "result": "failure",
+                "request_id": current_request_id(),
+            },
         )
         return
 
@@ -260,6 +274,17 @@ def _log_gemini_failure(
         "none",
         elapsed_ms,
         category,
+        extra={
+            "event": "gemini.request.completed",
+            "provider": "gemini",
+            "operation": "interpret",
+            "model": model,
+            "attempt": attempt,
+            "duration_ms": elapsed_ms,
+            "error_category": category,
+            "result": "failure",
+            "request_id": current_request_id(),
+        },
     )
 
 
@@ -320,6 +345,7 @@ def _log_invalid_response_failure(
     error: Exception,
     model: str,
     elapsed_ms: int,
+    attempt: int = 1,
 ) -> None:
     text = _safe_response_text(response)
     parsed_json = False
@@ -358,6 +384,18 @@ def _log_invalid_response_failure(
     logger.warning(
         "Gemini response rejected: %s",
         " ".join(f"{key}={value}" for key, value in fields.items()),
+        extra={
+            "event": "gemini.request.completed",
+            "provider": "gemini",
+            "operation": "interpret",
+            "model": model,
+            "attempt": attempt,
+            "duration_ms": elapsed_ms,
+            "error_category": fields["error_category"],
+            "result": "failure",
+            "response_bytes": fields["response_text_bytes"],
+            "request_id": current_request_id(),
+        },
     )
 
 
@@ -402,6 +440,7 @@ class GeminiClient:
                     error=error,
                     model=self._model,
                     elapsed_ms=elapsed_ms,
+                    attempt=attempt + 1,
                 )
                 if (
                     isinstance(error, genai_errors.APIError)
@@ -430,18 +469,33 @@ class GeminiClient:
                 error=error,
                 model=self._model,
                 elapsed_ms=round((time.monotonic() - started_at) * 1000),
+                attempt=attempt + 1,
             )
             raise GeminiInvalidResponseError(
                 "Gemini returned an invalid structured interpretation."
             ) from error
 
         try:
-            return validate_interpretation_references(interpretation, context)
+            interpretation = validate_interpretation_references(interpretation, context)
         except GeminiInvalidResponseError as error:
             _log_invalid_response_failure(
                 response=response,
                 error=error,
                 model=self._model,
                 elapsed_ms=round((time.monotonic() - started_at) * 1000),
+                attempt=attempt + 1,
             )
             raise
+
+        emit_event(
+            logger,
+            "gemini.request.completed",
+            provider="gemini",
+            operation="interpret",
+            model=self._model,
+            attempt=attempt + 1,
+            duration_ms=round((time.monotonic() - started_at) * 1000),
+            result="success",
+            response_bytes=len(_safe_response_text(response).encode("utf-8")),
+        )
+        return interpretation
