@@ -64,24 +64,48 @@ class _GeminiClient(Protocol):
     def aio(self) -> _AsyncGeminiSurface: ...
 
 
-def _strip_unsupported_schema_keywords(value: object) -> object:
-    if isinstance(value, dict):
-        return {
-            key: _strip_unsupported_schema_keywords(nested)
-            for key, nested in value.items()
-            if key not in {"default", "minLength", "maxLength"}
-        }
-    if isinstance(value, list):
-        return [_strip_unsupported_schema_keywords(item) for item in value]
-    return value
-
-
 def build_gemini_response_schema() -> object:
-    """Build a Gemini-compatible schema while keeping Pydantic as final validation."""
+    """Build a supported inline schema while keeping Pydantic as final validation."""
 
-    return _strip_unsupported_schema_keywords(
-        PortfolioInterpretation.model_json_schema()
-    )
+    source = PortfolioInterpretation.model_json_schema()
+    definitions = source.get("$defs", {})
+    supported_keys = {
+        "anyOf",
+        "description",
+        "enum",
+        "format",
+        "items",
+        "maxItems",
+        "maximum",
+        "minItems",
+        "minimum",
+        "properties",
+        "required",
+        "title",
+        "type",
+    }
+
+    def inline(value: object) -> object:
+        if isinstance(value, dict):
+            reference = value.get("$ref")
+            if (
+                isinstance(reference, str)
+                and reference.startswith("#/$defs/")
+                and isinstance(definitions, dict)
+            ):
+                definition = definitions.get(reference.removeprefix("#/$defs/"))
+                if definition is not None:
+                    return inline(definition)
+            return {
+                key: inline(nested)
+                for key, nested in value.items()
+                if key in supported_keys
+            }
+        if isinstance(value, list):
+            return [inline(item) for item in value]
+        return value
+
+    return inline(source)
 
 
 def validate_interpretation_references(
