@@ -103,7 +103,7 @@ def test_prompt_is_deterministic_and_excludes_raw_payload_fields() -> None:
     assert "Do not optimize for score" in SYSTEM_INSTRUCTION
     assert "technology choice as a reason" in SYSTEM_INSTRUCTION
     assert "exactly these top-level keys" in SYSTEM_INSTRUCTION
-    assert "do not omit any top-level key" in SYSTEM_INSTRUCTION
+    assert "Do not omit any" in SYSTEM_INSTRUCTION
     assert "alternate keys such as" in SYSTEM_INSTRUCTION
     assert GEMINI_INTERPRETATION_PROMPT_VERSION == "v2"
 
