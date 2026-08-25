@@ -34,3 +34,33 @@ def test_get_settings_returns_cached_instance() -> None:
     second = get_settings()
 
     assert first is second
+
+
+def test_cors_origins_default_to_local_frontend_origins() -> None:
+    settings = Settings(_env_file=None)
+
+    assert settings.cors_origins == [
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+    ]
+
+
+def test_cors_origins_normalize_whitespace_and_support_multiple_origins() -> None:
+    settings = Settings(
+        _env_file=None,
+        cors_allowed_origins=" https://devlens.example , https://admin.example ",
+    )
+
+    assert settings.cors_origins == [
+        "https://devlens.example",
+        "https://admin.example",
+    ]
+
+
+@pytest.mark.parametrize(
+    "value",
+    ["", "*", "http://", "ftp://devlens.example", "https://devlens.example/path"],
+)
+def test_cors_origins_reject_malformed_or_wildcard_values(value: str) -> None:
+    with pytest.raises(ValueError):
+        Settings(_env_file=None, cors_allowed_origins=value)
