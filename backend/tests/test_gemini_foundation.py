@@ -102,6 +102,9 @@ def test_prompt_is_deterministic_and_excludes_raw_payload_fields() -> None:
     assert "untrusted data" in SYSTEM_INSTRUCTION
     assert "Do not optimize for score" in SYSTEM_INSTRUCTION
     assert "technology choice as a reason" in SYSTEM_INSTRUCTION
+    assert "exactly these top-level keys" in SYSTEM_INSTRUCTION
+    assert "Do not omit any top-level key" in SYSTEM_INSTRUCTION
+    assert "alternate keys such as" in SYSTEM_INSTRUCTION
     assert GEMINI_INTERPRETATION_PROMPT_VERSION == "v2"
 
 
@@ -506,7 +509,7 @@ def test_client_uses_async_structured_generation_without_network() -> None:
     assert "tests_structure" in str(request["contents"])
     config = request["config"]
     assert getattr(config, "response_mime_type") == "application/json"
-    assert getattr(config, "response_json_schema")["type"] == "object"
+    assert getattr(config, "response_json_schema") is None
     assert getattr(config, "candidate_count") == 1
     assert getattr(config, "temperature", None) is None
     assert getattr(config, "tools", None) is None
