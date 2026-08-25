@@ -85,3 +85,7 @@ Compose ortamında backend `DATABASE_URL` için Docker içindeki `db` hostname'i
 ## CI quality gates
 
 Pull requests targeting `main` and pushes to `main` run the GitHub Actions `CI` workflow. It validates the backend regression suite, disposable PostgreSQL/Alembic integration, frontend lint/type-check/build and production dependency security, plus the Docker production-stack startup smoke. The stable `Required quality gates` aggregate check is required before merging to `main`. CI does not deploy and does not use production GitHub, Gemini, or database secrets.
+
+## Production deployment readiness
+
+Provider-neutral production configuration, environment classification, CORS policy, migration release order, rollback guidance and the pre-deploy checklist are documented in [docs/production-deployment.md](docs/production-deployment.md). This document prepares a future deployment; it does not provision cloud resources or perform a deployment.
