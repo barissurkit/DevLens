@@ -157,7 +157,6 @@ class GeminiClient:
             response_mime_type="application/json",
             response_schema=PortfolioInterpretation,
             candidate_count=1,
-            temperature=0.2,
         )
         try:
             response = await self._client.aio.models.generate_content(

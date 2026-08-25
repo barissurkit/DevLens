@@ -71,6 +71,12 @@ def test_settings_keep_gemini_optional_and_model_overridable(monkeypatch) -> Non
     assert settings.gemini_model == "gemini-test-model"
 
 
+def test_settings_default_to_supported_gemini_production_model() -> None:
+    settings = Settings(_env_file=None)
+
+    assert settings.gemini_model == "gemini-3.7-flash"
+
+
 def test_prompt_is_deterministic_and_excludes_raw_payload_fields() -> None:
     first = build_interpretation_content(context())
 
@@ -334,10 +340,11 @@ def test_client_uses_async_structured_generation_without_network() -> None:
     assert result.summary == "Evidence-based summary."
     assert len(models.calls) == 1
     request = models.calls[0]
-    assert request["model"] == "gemini-2.5-flash"
+    assert request["model"] == "gemini-3.7-flash"
     assert "tests_structure" in str(request["contents"])
     config = request["config"]
     assert getattr(config, "response_mime_type") == "application/json"
     assert getattr(config, "response_schema") is PortfolioInterpretation
     assert getattr(config, "candidate_count") == 1
+    assert getattr(config, "temperature", None) is None
     assert getattr(config, "tools", None) is None
