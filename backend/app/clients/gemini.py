@@ -1,5 +1,7 @@
 import asyncio
 import logging
+import re
+import time
 from collections.abc import Awaitable
 from typing import Protocol
 
@@ -191,6 +193,50 @@ def _normalize_sdk_error(error: Exception) -> GeminiError | None:
     return GeminiUpstreamError("Gemini returned an upstream error.")
 
 
+def _safe_google_status(error: genai_errors.APIError) -> str:
+    status = error.status
+    if isinstance(status, str) and re.fullmatch(r"[A-Z][A-Z0-9_]{0,63}", status):
+        return status
+    return "unknown"
+
+
+def _log_gemini_failure(
+    *,
+    error: Exception,
+    model: str,
+    elapsed_ms: int,
+) -> None:
+    if isinstance(error, genai_errors.APIError):
+        google_status = _safe_google_status(error)
+        category = google_status if google_status != "unknown" else "api_error"
+        logger.warning(
+            "Gemini request failed: model=%s upstream_status_code=%s "
+            "upstream_google_status=%s elapsed_ms=%s error_category=%s",
+            model,
+            error.code,
+            google_status,
+            elapsed_ms,
+            category,
+        )
+        return
+
+    if isinstance(error, (asyncio.TimeoutError, TimeoutError, httpx.TimeoutException)):
+        category = "timeout"
+    elif isinstance(error, httpx.RequestError):
+        category = "transport_error"
+    else:
+        category = "unexpected_error"
+    logger.warning(
+        "Gemini request failed: model=%s upstream_status_code=%s "
+        "upstream_google_status=%s elapsed_ms=%s error_category=%s",
+        model,
+        "none",
+        "none",
+        elapsed_ms,
+        category,
+    )
+
+
 class GeminiClient:
     def __init__(
         self,
@@ -212,6 +258,7 @@ class GeminiClient:
             response_json_schema=build_gemini_response_schema(),
             candidate_count=1,
         )
+        started_at = time.monotonic()
         try:
             response = await self._client.aio.models.generate_content(
                 model=self._model,
@@ -219,12 +266,12 @@ class GeminiClient:
                 config=config,
             )
         except Exception as error:
-            if isinstance(error, genai_errors.APIError):
-                logger.warning(
-                    "Gemini request failed: status=%s model=%s",
-                    error.code,
-                    self._model,
-                )
+            elapsed_ms = round((time.monotonic() - started_at) * 1000)
+            _log_gemini_failure(
+                error=error,
+                model=self._model,
+                elapsed_ms=elapsed_ms,
+            )
             normalized = _normalize_sdk_error(error)
             if normalized is None:
                 raise

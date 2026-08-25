@@ -2,11 +2,17 @@ import asyncio
 from types import SimpleNamespace
 
 import pytest
+from google.genai import errors as genai_errors
 
 from app.clients.gemini import (
     GeminiClient,
     GeminiInvalidResponseError,
     GeminiNotConfiguredError,
+    GeminiRateLimitError,
+    GeminiUnavailableError,
+    GeminiUpstreamError,
+    _log_gemini_failure,
+    _normalize_sdk_error,
     build_gemini_response_schema,
     validate_interpretation_references,
 )
@@ -117,6 +123,38 @@ def test_gemini_response_schema_removes_unsupported_constraint_keywords() -> Non
         "signal_key",
         "explanation",
     }
+
+
+@pytest.mark.parametrize("status_code", [500, 503, 504])
+def test_gemini_server_failures_are_unavailable(status_code: int) -> None:
+    error = genai_errors.APIError(status_code, {"error": {"status": "UNAVAILABLE"}})
+
+    assert isinstance(_normalize_sdk_error(error), GeminiUnavailableError)
+
+
+def test_gemini_rate_limit_and_client_errors_keep_distinct_mapping() -> None:
+    rate_limit = genai_errors.APIError(429, {"error": {"status": "RESOURCE_EXHAUSTED"}})
+    invalid_request = genai_errors.APIError(400, {"error": {"status": "INVALID_ARGUMENT"}})
+
+    assert isinstance(_normalize_sdk_error(rate_limit), GeminiRateLimitError)
+    assert isinstance(_normalize_sdk_error(invalid_request), GeminiUpstreamError)
+
+
+def test_gemini_diagnostics_log_safe_fields_only(caplog: pytest.LogCaptureFixture) -> None:
+    secret = "sentinel-api-key-must-not-appear"
+    error = genai_errors.APIError(
+        503,
+        {"error": {"status": "UNAVAILABLE", "message": secret}},
+    )
+
+    _log_gemini_failure(error=error, model="gemini-3.7-flash", elapsed_ms=321)
+
+    message = caplog.text
+    assert "upstream_status_code=503" in message
+    assert "upstream_google_status=UNAVAILABLE" in message
+    assert "elapsed_ms=321" in message
+    assert "error_category=UNAVAILABLE" in message
+    assert secret not in message
 
 
 def recommendation(**overrides: object) -> NextProjectRecommendation:
