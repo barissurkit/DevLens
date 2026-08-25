@@ -357,7 +357,6 @@ class GeminiClient:
         config = types.GenerateContentConfig(
             system_instruction=SYSTEM_INSTRUCTION,
             response_mime_type="application/json",
-            response_json_schema=build_gemini_response_schema(),
             candidate_count=1,
         )
         for attempt in range(_GEMINI_MAX_ATTEMPTS):
