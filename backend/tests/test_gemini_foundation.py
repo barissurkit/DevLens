@@ -15,6 +15,7 @@ from app.clients.gemini import (
     _GEMINI_MAX_ATTEMPTS,
     _GEMINI_TIMEOUT_MS,
     _log_gemini_failure,
+    _log_invalid_response_failure,
     _normalize_sdk_error,
     build_gemini_response_schema,
     validate_interpretation_references,
@@ -164,6 +165,46 @@ def test_gemini_diagnostics_log_safe_fields_only(caplog: pytest.LogCaptureFixtur
     assert "elapsed_ms=321" in message
     assert "error_category=UNAVAILABLE" in message
     assert secret not in message
+
+
+@pytest.mark.parametrize(
+    ("response_text", "expected_parse", "expected_type", "expected_location"),
+    [
+        ('{"summary": 42}', "success", "string_type", "summary"),
+        ("not-json", "failed", "json_invalid", ""),
+    ],
+)
+def test_invalid_response_diagnostics_identify_safe_contract_failure(
+    response_text: str,
+    expected_parse: str,
+    expected_type: str,
+    expected_location: str,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    from pydantic import ValidationError
+
+    try:
+        PortfolioInterpretation.model_validate_json(response_text)
+    except ValidationError as error:
+        response = SimpleNamespace(
+            text=response_text,
+            candidates=[SimpleNamespace(finish_reason="STOP")],
+        )
+        _log_invalid_response_failure(
+            response=response,
+            error=error,
+            model="gemini-3.6-flash",
+            elapsed_ms=20600,
+        )
+
+    message = caplog.text
+    assert "model=gemini-3.6-flash" in message
+    assert f"json_parse={expected_parse}" in message
+    assert "response_text_bytes=" in message
+    assert "finish_reasons=STOP" in message
+    assert f"validation_error_types={expected_type}" in message
+    assert f"validation_error_locations={expected_location or 'none'}" in message
+    assert response_text not in message
 
 
 def test_gemini_retries_503_with_bounded_backoff() -> None:

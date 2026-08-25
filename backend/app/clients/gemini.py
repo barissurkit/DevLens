@@ -1,4 +1,5 @@
 import asyncio
+import json
 import logging
 import re
 import time
@@ -257,6 +258,76 @@ def _log_gemini_failure(
     )
 
 
+def _safe_response_text(response: object) -> str:
+    value = getattr(response, "text", "")
+    return value if isinstance(value, str) else ""
+
+
+def _safe_finish_reasons(response: object) -> list[str]:
+    candidates = getattr(response, "candidates", None)
+    if not isinstance(candidates, list):
+        return []
+    reasons: list[str] = []
+    for candidate in candidates[:3]:
+        reason = getattr(candidate, "finish_reason", None)
+        if reason is not None:
+            reasons.append(str(reason))
+    return reasons
+
+
+def _safe_validation_locations(error: ValidationError) -> list[str]:
+    locations: list[str] = []
+    for item in error.errors()[:20]:
+        location = item.get("loc", ())
+        parts = [str(part) for part in location if isinstance(part, (str, int))]
+        locations.append(".".join(parts)[:160])
+    return locations
+
+
+def _log_invalid_response_failure(
+    *,
+    response: object,
+    error: Exception,
+    model: str,
+    elapsed_ms: int,
+) -> None:
+    text = _safe_response_text(response)
+    parsed_json = False
+    top_level_keys: list[str] = []
+    if text:
+        try:
+            decoded = json.loads(text)
+            parsed_json = True
+            if isinstance(decoded, dict):
+                top_level_keys = sorted(
+                    str(key)[:80] for key in decoded.keys() if isinstance(key, str)
+                )[:30]
+        except (TypeError, ValueError):
+            pass
+
+    fields: dict[str, object] = {
+        "model": model,
+        "elapsed_ms": elapsed_ms,
+        "response_text_bytes": len(text.encode("utf-8")),
+        "json_parse": "success" if parsed_json else "failed",
+        "top_level_keys": ",".join(top_level_keys) or "none",
+        "finish_reasons": ",".join(_safe_finish_reasons(response)) or "none",
+        "error_category": "validation" if isinstance(error, ValidationError) else "response",
+    }
+    if isinstance(error, ValidationError):
+        fields["validation_error_count"] = error.error_count()
+        fields["validation_error_types"] = ",".join(
+            str(item.get("type", "unknown"))[:80] for item in error.errors()[:20]
+        ) or "none"
+        fields["validation_error_locations"] = ",".join(
+            _safe_validation_locations(error)
+        ) or "none"
+    logger.warning(
+        "Gemini response rejected: %s",
+        " ".join(f"{key}={value}" for key, value in fields.items()),
+    )
+
+
 class GeminiClient:
     def __init__(
         self,
@@ -321,8 +392,23 @@ class GeminiClient:
                 else PortfolioInterpretation.model_validate_json(response.text)
             )
         except (AttributeError, TypeError, ValidationError, ValueError) as error:
+            _log_invalid_response_failure(
+                response=response,
+                error=error,
+                model=self._model,
+                elapsed_ms=round((time.monotonic() - started_at) * 1000),
+            )
             raise GeminiInvalidResponseError(
                 "Gemini returned an invalid structured interpretation."
             ) from error
 
-        return validate_interpretation_references(interpretation, context)
+        try:
+            return validate_interpretation_references(interpretation, context)
+        except GeminiInvalidResponseError as error:
+            _log_invalid_response_failure(
+                response=response,
+                error=error,
+                model=self._model,
+                elapsed_ms=round((time.monotonic() - started_at) * 1000),
+            )
+            raise
