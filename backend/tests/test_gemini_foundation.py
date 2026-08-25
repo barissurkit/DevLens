@@ -101,6 +101,8 @@ def test_gemini_response_schema_removes_unsupported_constraint_keywords() -> Non
     assert "'default'" not in schema_text
     assert "'minLength'" not in schema_text
     assert "'maxLength'" not in schema_text
+    assert "'$defs'" not in schema_text
+    assert "'$ref'" not in schema_text
 
 
 def recommendation(**overrides: object) -> NextProjectRecommendation:
