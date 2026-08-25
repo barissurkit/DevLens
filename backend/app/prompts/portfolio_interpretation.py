@@ -31,7 +31,9 @@ When next_project_recommendation is not null, it must contain title, goal, ratio
 and suggested_deliverables. When there are no deterministic improvement signals, set
 next_project_recommendation to null. Use JSON null for unknown optional context fields. Do not omit any
 top-level key, do not use Markdown fences, and do not return explanatory prose or alternate keys such as
-strengths or improvement_opportunities. Use concise evidence-linked language.
+strengths or improvement_opportunities. technology_context, project_area_context, and limitations_note
+must each be either a JSON string or JSON null; never return an array or object for those fields. Use concise
+evidence-linked language.
 """
 
 
