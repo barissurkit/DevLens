@@ -206,6 +206,7 @@ def test_invalid_response_diagnostics_identify_safe_contract_failure(
     assert f"json_parse={expected_parse}" in message
     assert "response_text_bytes=" in message
     assert "finish_reasons=STOP" in message
+    assert "top_level_value_types=summary:number" in message or "top_level_value_types=none" in message
     assert f"validation_error_types={expected_type}" in message
     assert f"validation_error_locations={expected_location or 'none'}" in message
     assert response_text not in message

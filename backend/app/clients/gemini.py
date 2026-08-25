@@ -289,6 +289,31 @@ def _safe_validation_locations(error: ValidationError) -> list[str]:
     return locations
 
 
+def _safe_json_value_types(decoded: object) -> str:
+    if not isinstance(decoded, dict):
+        return "non_object"
+    type_names: list[str] = []
+    for key, value in sorted(decoded.items(), key=lambda item: str(item[0]))[:30]:
+        if not isinstance(key, str):
+            continue
+        if value is None:
+            value_type = "null"
+        elif isinstance(value, bool):
+            value_type = "boolean"
+        elif isinstance(value, (int, float)):
+            value_type = "number"
+        elif isinstance(value, str):
+            value_type = "string"
+        elif isinstance(value, list):
+            value_type = "array"
+        elif isinstance(value, dict):
+            value_type = "object"
+        else:
+            value_type = "other"
+        type_names.append(f"{key[:80]}:{value_type}")
+    return ",".join(type_names) or "none"
+
+
 def _log_invalid_response_failure(
     *,
     response: object,
@@ -299,6 +324,7 @@ def _log_invalid_response_failure(
     text = _safe_response_text(response)
     parsed_json = False
     top_level_keys: list[str] = []
+    top_level_value_types = "none"
     if text:
         try:
             decoded = json.loads(text)
@@ -307,6 +333,7 @@ def _log_invalid_response_failure(
                 top_level_keys = sorted(
                     str(key)[:80] for key in decoded.keys() if isinstance(key, str)
                 )[:30]
+                top_level_value_types = _safe_json_value_types(decoded)
         except (TypeError, ValueError):
             pass
 
@@ -316,6 +343,7 @@ def _log_invalid_response_failure(
         "response_text_bytes": len(text.encode("utf-8")),
         "json_parse": "success" if parsed_json else "failed",
         "top_level_keys": ",".join(top_level_keys) or "none",
+        "top_level_value_types": top_level_value_types,
         "finish_reasons": ",".join(_safe_finish_reasons(response)) or "none",
         "error_category": "validation" if isinstance(error, ValidationError) else "response",
     }
