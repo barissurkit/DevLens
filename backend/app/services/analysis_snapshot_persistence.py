@@ -1,4 +1,5 @@
 import logging
+import time
 from collections.abc import Callable
 from datetime import datetime
 from enum import StrEnum
@@ -11,6 +12,7 @@ from app.db.database import DatabaseNotConfiguredError, get_session_factory
 from app.db.repositories.analysis_snapshots import AnalysisSnapshotRepository
 from app.schemas.analysis import GitHubPortfolioAnalysis
 from app.schemas.interpretation import PublicPortfolioInterpretationResult
+from app.observability import emit_event
 
 logger = logging.getLogger(__name__)
 
@@ -44,8 +46,15 @@ class AnalysisSnapshotPersistenceService:
         request_kind: str,
     ) -> SnapshotPersistenceOutcome:
         if not self._settings.database_url:
+            emit_event(
+                logger,
+                "snapshot.write.skipped",
+                operation=request_kind,
+                result="not_configured",
+            )
             return SnapshotPersistenceOutcome.SKIPPED_NOT_CONFIGURED
 
+        started_at = time.monotonic()
         try:
             session_factory = self._session_factory_provider(self._settings)
             async with session_factory() as session:
@@ -57,24 +66,41 @@ class AnalysisSnapshotPersistenceService:
                         analysis_generated_at=analysis_generated_at,
                     )
         except DatabaseNotConfiguredError:
+            emit_event(
+                logger,
+                "snapshot.write.skipped",
+                operation=request_kind,
+                result="not_configured",
+            )
             return SnapshotPersistenceOutcome.SKIPPED_NOT_CONFIGURED
         except SQLAlchemyError as exc:
-            logger.warning(
-                "snapshot persistence failed",
-                extra={
-                    "request_kind": request_kind,
-                    "exception_type": type(exc).__name__,
-                },
+            emit_event(
+                logger,
+                "snapshot.write_failed",
+                level=logging.WARNING,
+                operation=request_kind,
+                duration_ms=max(0, round((time.monotonic() - started_at) * 1000)),
+                result="failed_operational",
+                error_category=type(exc).__name__,
             )
             return SnapshotPersistenceOutcome.FAILED_OPERATIONAL
         except OSError as exc:
-            logger.warning(
-                "snapshot persistence failed",
-                extra={
-                    "request_kind": request_kind,
-                    "exception_type": type(exc).__name__,
-                },
+            emit_event(
+                logger,
+                "snapshot.write_failed",
+                level=logging.WARNING,
+                operation=request_kind,
+                duration_ms=max(0, round((time.monotonic() - started_at) * 1000)),
+                result="failed_operational",
+                error_category=type(exc).__name__,
             )
             return SnapshotPersistenceOutcome.FAILED_OPERATIONAL
 
+        emit_event(
+            logger,
+            "snapshot.write.completed",
+            operation=request_kind,
+            duration_ms=max(0, round((time.monotonic() - started_at) * 1000)),
+            result="persisted",
+        )
         return SnapshotPersistenceOutcome.PERSISTED

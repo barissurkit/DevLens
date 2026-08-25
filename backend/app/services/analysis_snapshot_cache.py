@@ -1,4 +1,5 @@
 import logging
+import time
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
@@ -14,6 +15,7 @@ from app.db.repositories.analysis_snapshots import (
     SnapshotPayloadValidationError,
 )
 from app.schemas.analysis import GitHubPortfolioAnalysis
+from app.observability import emit_event
 
 logger = logging.getLogger(__name__)
 
@@ -37,11 +39,18 @@ class AnalysisSnapshotCacheService:
 
     async def get_fresh_analysis(self, *, username: str, request_kind: str) -> CachedAnalysis | None:
         if not self._settings.database_url or self._settings.analysis_cache_ttl_seconds == 0:
+            emit_event(
+                logger,
+                "cache.disabled",
+                operation="read",
+                cache_state="disabled",
+            )
             return None
 
         fresh_after = datetime.now(timezone.utc) - timedelta(
             seconds=self._settings.analysis_cache_ttl_seconds
         )
+        started_at = time.monotonic()
         try:
             session_factory = self._session_factory_provider(self._settings)
             async with session_factory() as session:
@@ -57,14 +66,33 @@ class AnalysisSnapshotCacheService:
             OSError,
             SnapshotPayloadValidationError,
         ) as exc:
-            logger.warning(
-                "analysis cache lookup failed",
-                extra={"request_kind": request_kind, "exception_type": type(exc).__name__},
+            emit_event(
+                logger,
+                "cache.read_failed",
+                level=logging.WARNING,
+                operation=request_kind,
+                cache_state="read_failed",
+                duration_ms=max(0, round((time.monotonic() - started_at) * 1000)),
+                error_category=type(exc).__name__,
             )
             return None
 
         if record is None:
+            emit_event(
+                logger,
+                "cache.miss",
+                operation=request_kind,
+                cache_state="miss",
+                duration_ms=max(0, round((time.monotonic() - started_at) * 1000)),
+            )
             return None
+        emit_event(
+            logger,
+            "cache.hit",
+            operation=request_kind,
+            cache_state="hit",
+            duration_ms=max(0, round((time.monotonic() - started_at) * 1000)),
+        )
         return CachedAnalysis(
             analysis=record.analysis,
             analysis_generated_at=record.analysis_generated_at,
