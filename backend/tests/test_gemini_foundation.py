@@ -110,6 +110,12 @@ def test_gemini_response_schema_removes_unsupported_constraint_keywords() -> Non
     assert "'maxLength'" not in schema_text
     assert "'$defs'" not in schema_text
     assert "'$ref'" not in schema_text
+    assert "'anyOf'" not in schema_text
+    assert schema["properties"]["technology_context"]["type"] == ["string", "null"]
+    assert schema["properties"]["next_project_recommendation"]["type"] == [
+        "object",
+        "null",
+    ]
     assert set(schema["properties"]) == {
         "summary",
         "strength_explanations",

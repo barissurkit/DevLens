@@ -98,7 +98,7 @@ def build_gemini_response_schema() -> object:
                 definition = definitions.get(reference.removeprefix("#/$defs/"))
                 if definition is not None:
                     return inline(definition)
-            return {
+            filtered = {
                 key: (
                     {
                         property_name: inline(property_schema)
@@ -110,6 +110,23 @@ def build_gemini_response_schema() -> object:
                 for key, nested in value.items()
                 if key in supported_keys
             }
+            variants = filtered.get("anyOf")
+            if isinstance(variants, list) and len(variants) == 2:
+                nullable = next(
+                    (item for item in variants if item == {"type": "null"}),
+                    None,
+                )
+                non_null = next(
+                    (item for item in variants if item is not nullable),
+                    None,
+                )
+                if nullable is not None and isinstance(non_null, dict):
+                    non_null_type = non_null.get("type")
+                    if isinstance(non_null_type, str):
+                        merged = dict(non_null)
+                        merged["type"] = [non_null_type, "null"]
+                        return merged
+            return filtered
         if isinstance(value, list):
             return [inline(item) for item in value]
         return value
