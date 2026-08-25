@@ -13,7 +13,7 @@ class Settings(BaseSettings):
     github_token: str | None = None
     github_api_base_url: str = "https://api.github.com"
     gemini_api_key: str | None = None
-    gemini_model: str = "gemini-3.7-flash"
+    gemini_model: str = "gemini-3.6-flash"
     database_url: str | None = None
     analysis_cache_ttl_seconds: int = Field(default=900, ge=0)
     cors_allowed_origins: str = DEFAULT_CORS_ALLOWED_ORIGINS
