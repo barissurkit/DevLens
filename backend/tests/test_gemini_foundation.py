@@ -1,4 +1,5 @@
 import asyncio
+from unittest.mock import AsyncMock, patch
 from types import SimpleNamespace
 
 import pytest
@@ -161,6 +162,47 @@ def test_gemini_diagnostics_log_safe_fields_only(caplog: pytest.LogCaptureFixtur
     assert "elapsed_ms=321" in message
     assert "error_category=UNAVAILABLE" in message
     assert secret not in message
+
+
+def test_gemini_retries_503_with_bounded_backoff() -> None:
+    models = FakeModels()
+    models.failures = [
+        genai_errors.APIError(503, {"error": {"status": "UNAVAILABLE"}}),
+        genai_errors.APIError(503, {"error": {"status": "UNAVAILABLE"}}),
+    ]
+
+    client = GeminiClient(
+        Settings(_env_file=None, gemini_api_key="sentinel-not-a-real-key"),
+        sdk_client=FakeSdkClient(models),
+    )
+
+    with patch(
+        "app.clients.gemini.asyncio.sleep",
+        new_callable=AsyncMock,
+    ) as sleep:
+        result = asyncio.run(client.interpret(context()))
+
+    assert result.summary == "Evidence-based summary."
+    assert len(models.calls) == 3
+    assert [call.args[0] for call in sleep.await_args_list] == [0.5, 1.0]
+
+
+def test_gemini_does_not_retry_invalid_argument() -> None:
+    models = FakeModels()
+    models.failures = [
+        genai_errors.APIError(400, {"error": {"status": "INVALID_ARGUMENT"}}),
+    ]
+    client = GeminiClient(
+        Settings(_env_file=None, gemini_api_key="sentinel-not-a-real-key"),
+        sdk_client=FakeSdkClient(models),
+    )
+
+    with patch("app.clients.gemini.asyncio.sleep", new_callable=AsyncMock) as sleep:
+        with pytest.raises(GeminiUpstreamError):
+            asyncio.run(client.interpret(context()))
+
+    assert len(models.calls) == 1
+    sleep.assert_not_awaited()
 
 
 def recommendation(**overrides: object) -> NextProjectRecommendation:
@@ -376,9 +418,12 @@ def test_gemini_key_is_required_only_at_client_boundary() -> None:
 class FakeModels:
     def __init__(self) -> None:
         self.calls: list[dict[str, object]] = []
+        self.failures: list[Exception] = []
 
     async def generate_content(self, **kwargs: object) -> object:
         self.calls.append(kwargs)
+        if self.failures:
+            raise self.failures.pop(0)
         return SimpleNamespace(
             parsed=PortfolioInterpretation(
                 summary="Evidence-based summary.",
