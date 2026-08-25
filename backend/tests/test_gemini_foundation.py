@@ -85,7 +85,7 @@ def test_settings_keep_gemini_optional_and_model_overridable(monkeypatch) -> Non
 def test_settings_default_to_supported_gemini_production_model() -> None:
     settings = Settings(_env_file=None)
 
-    assert settings.gemini_model == "gemini-3.7-flash"
+    assert settings.gemini_model == "gemini-3.6-flash"
 
 
 def test_prompt_is_deterministic_and_excludes_raw_payload_fields() -> None:
@@ -129,6 +129,7 @@ def test_gemini_response_schema_removes_unsupported_constraint_keywords() -> Non
         "limitations_note",
         "next_project_recommendation",
     }
+    assert set(schema["required"]) == set(schema["properties"])
     assert set(schema["properties"]["strength_explanations"]["items"]["properties"]) == {
         "signal_key",
         "explanation",
@@ -501,11 +502,11 @@ def test_client_uses_async_structured_generation_without_network() -> None:
     assert result.summary == "Evidence-based summary."
     assert len(models.calls) == 1
     request = models.calls[0]
-    assert request["model"] == "gemini-3.7-flash"
+    assert request["model"] == "gemini-3.6-flash"
     assert "tests_structure" in str(request["contents"])
     config = request["config"]
     assert getattr(config, "response_mime_type") == "application/json"
-    assert getattr(config, "response_json_schema") is None
+    assert getattr(config, "response_json_schema")["type"] == "object"
     assert getattr(config, "candidate_count") == 1
     assert getattr(config, "temperature", None) is None
     assert getattr(config, "tools", None) is None
