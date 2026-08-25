@@ -344,7 +344,10 @@ def test_client_uses_async_structured_generation_without_network() -> None:
     assert "tests_structure" in str(request["contents"])
     config = request["config"]
     assert getattr(config, "response_mime_type") == "application/json"
-    assert getattr(config, "response_schema") is PortfolioInterpretation
+    assert (
+        getattr(config, "response_json_schema")
+        == PortfolioInterpretation.model_json_schema()
+    )
     assert getattr(config, "candidate_count") == 1
     assert getattr(config, "temperature", None) is None
     assert getattr(config, "tools", None) is None

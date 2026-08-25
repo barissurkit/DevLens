@@ -1,4 +1,5 @@
 import asyncio
+import logging
 from collections.abc import Awaitable
 from typing import Protocol
 
@@ -17,6 +18,8 @@ from app.schemas.interpretation import (
     PortfolioInterpretation,
     PortfolioInterpretationContext,
 )
+
+logger = logging.getLogger(__name__)
 
 
 class GeminiError(Exception):
@@ -155,7 +158,7 @@ class GeminiClient:
         config = types.GenerateContentConfig(
             system_instruction=SYSTEM_INSTRUCTION,
             response_mime_type="application/json",
-            response_schema=PortfolioInterpretation,
+            response_json_schema=PortfolioInterpretation.model_json_schema(),
             candidate_count=1,
         )
         try:
@@ -165,6 +168,12 @@ class GeminiClient:
                 config=config,
             )
         except Exception as error:
+            if isinstance(error, genai_errors.APIError):
+                logger.warning(
+                    "Gemini request failed: status=%s model=%s",
+                    error.code,
+                    self._model,
+                )
             normalized = _normalize_sdk_error(error)
             if normalized is None:
                 raise
