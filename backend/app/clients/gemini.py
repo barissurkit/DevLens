@@ -22,8 +22,9 @@ from app.schemas.interpretation import (
 )
 
 logger = logging.getLogger(__name__)
-_GEMINI_MAX_ATTEMPTS = 3
+_GEMINI_MAX_ATTEMPTS = 2
 _GEMINI_RETRY_INITIAL_DELAY_SECONDS = 0.5
+_GEMINI_TIMEOUT_MS = 30_000
 
 
 class GeminiError(Exception):
@@ -265,7 +266,13 @@ class GeminiClient:
         if not settings.gemini_api_key:
             raise GeminiNotConfiguredError("Gemini API key is not configured.")
         self._model = settings.gemini_model
-        self._client = sdk_client or genai.Client(api_key=settings.gemini_api_key)
+        self._client = sdk_client or genai.Client(
+            api_key=settings.gemini_api_key,
+            http_options=types.HttpOptions(
+                timeout=_GEMINI_TIMEOUT_MS,
+                retry_options=types.HttpRetryOptions(attempts=1),
+            ),
+        )
 
     async def interpret(
         self,

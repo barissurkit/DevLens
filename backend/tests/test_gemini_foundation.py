@@ -12,6 +12,8 @@ from app.clients.gemini import (
     GeminiRateLimitError,
     GeminiUnavailableError,
     GeminiUpstreamError,
+    _GEMINI_MAX_ATTEMPTS,
+    _GEMINI_TIMEOUT_MS,
     _log_gemini_failure,
     _normalize_sdk_error,
     build_gemini_response_schema,
@@ -168,7 +170,6 @@ def test_gemini_retries_503_with_bounded_backoff() -> None:
     models = FakeModels()
     models.failures = [
         genai_errors.APIError(503, {"error": {"status": "UNAVAILABLE"}}),
-        genai_errors.APIError(503, {"error": {"status": "UNAVAILABLE"}}),
     ]
 
     client = GeminiClient(
@@ -183,8 +184,13 @@ def test_gemini_retries_503_with_bounded_backoff() -> None:
         result = asyncio.run(client.interpret(context()))
 
     assert result.summary == "Evidence-based summary."
-    assert len(models.calls) == 3
-    assert [call.args[0] for call in sleep.await_args_list] == [0.5, 1.0]
+    assert len(models.calls) == 2
+    assert [call.args[0] for call in sleep.await_args_list] == [0.5]
+
+
+def test_gemini_latency_budget_is_finite_and_sdk_retry_is_single_attempt() -> None:
+    assert _GEMINI_MAX_ATTEMPTS == 2
+    assert _GEMINI_TIMEOUT_MS == 30_000
 
 
 def test_gemini_does_not_retry_invalid_argument() -> None:
