@@ -22,6 +22,8 @@ from app.schemas.interpretation import (
 )
 
 logger = logging.getLogger(__name__)
+_GEMINI_MAX_ATTEMPTS = 3
+_GEMINI_RETRY_INITIAL_DELAY_SECONDS = 0.5
 
 
 class GeminiError(Exception):
@@ -274,24 +276,35 @@ class GeminiClient:
             response_mime_type="application/json",
             candidate_count=1,
         )
-        started_at = time.monotonic()
-        try:
-            response = await self._client.aio.models.generate_content(
-                model=self._model,
-                contents=build_interpretation_content(context),
-                config=config,
-            )
-        except Exception as error:
-            elapsed_ms = round((time.monotonic() - started_at) * 1000)
-            _log_gemini_failure(
-                error=error,
-                model=self._model,
-                elapsed_ms=elapsed_ms,
-            )
-            normalized = _normalize_sdk_error(error)
-            if normalized is None:
-                raise
-            raise normalized from error
+        for attempt in range(_GEMINI_MAX_ATTEMPTS):
+            started_at = time.monotonic()
+            try:
+                response = await self._client.aio.models.generate_content(
+                    model=self._model,
+                    contents=build_interpretation_content(context),
+                    config=config,
+                )
+                break
+            except Exception as error:
+                elapsed_ms = round((time.monotonic() - started_at) * 1000)
+                _log_gemini_failure(
+                    error=error,
+                    model=self._model,
+                    elapsed_ms=elapsed_ms,
+                )
+                if (
+                    isinstance(error, genai_errors.APIError)
+                    and error.code == 503
+                    and attempt < _GEMINI_MAX_ATTEMPTS - 1
+                ):
+                    await asyncio.sleep(
+                        _GEMINI_RETRY_INITIAL_DELAY_SECONDS * (2**attempt)
+                    )
+                    continue
+                normalized = _normalize_sdk_error(error)
+                if normalized is None:
+                    raise
+                raise normalized from error
 
         try:
             parsed = getattr(response, "parsed", None)
