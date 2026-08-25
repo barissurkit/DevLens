@@ -7,6 +7,7 @@ from app.clients.gemini import (
     GeminiClient,
     GeminiInvalidResponseError,
     GeminiNotConfiguredError,
+    build_gemini_response_schema,
     validate_interpretation_references,
 )
 from app.config import Settings
@@ -92,6 +93,14 @@ def test_prompt_is_deterministic_and_excludes_raw_payload_fields() -> None:
     assert "Do not optimize for score" in SYSTEM_INSTRUCTION
     assert "technology choice as a reason" in SYSTEM_INSTRUCTION
     assert GEMINI_INTERPRETATION_PROMPT_VERSION == "v2"
+
+
+def test_gemini_response_schema_removes_unsupported_constraint_keywords() -> None:
+    schema_text = str(build_gemini_response_schema())
+
+    assert "'default'" not in schema_text
+    assert "'minLength'" not in schema_text
+    assert "'maxLength'" not in schema_text
 
 
 def recommendation(**overrides: object) -> NextProjectRecommendation:
@@ -345,8 +354,7 @@ def test_client_uses_async_structured_generation_without_network() -> None:
     config = request["config"]
     assert getattr(config, "response_mime_type") == "application/json"
     assert (
-        getattr(config, "response_json_schema")
-        == PortfolioInterpretation.model_json_schema()
+        getattr(config, "response_json_schema") == build_gemini_response_schema()
     )
     assert getattr(config, "candidate_count") == 1
     assert getattr(config, "temperature", None) is None

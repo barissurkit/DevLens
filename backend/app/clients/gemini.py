@@ -64,6 +64,26 @@ class _GeminiClient(Protocol):
     def aio(self) -> _AsyncGeminiSurface: ...
 
 
+def _strip_unsupported_schema_keywords(value: object) -> object:
+    if isinstance(value, dict):
+        return {
+            key: _strip_unsupported_schema_keywords(nested)
+            for key, nested in value.items()
+            if key not in {"default", "minLength", "maxLength"}
+        }
+    if isinstance(value, list):
+        return [_strip_unsupported_schema_keywords(item) for item in value]
+    return value
+
+
+def build_gemini_response_schema() -> object:
+    """Build a Gemini-compatible schema while keeping Pydantic as final validation."""
+
+    return _strip_unsupported_schema_keywords(
+        PortfolioInterpretation.model_json_schema()
+    )
+
+
 def validate_interpretation_references(
     interpretation: PortfolioInterpretation,
     context: PortfolioInterpretationContext,
@@ -158,7 +178,7 @@ class GeminiClient:
         config = types.GenerateContentConfig(
             system_instruction=SYSTEM_INSTRUCTION,
             response_mime_type="application/json",
-            response_json_schema=PortfolioInterpretation.model_json_schema(),
+            response_json_schema=build_gemini_response_schema(),
             candidate_count=1,
         )
         try:
