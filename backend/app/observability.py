@@ -21,6 +21,7 @@ _SAFE_FIELDS = {
     "status_code",
     "duration_ms",
     "provider",
+    "provider_status",
     "operation",
     "upstream_status",
     "attempt",
@@ -34,6 +35,7 @@ _SAFE_FIELDS = {
     "rate_limit_reset",
     "rate_limit_resource",
     "rate_limit_used",
+    "retry_after_seconds",
 }
 
 

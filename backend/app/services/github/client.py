@@ -121,6 +121,14 @@ class GitHubClient:
         resource = headers.get("x-ratelimit-resource")
         if resource is not None and len(resource) <= 64:
             rate_fields["rate_limit_resource"] = resource
+        retry_after = headers.get("retry-after")
+        if retry_after is not None:
+            try:
+                retry_after_seconds = int(retry_after)
+            except ValueError:
+                retry_after_seconds = -1
+            if retry_after_seconds >= 0:
+                rate_fields["retry_after_seconds"] = retry_after_seconds
 
         error_category = None
         if response.status_code == httpx.codes.NOT_FOUND:
