@@ -1,4 +1,5 @@
 import asyncio
+import logging
 from collections.abc import Iterator
 from datetime import datetime, timezone
 from types import SimpleNamespace
@@ -92,7 +93,10 @@ def test_interpretation_route_and_openapi_contract() -> None:
         ] == {"$ref": "#/components/schemas/APIErrorResponse"}
 
 
-def test_available_response_is_composite_and_publicly_discriminated() -> None:
+def test_available_response_is_composite_and_emits_one_safe_outcome_event(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    caplog.set_level(logging.INFO, logger="app")
     mock_github = AsyncMock(spec=GitHubClient)
     use_mock_github(mock_github)
     fake_gemini = SimpleNamespace(
@@ -136,6 +140,18 @@ def test_available_response_is_composite_and_publicly_discriminated() -> None:
     assert persistence_call["analysis"] is composition.return_value.analysis
     assert persistence_call["interpretation"].model_dump(mode="json") == body["interpretation"]
     assert persistence_call["request_kind"] == "interpretation"
+    events = [
+        record
+        for record in caplog.records
+        if getattr(record, "event", None) == "interpretation.completed"
+        and getattr(record, "request_id", None) == response.headers["x-request-id"]
+    ]
+    assert len(events) == 1
+    assert events[0].operation == "interpretation"
+    assert events[0].result == "available"
+    assert not hasattr(events[0], "error_category")
+    assert "synthetic-user" not in caplog.text
+    assert "Grounded." not in caplog.text
 
 
 def test_interpretation_reuses_only_fresh_analysis_and_runs_current_policy() -> None:
@@ -223,7 +239,10 @@ def test_public_endpoint_runs_real_analysis_and_interpretation_composition() -> 
     assert "Authorization" not in response.text
 
 
-def test_public_endpoint_preserves_insufficient_evidence_without_gemini_call() -> None:
+def test_public_endpoint_preserves_insufficient_evidence_without_gemini_call(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    caplog.set_level(logging.INFO, logger="app")
     use_fake_github([])
 
     class FailingGemini:
@@ -241,20 +260,36 @@ def test_public_endpoint_preserves_insufficient_evidence_without_gemini_call() -
         "status": "unavailable",
         "reason": "insufficient_evidence",
     }
+    events = [
+        record
+        for record in caplog.records
+        if getattr(record, "event", None) == "interpretation.completed"
+        and getattr(record, "request_id", None) == response.headers["x-request-id"]
+    ]
+    assert len(events) == 1
+    assert events[0].operation == "interpretation"
+    assert events[0].result == "unavailable"
+    assert events[0].error_category == "insufficient_evidence"
+    assert "synthetic-user" not in caplog.text
 
 
 @pytest.mark.parametrize(
     "reason",
     [
         InterpretationUnavailableReason.NOT_CONFIGURED,
+        InterpretationUnavailableReason.INSUFFICIENT_EVIDENCE,
         InterpretationUnavailableReason.RATE_LIMIT,
         InterpretationUnavailableReason.TIMEOUT,
+        InterpretationUnavailableReason.UNAVAILABLE,
+        InterpretationUnavailableReason.UPSTREAM_ERROR,
         InterpretationUnavailableReason.INVALID_RESPONSE,
     ],
 )
 def test_unavailable_interpretation_is_http_200_and_safe(
     reason: InterpretationUnavailableReason,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
+    caplog.set_level(logging.INFO, logger="app")
     mock_github = AsyncMock(spec=GitHubClient)
     use_mock_github(mock_github)
     original = interpretation_api.analyze_and_interpret_github_portfolio
@@ -277,6 +312,17 @@ def test_unavailable_interpretation_is_http_200_and_safe(
         "reason": reason.value,
     }
     assert "exception" not in response.text
+    events = [
+        record
+        for record in caplog.records
+        if getattr(record, "event", None) == "interpretation.completed"
+        and getattr(record, "request_id", None) == response.headers["x-request-id"]
+    ]
+    assert len(events) == 1
+    assert events[0].operation == "interpretation"
+    assert events[0].result == "unavailable"
+    assert events[0].error_category == reason.value
+    assert "synthetic-user" not in caplog.text
 
 
 @pytest.mark.parametrize(

@@ -1,3 +1,5 @@
+import logging
+
 import httpx
 from datetime import datetime, timezone
 from fastapi import APIRouter, Depends
@@ -27,11 +29,14 @@ from app.services.portfolio_interpretation_composition import (
     analyze_and_interpret_github_portfolio,
     PortfolioInterpretationCompositionResult,
 )
+from app.observability import emit_event
 
 router = APIRouter(
     prefix="/api/v1",
     tags=["Interpretation"],
 )
+
+logger = logging.getLogger(__name__)
 
 
 def to_public_interpretation_result(
@@ -103,6 +108,13 @@ async def interpret_portfolio(
         raise map_github_exception(exc) from exc
 
     public_interpretation = to_public_interpretation_result(result.interpretation)
+    outcome_fields: dict[str, str] = {
+        "operation": "interpretation",
+        "result": public_interpretation.status,
+    }
+    if isinstance(public_interpretation, PublicInterpretationUnavailable):
+        outcome_fields["error_category"] = public_interpretation.reason.value
+    emit_event(logger, "interpretation.completed", **outcome_fields)
     response = GitHubPortfolioInterpretationResponse(
         analysis=result.analysis,
         interpretation=public_interpretation,
