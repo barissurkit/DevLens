@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import type {
   GitHubPortfolioInterpretationResponse,
   PortfolioInsight,
@@ -23,11 +24,16 @@ const DIMENSION_DESCRIPTIONS: Record<string, string> = {
 };
 
 export function AnalysisResultShell({ result }: AnalysisResultShellProps) {
+  const dashboardHeadingRef = useRef<HTMLHeadingElement>(null);
   const { analysis, interpretation } = result;
   const { aggregation, intelligence, score, selection, user } = analysis;
   const dimensions = orderDimensions(score.dimensions);
   const limitations = uniqueItems([...score.limitations, ...intelligence.limitations]);
   const isPartial = score.is_partial || aggregation.has_failures || aggregation.partial_evidence_repository_count > 0;
+
+  useEffect(() => {
+    dashboardHeadingRef.current?.focus();
+  }, []);
 
   return (
     <section aria-labelledby="portfolio-dashboard" className="space-y-6">
@@ -35,7 +41,7 @@ export function AnalysisResultShell({ result }: AnalysisResultShellProps) {
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <p className="text-sm font-medium uppercase tracking-[0.16em] text-emerald-600">Analiz tamamlandı</p>
-            <h2 id="portfolio-dashboard" className="mt-2 text-2xl font-semibold tracking-tight text-slate-950 sm:text-3xl">
+            <h2 ref={dashboardHeadingRef} id="portfolio-dashboard" tabIndex={-1} className="mt-2 text-2xl font-semibold tracking-tight text-slate-950 focus:outline-none focus:ring-2 focus:ring-slate-950 focus:ring-offset-2 sm:text-3xl">
               {user.name || `@${user.username}`} portföyü
             </h2>
             <p className="mt-2 text-slate-600">@{user.username} için herkese açık GitHub kanıtları incelendi.</p>

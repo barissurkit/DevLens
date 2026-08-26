@@ -10,7 +10,7 @@ interface PortfolioInterpretationSectionProps {
 }
 
 const UNAVAILABLE_COPY: Record<InterpretationUnavailableReason, string> = {
-  not_configured: "AI yorumu şu anda kullanılamıyor. Deterministic portföy analizi aşağıda kullanılabilir.",
+  not_configured: "AI yorumu bu analiz için yapılandırılmamış.",
   insufficient_evidence: "AI yorumu için yeterli başarılı repository evidence'ı oluşmadı.",
   timeout: "AI yorumu geçici olarak kullanılamıyor.",
   rate_limit: "AI yorumu geçici olarak kullanılamıyor.",
@@ -30,7 +30,11 @@ export function PortfolioInterpretationSection({ analysis, interpretation }: Por
       {interpretation.status === "available" ? (
         <AvailableInterpretation analysis={analysis} interpretation={interpretation.interpretation} />
       ) : (
-        <p className="mt-6 rounded-xl bg-slate-50 px-4 py-4 text-sm leading-6 text-slate-600">{UNAVAILABLE_COPY[interpretation.reason]}</p>
+        <div role="status" aria-live="polite" className="mt-6 rounded-xl border border-amber-200 bg-amber-50 px-4 py-4 text-sm leading-6 text-amber-950">
+          <p className="font-semibold">AI yorumu şu anda kullanılamıyor.</p>
+          <p className="mt-1 text-amber-900">{UNAVAILABLE_COPY[interpretation.reason]}</p>
+          <p className="mt-3 text-amber-900">Portföy skoru ve repository analizleri yine de kullanılabilir.</p>
+        </div>
       )}
     </section>
   );
