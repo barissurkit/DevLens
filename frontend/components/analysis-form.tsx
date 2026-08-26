@@ -1,6 +1,6 @@
 "use client";
 
-import { type FormEvent, useState } from "react";
+import { type FormEvent, useRef, useState } from "react";
 import { analyzePortfolioWithInterpretation, ApiError } from "../lib/api";
 import type { GitHubPortfolioInterpretationResponse } from "../lib/types";
 import { AnalysisErrorState } from "./analysis-error-state";
@@ -13,6 +13,7 @@ export function AnalysisForm() {
   const [username, setUsername] = useState("");
   const [state, setState] = useState<AnalysisState>({ status: "idle" });
   const [validationMessage, setValidationMessage] = useState<string | null>(null);
+  const usernameInputRef = useRef<HTMLInputElement>(null);
 
   async function submitUsername(normalizedUsername: string) {
     setValidationMessage(null);
@@ -39,6 +40,7 @@ export function AnalysisForm() {
     setValidationMessage(message);
     if (message) {
       setState({ status: "idle" });
+      usernameInputRef.current?.focus();
     } else {
       void submitUsername(normalizedUsername);
     }
@@ -57,6 +59,7 @@ export function AnalysisForm() {
         <label htmlFor="github-username" className="block text-sm font-medium text-slate-900">GitHub kullanıcı adı</label>
         <div className="mt-2 flex flex-col gap-3 sm:flex-row">
           <input
+            ref={usernameInputRef}
             id="github-username"
             name="username"
             value={username}

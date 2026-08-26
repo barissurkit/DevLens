@@ -1,4 +1,18 @@
+"use client";
+
+import { useEffect, useState } from "react";
+
+const LONG_REQUEST_THRESHOLD_MS = 8_000;
+
 export function AnalysisLoadingState() {
+  const [isLongRunning, setIsLongRunning] = useState(false);
+
+  useEffect(() => {
+    const timeout = window.setTimeout(() => setIsLongRunning(true), LONG_REQUEST_THRESHOLD_MS);
+
+    return () => window.clearTimeout(timeout);
+  }, []);
+
   return (
     <div
       role="status"
@@ -12,6 +26,11 @@ export function AnalysisLoadingState() {
       <span>
         <strong className="font-medium text-slate-900">GitHub portföyü analiz ediliyor...</strong>{" "}
         Bu işlem repository sayısına göre birkaç saniye sürebilir.
+        {isLongRunning && (
+          <span className="mt-1 block text-slate-600">
+            Analiz beklenenden uzun sürüyor. İşlem devam ediyor; bu sırada sayfayı açık tutabilirsiniz.
+          </span>
+        )}
       </span>
     </div>
   );

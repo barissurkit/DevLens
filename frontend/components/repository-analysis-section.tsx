@@ -73,7 +73,7 @@ function RepositoryCard({ result }: { result: PortfolioRepositoryResult }) {
         <span aria-hidden="true" className="mt-1 shrink-0 text-xl leading-none text-slate-500 transition-transform group-open:rotate-90">›</span>
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            <a href={repository.html_url} target="_blank" rel="noreferrer" className="max-w-full break-words text-lg font-semibold text-slate-950 underline decoration-slate-300 underline-offset-4 hover:decoration-slate-950" onClick={(event) => event.stopPropagation()}>{repository.name}</a>
+            <span className="max-w-full break-words text-lg font-semibold text-slate-950">{repository.name}</span>
             {score.is_partial && <span className="rounded-full bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-800">Kısmi evidence</span>}
           </div>
           <p className="mt-2 break-words text-sm text-slate-600">{analysis.classification.primary_category}</p>
@@ -84,6 +84,7 @@ function RepositoryCard({ result }: { result: PortfolioRepositoryResult }) {
         </div>
       </summary>
       <div className="border-t border-slate-100 px-5 pb-6 pt-5 sm:px-6">
+        <a href={repository.html_url} target="_blank" rel="noreferrer" className="inline-flex min-h-11 items-center rounded-lg text-sm font-medium text-slate-700 underline decoration-slate-300 underline-offset-4 hover:text-slate-950 hover:decoration-slate-950 focus:outline-none focus:ring-2 focus:ring-slate-950 focus:ring-offset-2">Repository sayfasını aç</a>
         {score.is_partial && <p className="mb-5 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-900">Repository tree kısmi olduğu için structure-based evidence eksik olabilir. Bu durum analiz hatası değildir.</p>}
         {score.limitations.length > 0 && <ul className="mb-5 space-y-2 text-sm text-slate-600">{score.limitations.map((limitation) => <li key={limitation}>{limitation}</li>)}</ul>}
 

@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import type { ApiError } from "../lib/api";
 
 interface ErrorPresentation {
@@ -32,9 +33,14 @@ function getErrorPresentation(error: ApiError): ErrorPresentation {
 
 export function AnalysisErrorState({ error, onRetry }: AnalysisErrorStateProps) {
   const presentation = getErrorPresentation(error);
+  const errorRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    errorRef.current?.focus();
+  }, []);
 
   return (
-    <div role="alert" aria-live="assertive" aria-atomic="true" className="mt-4 rounded-xl border border-amber-300 bg-amber-50 px-4 py-4 text-sm text-amber-950">
+    <div ref={errorRef} tabIndex={-1} role="alert" aria-live="assertive" aria-atomic="true" className="mt-4 rounded-xl border border-amber-300 bg-amber-50 px-4 py-4 text-sm text-amber-950 focus:outline-none focus:ring-2 focus:ring-amber-800 focus:ring-offset-2">
       <p className="font-semibold">{presentation.title}</p>
       <p className="mt-1 text-amber-900">{presentation.message}</p>
       {presentation.canRetry && (
