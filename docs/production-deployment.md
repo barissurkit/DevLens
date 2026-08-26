@@ -29,7 +29,7 @@ Release: database → one-shot `alembic upgrade head` → backend `/health`
 | `GITHUB_TOKEN` | Backend | Runtime | Secret | Optional; recommended for production rate limits | GitHub API bearer token. Never frontend-visible. |
 | `GITHUB_API_BASE_URL` | Backend | Runtime | Public configuration | Optional, default `https://api.github.com` | GitHub API endpoint. |
 | `GEMINI_API_KEY` | Backend | Runtime | Secret | Optional for startup; needed for AI | Gemini credential. Never frontend-visible. |
-| `GEMINI_MODEL` | Backend | Runtime | Non-secret | Optional, default `gemini-2.5-flash` | Gemini model selection. |
+| `GEMINI_MODEL` | Backend | Runtime | Non-secret | Optional, default `gemini-3.6-flash` | Gemini model selection. |
 | `POSTGRES_DB` | Local Compose | Runtime | Local-only | Local only | Local database name. |
 | `POSTGRES_USER` | Local Compose | Runtime | Local-only | Local only | Local database user. |
 | `POSTGRES_PASSWORD` | Local Compose | Runtime | Local-only secret | Local only | Local password; never reuse in production. |
