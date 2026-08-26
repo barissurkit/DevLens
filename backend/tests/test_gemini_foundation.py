@@ -149,9 +149,12 @@ def test_gemini_server_failures_are_unavailable(status_code: int) -> None:
 
 def test_gemini_rate_limit_and_client_errors_keep_distinct_mapping() -> None:
     rate_limit = genai_errors.APIError(429, {"error": {"status": "RESOURCE_EXHAUSTED"}})
+    permission_denied = genai_errors.APIError(403, {"error": {"status": "PERMISSION_DENIED"}})
     invalid_request = genai_errors.APIError(400, {"error": {"status": "INVALID_ARGUMENT"}})
 
     assert isinstance(_normalize_sdk_error(rate_limit), GeminiRateLimitError)
+    assert not isinstance(_normalize_sdk_error(permission_denied), GeminiRateLimitError)
+    assert isinstance(_normalize_sdk_error(permission_denied), GeminiUpstreamError)
     assert isinstance(_normalize_sdk_error(invalid_request), GeminiUpstreamError)
 
 

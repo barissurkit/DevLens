@@ -213,7 +213,7 @@ def _normalize_sdk_error(error: Exception) -> GeminiError | None:
         return None
 
     status_code = error.code
-    if status_code in {429, 403}:
+    if status_code == 429:
         return GeminiRateLimitError("Gemini rate limit or quota prevented the request.")
     if isinstance(status_code, int) and status_code >= 500:
         return GeminiUnavailableError("Gemini service is unavailable.")
@@ -237,6 +237,10 @@ def _log_gemini_failure(
     if isinstance(error, genai_errors.APIError):
         google_status = _safe_google_status(error)
         category = google_status if google_status != "unknown" else "api_error"
+        structured_category = "rate_limit" if error.code == 429 else "upstream_error"
+        display_category = (
+            structured_category if error.code in {403, 429} else category
+        )
         logger.warning(
             "Gemini request failed: model=%s upstream_status_code=%s "
             "upstream_google_status=%s elapsed_ms=%s error_category=%s",
@@ -244,7 +248,7 @@ def _log_gemini_failure(
             error.code,
             google_status,
             elapsed_ms,
-            category,
+            display_category,
             extra={
                 "event": "gemini.request.completed",
                 "provider": "gemini",
@@ -253,7 +257,8 @@ def _log_gemini_failure(
                 "attempt": attempt,
                 "duration_ms": elapsed_ms,
                 "upstream_status": error.code,
-                "error_category": category,
+                "error_category": structured_category,
+                "provider_status": google_status,
                 "result": "failure",
                 "request_id": current_request_id(),
             },
