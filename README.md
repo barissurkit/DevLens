@@ -25,11 +25,17 @@ Enter a GitHub username to inspect public profile and repository evidence. DevLe
 5. Structured analysis is passed to Gemini for interpretation when the optional AI layer is available.
 6. The frontend renders deterministic results and the AI interpretation separately.
 
+![DevLens analysis dashboard showing portfolio scoring, repository evidence, and analysis insights](docs/assets/screenshots/devlens-analysis-overview.png)
+
+> Screenshots use synthetic demo data rendered through the real DevLens application pipeline.
+
 ## Deterministic Analysis vs. AI Interpretation
 
 The deterministic layer owns repository evidence, measurable findings, repository scoring, and portfolio scoring. Gemini owns interpretation, explanation, and the next-project recommendation.
 
 Gemini does not invent repository evidence, modify deterministic scores, or override measurable findings. Its structured response is validated against the deterministic signals, and an AI failure does not invalidate the deterministic analysis.
+
+![DevLens repository analysis showing deterministic evidence signals and score breakdown](docs/assets/screenshots/devlens-evidence-detail.png)
 
 ## Engineering and Production Highlights
 
