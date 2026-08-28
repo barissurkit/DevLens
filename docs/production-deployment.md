@@ -1,130 +1,107 @@
-# DevLens Production Deployment Readiness
+# Production Deployment
 
-This provider-neutral Aşama 9.3 contract does not provision cloud resources, create production secrets, publish images, or deploy. Provider selection and the first real production smoke belong to Aşama 9.4.
+This document describes the current DevLens production topology and operational boundaries. It contains no credentials, provider resource IDs, or private service URLs.
 
-## Target topology
+## Current Topology
 
 ```text
-Public Internet
+User Browser
       ↓ HTTPS
-Frontend web service (Next.js production container)
-      ↓ HTTPS: NEXT_PUBLIC_API_BASE_URL
-Backend web service (FastAPI production container)
-      ├── GitHub API
-      ├── Gemini API
-      └── Managed persistent PostgreSQL
+Render Free — Next.js production frontend
+      ↓ HTTPS direct fetch via NEXT_PUBLIC_API_BASE_URL
+Render Free — FastAPI/Uvicorn backend
+      ├── HTTPS → GitHub API
+      ├── PostgreSQL/TLS → Neon Free PostgreSQL
+      └── HTTPS → Gemini API (optional interpretation)
 
-Release: database → one-shot `alembic upgrade head` → backend `/health`
-          → frontend build/deploy → production browser smoke
+Separate release operation:
+backend image/environment → Alembic one-shot migration → Neon schema
 ```
 
-## Production environment contract
+The frontend contains no GitHub, Gemini, or database secrets. Provider credentials belong to the backend runtime. `CORS_ALLOWED_ORIGINS` restricts browser access to explicit frontend origins.
 
-| Variable | Component | Build/runtime | Secret/public | Required | Purpose |
-| --- | --- | --- | --- | --- | --- |
-| `NEXT_PUBLIC_API_BASE_URL` | Frontend | Build-time | Public | Browser functionality | Public HTTPS FastAPI URL; never a Docker-internal hostname. |
-| `CORS_ALLOWED_ORIGINS` | Backend | Runtime | Public configuration | Non-local deployment | Comma-separated exact browser origins. Whitespace is normalized; wildcard/malformed values are rejected. |
-| `DATABASE_URL` | Backend/migration | Runtime | Secret | App-optional; production required | `postgresql+asyncpg://USER:PASSWORD@HOST:PORT/DATABASE`. |
-| `ANALYSIS_CACHE_TTL_SECONDS` | Backend | Runtime | Non-secret | Optional, default `900` | Deterministic PostgreSQL snapshot cache freshness; `0` disables reads. |
-| `GITHUB_TOKEN` | Backend | Runtime | Secret | Optional; recommended for production rate limits | GitHub API bearer token. Never frontend-visible. |
-| `GITHUB_API_BASE_URL` | Backend | Runtime | Public configuration | Optional, default `https://api.github.com` | GitHub API endpoint. |
-| `GEMINI_API_KEY` | Backend | Runtime | Secret | Optional for startup; needed for AI | Gemini credential. Never frontend-visible. |
-| `GEMINI_MODEL` | Backend | Runtime | Non-secret | Optional, default `gemini-3.6-flash` | Gemini model selection. |
-| `POSTGRES_DB` | Local Compose | Runtime | Local-only | Local only | Local database name. |
-| `POSTGRES_USER` | Local Compose | Runtime | Local-only | Local only | Local database user. |
-| `POSTGRES_PASSWORD` | Local Compose | Runtime | Local-only secret | Local only | Local password; never reuse in production. |
+## Production Services
 
-`NEXT_PUBLIC_*` is embedded into the browser bundle during `npm run build` and the Docker frontend builder stage. Changing it after image creation requires rebuilding the frontend. No frontend secret may use this prefix.
+| Service | Current deployment | Runtime contract |
+| --- | --- | --- |
+| Frontend | Render Free | Next.js production `next start`, port 3000 |
+| Backend | Render Free | FastAPI/Uvicorn, port 8000, `GET /health` |
+| Database | Neon Free PostgreSQL | Persistent PostgreSQL-compatible storage |
+| Migration | One-shot backend image operation | `alembic upgrade head` before backend rollout |
+| GitHub | GitHub API | Public evidence; optional backend-only token |
+| AI | Gemini API | Optional interpretation, model `gemini-3.6-flash` |
 
-## Application versus production requirements
+## Environment Variables
 
-The application intentionally remains fail-open/optional in these areas:
+| Variable | Component | Visibility | Purpose |
+| --- | --- | --- | --- |
+| `NEXT_PUBLIC_API_BASE_URL` | Frontend build | Public | Public HTTPS FastAPI URL |
+| `CORS_ALLOWED_ORIGINS` | Backend runtime | Public configuration | Exact allowed frontend origins |
+| `DATABASE_URL` | Backend/migration | Secret | Neon PostgreSQL connection |
+| `GITHUB_TOKEN` | Backend runtime | Secret | Optional GitHub API bearer token |
+| `GITHUB_API_BASE_URL` | Backend runtime | Public configuration | Defaults to `https://api.github.com` |
+| `GEMINI_API_KEY` | Backend runtime | Secret | Optional Gemini credential |
+| `GEMINI_MODEL` | Backend runtime | Non-secret | Defaults to `gemini-3.6-flash` |
+| `ANALYSIS_CACHE_TTL_SECONDS` | Backend runtime | Non-secret | Defaults to `900` seconds |
 
-- Without `DATABASE_URL`, the API starts and persistence/cache operations remain optional.
-- Without `GEMINI_API_KEY`, the API starts and returns a safe unavailable/not-configured AI result.
-- Without `GITHUB_TOKEN`, public GitHub requests retain their existing unauthenticated behavior.
+`NEXT_PUBLIC_API_BASE_URL` is embedded into the frontend build and must never contain a secret. See [.env.example](../.env.example) for local configuration names.
 
-Production should still configure persistent PostgreSQL, a GitHub token appropriate for expected rate limits, and Gemini when the full AI experience is required.
+## Database Migration
 
-## CORS policy
-
-FastAPI uses `CORS_ALLOWED_ORIGINS` as an exact comma-separated allowlist with credentials enabled, `GET`/`POST` methods and all request headers. The local default remains:
-
-```text
-http://localhost:3000,http://127.0.0.1:3000
-```
-
-Production supplies origins such as `https://frontend.example.com` through runtime configuration. `*` is rejected and is never used with credentialed CORS.
-
-## Services, ports and provider requirements
-
-| Service | Exposure | Port | Contract |
-| --- | --- | ---: | --- |
-| Frontend | Public HTTPS at provider edge | 3000 | Next.js production `next start`; no local persistence. |
-| Backend | Public HTTPS at provider edge | 8000 | Uvicorn production command; `GET /health`; no local persistence. |
-| Migration job | Private one-shot backend image | 8000 image context | `alembic upgrade head`; must succeed before backend rollout. |
-| PostgreSQL | Private managed service | Provider-managed | PostgreSQL 16-compatible persistent storage, backups and restore. |
-
-The current containers use fixed internal ports 3000 and 8000. Provider selection must support these ports or provide explicit mapping; generic `$PORT` handling was not added speculatively.
-
-The eventual provider must support Docker-compatible frontend/backend services, runtime secrets, HTTPS, health checks, outbound GitHub/Gemini access, managed PostgreSQL and a one-shot migration command. No provider-specific deployment file is included.
-
-## Database and migration release strategy
-
-Production PostgreSQL must persist independently of backend containers. The current async SQLAlchemy engine uses `asyncpg` and `pool_pre_ping=True`; pool tuning belongs to provider deployment. Provider-specific TLS query parameters must be validated in Aşama 9.4.
-
-FastAPI startup does not run migrations. Run from the backend image’s `/app` directory:
+FastAPI startup does not run migrations. Run migration as a separate one-shot operation using the backend image and production database environment:
 
 ```bash
 alembic upgrade head
 ```
 
-Recommended order:
+Stop the rollout if migration fails. The application uses SQLAlchemy with `asyncpg`; schema changes and application rollbacks remain separate decisions. Do not automatically downgrade production schema during rollback.
 
-1. Make managed PostgreSQL available and verify backups.
-2. Inject backend runtime configuration and secrets.
-3. Run the one-shot migration job; stop if it fails.
-4. Deploy backend and verify `/health`.
-5. Confirm backend public HTTPS URL.
-6. Build frontend with `NEXT_PUBLIC_API_BASE_URL` set.
-7. Configure the final frontend HTTPS origin in `CORS_ALLOWED_ORIGINS`.
-8. Deploy frontend and run browser smoke.
-9. Verify GitHub, Gemini, persistence and cache behavior.
+## Deployment Order
 
-Do not automatically run `alembic downgrade` during rollback. Application rollback and schema rollback are separate decisions. Destructive/incompatible changes require a verified managed-database backup and restore plan.
+1. Confirm Neon PostgreSQL availability and backup/restore expectations.
+2. Configure backend runtime secrets and public settings.
+3. Run the one-shot Alembic migration.
+4. Deploy or restart the backend and verify `/health`.
+5. Build the frontend with the public backend URL.
+6. Configure the production frontend origin in `CORS_ALLOWED_ORIGINS`.
+7. Deploy the frontend.
+8. Run browser smoke and verify GitHub, cache, persistence, and optional Gemini behavior.
 
-## Health, logging and security boundaries
+## Health Verification
 
-- `/health` is a fast non-sensitive liveness endpoint returning `{"status":"ok"}`.
-- No `/ready` endpoint was added; migration ordering provides schema readiness.
-- Production images use Uvicorn and `next start`; no reload/dev command is present.
-- Application logs go to stdout as one JSON object per event. HTTP requests receive a server-generated `X-Request-ID`; the `request.completed` event includes the normalized route, status and duration. Provider and cache events expose only allowlisted operational metadata. Request/response bodies, prompts, provider payloads, DSNs and secrets are never logged.
-- Public errors do not expose SQL, DSNs, stack traces or credentials.
-- No broad forwarded-header trust or TrustedHostMiddleware was added without a provider requirement.
-- TLS termination belongs to the selected platform edge. Production frontend and backend URLs must both be HTTPS.
+`GET /health` is a fast non-sensitive liveness endpoint returning:
 
-## Pre-deploy checklist
+```json
+{"status":"ok"}
+```
 
-- [ ] Final `main` CI is green and production npm audit has zero high/critical findings.
-- [ ] Backend runtime secrets are configured through provider secret management.
-- [ ] Public backend HTTPS URL is known; frontend was built with it.
-- [ ] Final frontend HTTPS origin is in `CORS_ALLOWED_ORIGINS`.
-- [ ] Managed PostgreSQL is persistent and its backup/restore policy is understood.
-- [ ] `alembic upgrade head` completed successfully.
-- [ ] Backend `/health` and frontend health/root are successful.
-- [ ] Browser smoke has no mixed-content, console or unexpected network errors.
-- [ ] GitHub/Gemini, persistence/cache and rate-limit behavior are verified.
-- [ ] No secret appears in image layers, browser bundle or logs.
+Normal application responses include a server-generated `X-Request-ID`. Structured logs correlate request lifecycle and provider activity; this document does not claim that every possible raw unhandled 500 response has the header.
 
-## Rollback and recovery runbook
+## Analysis Verification
 
-- Frontend issue: roll back the frontend image/build.
-- Backend issue: roll back the backend image only when schema compatibility is confirmed.
-- Migration issue: stop rollout; do not auto-downgrade; assess compatibility and restore a verified backup if required.
-- Secret/config issue: correct provider environment/secrets and restart/redeploy the affected service.
-- Database recovery: use the managed provider backup/restore procedure; this repository does not implement backups.
-- Secret rotation: update provider-managed environment/secrets and restart/redeploy as applicable.
+`POST /api/v1/analysis` returns deterministic repository and portfolio analysis. The PostgreSQL snapshot cache reuses only fresh snapshots with compatible schema and `ANALYSIS_ENGINE_VERSION` (`v2`). The default freshness window is 900 seconds. Supported cache read failures fail open, and persistence writes are best-effort.
 
-## Non-goals
+## Interpretation Verification
 
-This stage does not perform cloud deployment, provision PostgreSQL, create production secrets, configure DNS/domains/TLS certificates, publish images, add CD, Kubernetes, Terraform, Redis, workers, auth, observability vendors, or start Aşama 9.4.
+`POST /api/v1/interpretation` reuses deterministic analysis where available, then may invoke Gemini again. A persisted interpretation payload is not described as a reusable AI cache authority. Gemini output is schema- and signal-reference-validated, and unavailable AI leaves deterministic analysis usable.
+
+The configured default model is `gemini-3.6-flash`. Natural-language output is Turkish while repository names, technology names, package names, URLs, and technical identifiers are preserved.
+
+## Rollback / Safety Notes
+
+- Frontend issues can be rolled back at the frontend deployment level.
+- Backend rollback requires schema compatibility confirmation.
+- Migration failure stops rollout; do not auto-downgrade.
+- Secret rotation uses provider-managed runtime configuration followed by service restart/redeploy.
+- Database recovery uses Neon managed backup/restore procedures.
+- Do not expose tokens, DSNs, credentials, provider resource IDs, or internal URLs in logs or public documentation.
+
+## Cost Assumptions
+
+Expected recurring infrastructure cost under the current free-tier configuration: **$0/month**. This is not a guaranteed operating cost; provider pricing, quotas, free-tier policies, and usage limits may change.
+
+## Related Documentation
+
+- [Architecture and technical story](architecture.md)
+- [Project README](../README.md)
+- [Environment template](../.env.example)

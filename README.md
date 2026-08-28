@@ -63,14 +63,11 @@ The production frontend is available at the [Live Demo](https://devlens-frontend
 
 ## Architecture Overview
 
-```text
-Browser
-  → Next.js frontend
-  → FastAPI backend
-  → GitHub API and deterministic analysis
-  → PostgreSQL cache and persistence
-  → Gemini interpretation (optional)
-```
+DevLens uses a direct browser → Next.js → FastAPI boundary. The backend combines public GitHub evidence with a deterministic analysis pipeline and a versioned PostgreSQL snapshot cache. Gemini receives only structured deterministic context for optional interpretation and a grounded next-project recommendation; Gemini does not determine or modify DevLens scores.
+
+![DevLens production architecture](docs/assets/architecture/production-architecture.svg)
+
+Read the full [architecture and technical story](docs/architecture.md), including the deterministic-versus-AI responsibility boundary and production request flow.
 
 The browser receives only the public frontend configuration. GitHub and Gemini credentials remain in the backend runtime environment.
 

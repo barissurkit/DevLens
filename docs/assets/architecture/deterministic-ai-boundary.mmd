@@ -1,0 +1,35 @@
+%% DevLens responsibility boundary. Keep this source canonical.
+flowchart TB
+    evidence["GitHub Public Evidence"]
+    repo["Repository Analysis"]
+    signals["Deterministic Signals"]
+    repoScore["Repository Scores"]
+    aggregate["Portfolio Aggregation"]
+    portfolio["Portfolio Score\n+ Deterministic Findings"]
+    portfolio --> context["Structured\nInterpretation Context"]
+    context --> gemini["Optional Gemini"]
+    gemini --> output["Turkish Interpretation\n+ Grounded Recommendation"]
+
+    subgraph deterministic[DETERMINISTIC AUTHORITY]
+        direction LR
+        evidence --> repo --> signals --> repoScore --> aggregate --> portfolio
+    end
+    subgraph ai[OPTIONAL AI INTERPRETATION]
+        context
+        gemini
+        output
+    end
+
+    guardrail["Gemini may explain supplied signals.\nIt cannot create evidence or change scores."]
+    guardrail -.-> gemini
+
+    classDef deterministicStyle fill:#e8f1ff,stroke:#2563eb,color:#172554,stroke-width:2px
+    classDef contextStyle fill:#fef3c7,stroke:#d97706,color:#78350f,stroke-width:2px
+    classDef aiStyle fill:#f3e8ff,stroke:#9333ea,color:#581c87,stroke-width:2px
+    classDef guardrailStyle fill:#fff7ed,stroke:#ea580c,color:#7c2d12,stroke-width:2px
+    class evidence,repo,signals,repoScore,aggregate,portfolio deterministicStyle
+    class context contextStyle
+    class gemini,output aiStyle
+    class guardrail guardrailStyle
+    style deterministic fill:#f8fbff,stroke:#2563eb,stroke-width:2px
+    style ai fill:#fcf7ff,stroke:#9333ea,stroke-width:2px

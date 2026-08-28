@@ -1,0 +1,25 @@
+%% DevLens production topology. Keep this source canonical.
+flowchart TB
+    browser[User Browser]
+    frontend["Render\nNext.js Frontend\nTypeScript / React"]
+    backend["Render\nFastAPI Backend\nBackend-only credentials"]
+    github["GitHub API\nPublic profile / repository evidence"]
+    neon["Neon PostgreSQL\nVersioned analysis snapshots"]
+    gemini["Gemini API\nOptional structured interpretation"]
+    migrate["Alembic\nOne-shot schema migration"]
+
+    browser -->|HTTPS| frontend
+    frontend -->|HTTPS direct fetch\nNEXT_PUBLIC_API_BASE_URL| backend
+    backend -->|Public evidence| github
+    backend <-->|PostgreSQL / TLS\nVersioned snapshots| neon
+    backend -->|Structured context\nOptional AI| gemini
+    migrate -->|Migration| neon
+
+    classDef frontendStyle fill:#e8f1ff,stroke:#2563eb,color:#172554,stroke-width:2px
+    classDef backendStyle fill:#dbeafe,stroke:#1d4ed8,color:#172554,stroke-width:3px
+    classDef dataStyle fill:#ecfdf5,stroke:#059669,color:#064e3b,stroke-width:2px
+    classDef externalStyle fill:#f3f4f6,stroke:#6b7280,color:#1f2937,stroke-width:2px
+    class browser,frontend frontendStyle
+    class backend backendStyle
+    class neon,migrate dataStyle
+    class github,gemini externalStyle
