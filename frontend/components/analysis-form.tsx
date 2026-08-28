@@ -83,7 +83,7 @@ export function AnalysisForm() {
             {isLoading ? "Analiz ediliyor..." : "Analiz et"}
           </button>
         </div>
-        <p id="username-hint" className="mt-3 text-sm text-slate-500">Public repository kanıtlarını incelemek için kullanıcı adını girin.</p>
+        <p id="username-hint" className="mt-3 text-sm text-slate-500">Herkese açık repository kanıtlarını incelemek için kullanıcı adını girin.</p>
         {validationMessage && (
           <p id="analysis-validation-error" role="alert" aria-live="assertive" className="mt-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">
             {validationMessage}

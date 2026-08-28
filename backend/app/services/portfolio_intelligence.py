@@ -16,6 +16,32 @@ MIN_DETECTIONS_FOR_STRENGTH = 2
 MIN_REPOSITORIES_FOR_RECURRING_TECHNOLOGY = 2
 MIN_REPOSITORIES_FOR_DOMINANT_AREA = 2
 
+_SIGNAL_LABELS = {
+    "readme_exists": "README içeriği",
+    "readme_title": "README başlığı",
+    "readme_description": "README açıklaması",
+    "readme_installation": "README kurulum bölümü",
+    "readme_usage": "README kullanım bölümü",
+    "readme_technologies": "README teknoloji bölümü",
+    "readme_requirements": "README gereksinimleri bölümü",
+    "tests_structure": "test dizini yapısı",
+    "ci_workflow": "GitHub Actions iş akışı",
+    "gitignore": ".gitignore dosyası",
+    "license": "desteklenen lisans dosyası adı",
+}
+
+
+def _signal_message(key: str, kind: str, detected_count: int = 0) -> str:
+    label = _SIGNAL_LABELS[key]
+    if kind == "strength":
+        display_label = "README" if key.startswith("readme_") else label
+        return f"{display_label} sinyalleri, başarıyla analiz edilen birden fazla herkese açık repository'de tespit edildi."
+    if detected_count == 0:
+        display_label = "README " + label.removeprefix("README ") if key.startswith("readme_") else label
+        return f"Başarıyla analiz edilen herkese açık repository'lerin hiçbirinde {display_label} sinyali tespit edilmedi."
+    display_label = "README " + label.removeprefix("README ") if key.startswith("readme_") else label
+    return f"{display_label} sinyalleri, başarıyla analiz edilen herkese açık repository'lerin yalnızca sınırlı bir bölümünde tespit edildi."
+
 
 @dataclass(frozen=True, slots=True)
 class PortfolioInsightRule:
@@ -227,7 +253,7 @@ def _strength_signals(
             strengths.append(
                 PortfolioInsight(
                     key=rule.key,
-                    message=rule.strength_message,
+                    message=_signal_message(rule.key, "strength"),
                     detected_repository_count=detected_count,
                     analyzed_repository_count=analyzed_count,
                 )
@@ -270,7 +296,7 @@ def _improvement_signals(
         improvements.append(
             PortfolioInsight(
                 key=rule.key,
-                message=message,
+            message=_signal_message(rule.key, "improvement", detected_count),
                 detected_repository_count=detected_count,
                 analyzed_repository_count=analyzed_count,
             )
@@ -343,27 +369,20 @@ def _limitations(aggregation: PortfolioAggregation) -> list[str]:
 
     if aggregation.failed_repository_count == 1:
         limitations.append(
-            "1 selected repository could not be analyzed and was excluded "
-            "from portfolio intelligence."
+            "1 seçilen repository analiz edilemedi ve portföy analizinden çıkarıldı."
         )
     elif aggregation.failed_repository_count > 1:
         limitations.append(
-            f"{aggregation.failed_repository_count} selected repositories "
-            "could not be analyzed and were excluded from portfolio intelligence."
+            f"{aggregation.failed_repository_count} seçilen repository analiz edilemedi ve portföy analizinden çıkarıldı."
         )
 
     if aggregation.partial_evidence_repository_count == 1:
         limitations.append(
-            "1 successfully analyzed repository has partial structure evidence; "
-            "absence-based structure and repository-hygiene insights may be "
-            "incomplete."
+            "1 başarıyla analiz edilen repository kısmi yapı kanıtına sahip; yokluğa dayalı yapı ve repository hijyeni içgörüleri eksik olabilir."
         )
     elif aggregation.partial_evidence_repository_count > 1:
         limitations.append(
-            f"{aggregation.partial_evidence_repository_count} successfully "
-            "analyzed repositories have partial structure evidence; "
-            "absence-based structure and repository-hygiene insights may be "
-            "incomplete."
+            f"{aggregation.partial_evidence_repository_count} başarıyla analiz edilen repository kısmi yapı kanıtına sahip; yokluğa dayalı yapı ve repository hijyeni içgörüleri eksik olabilir."
         )
 
     if (
@@ -371,8 +390,7 @@ def _limitations(aggregation: PortfolioAggregation) -> list[str]:
         < MIN_REPOSITORIES_FOR_PATTERN
     ):
         limitations.append(
-            "Portfolio-level patterns require at least two successfully "
-            "analyzed repositories."
+            "Portföy düzeyindeki örüntüler için en az iki repository'nin başarıyla analiz edilmesi gerekir."
         )
 
     return limitations

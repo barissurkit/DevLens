@@ -32,64 +32,64 @@ PORTFOLIO_SCORING_DIMENSIONS: tuple[
 ] = (
     PortfolioScoringDimensionDefinition(
         key="documentation_consistency",
-        label="Documentation Consistency",
+        label="Dokümantasyon Tutarlılığı",
         rules=(
             PortfolioScoringRuleDefinition(
                 key="readme_exists",
-                label="README exists",
+                label="README mevcut",
                 weight=8,
             ),
             PortfolioScoringRuleDefinition(
                 key="readme_title",
-                label="README title",
+                label="README başlığı",
                 weight=5,
             ),
             PortfolioScoringRuleDefinition(
                 key="readme_description",
-                label="README description",
+                label="README açıklaması",
                 weight=8,
             ),
             PortfolioScoringRuleDefinition(
                 key="readme_installation",
-                label="README installation",
+                label="README kurulumu",
                 weight=9,
             ),
             PortfolioScoringRuleDefinition(
                 key="readme_usage",
-                label="README usage",
+                label="README kullanımı",
                 weight=9,
             ),
             PortfolioScoringRuleDefinition(
                 key="readme_technologies",
-                label="README technologies",
+                label="README teknolojileri",
                 weight=6,
             ),
             PortfolioScoringRuleDefinition(
                 key="readme_requirements",
-                label="README requirements",
+                label="README gereksinimleri",
                 weight=5,
             ),
         ),
     ),
     PortfolioScoringDimensionDefinition(
         key="testing_automation_adoption",
-        label="Testing & Automation Adoption",
+        label="Test ve Otomasyon Kullanımı",
         rules=(
             PortfolioScoringRuleDefinition(
                 key="tests_structure",
-                label="Tests structure",
+                label="Test Yapısı",
                 weight=18,
             ),
             PortfolioScoringRuleDefinition(
                 key="ci_workflow",
-                label="CI workflow",
+                label="CI İş Akışı",
                 weight=12,
             ),
         ),
     ),
     PortfolioScoringDimensionDefinition(
         key="repository_hygiene_consistency",
-        label="Repository Hygiene Consistency",
+        label="Repository Hijyeni Tutarlılığı",
         rules=(
             PortfolioScoringRuleDefinition(
                 key="gitignore",
@@ -252,31 +252,25 @@ def _limitations(aggregation: PortfolioAggregation) -> list[str]:
         < MIN_REPOSITORIES_FOR_PORTFOLIO_SCORE
     ):
         limitations.append(
-            "Portfolio scoring requires at least two successfully analyzed "
-            "repositories."
+            "Portföy skoru için en az iki repository'nin başarıyla analiz edilmesi gerekir."
         )
 
     if aggregation.failed_repository_count == 1:
         limitations.append(
-            "1 selected repository could not be analyzed and was excluded "
-            "from portfolio scoring."
+            "1 seçilen repository analiz edilemedi ve portföy skorundan çıkarıldı."
         )
     elif aggregation.failed_repository_count > 1:
         limitations.append(
-            f"{aggregation.failed_repository_count} selected repositories "
-            "could not be analyzed and were excluded from portfolio scoring."
+            f"{aggregation.failed_repository_count} seçilen repository analiz edilemedi ve portföy skorundan çıkarıldı."
         )
 
     if aggregation.partial_evidence_repository_count == 1:
         limitations.append(
-            "1 successfully analyzed repository has partial structure evidence; "
-            "structure-based scoring evidence may be incomplete."
+            "1 başarıyla analiz edilen repository kısmi yapı kanıtına sahip; yapı tabanlı skor kanıtı eksik olabilir."
         )
     elif aggregation.partial_evidence_repository_count > 1:
         limitations.append(
-            f"{aggregation.partial_evidence_repository_count} successfully "
-            "analyzed repositories have partial structure evidence; "
-            "structure-based scoring evidence may be incomplete."
+            f"{aggregation.partial_evidence_repository_count} başarıyla analiz edilen repository kısmi yapı kanıtına sahip; yapı tabanlı skor kanıtı eksik olabilir."
         )
 
     return limitations

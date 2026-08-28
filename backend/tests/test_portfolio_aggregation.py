@@ -190,47 +190,47 @@ def test_empty_portfolio_returns_canonical_zero_aggregation() -> None:
             "portfolio_signals": [
                 {
                     "key": "readme_exists",
-                    "label": "README exists",
+                    "label": "README mevcut",
                     "detected_repository_count": 0,
                 },
                 {
                     "key": "readme_title",
-                    "label": "README title",
+                    "label": "README başlığı",
                     "detected_repository_count": 0,
                 },
                 {
                     "key": "readme_description",
-                    "label": "README description",
+                    "label": "README açıklaması",
                     "detected_repository_count": 0,
                 },
                 {
                     "key": "readme_installation",
-                    "label": "README installation",
+                    "label": "README kurulumu",
                     "detected_repository_count": 0,
                 },
                 {
                     "key": "readme_usage",
-                    "label": "README usage",
+                    "label": "README kullanımı",
                     "detected_repository_count": 0,
                 },
                 {
                     "key": "readme_technologies",
-                    "label": "README technologies",
+                    "label": "README teknolojileri",
                     "detected_repository_count": 0,
                 },
                 {
                     "key": "readme_requirements",
-                    "label": "README requirements",
+                    "label": "README gereksinimleri",
                     "detected_repository_count": 0,
                 },
                 {
                     "key": "tests_structure",
-                    "label": "Tests structure",
+                    "label": "Test Yapısı",
                     "detected_repository_count": 0,
                 },
                 {
                     "key": "ci_workflow",
-                    "label": "CI workflow",
+                    "label": "CI İş Akışı",
                     "detected_repository_count": 0,
                 },
                 {

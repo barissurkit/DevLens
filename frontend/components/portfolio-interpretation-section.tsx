@@ -11,7 +11,7 @@ interface PortfolioInterpretationSectionProps {
 
 const UNAVAILABLE_COPY: Record<InterpretationUnavailableReason, string> = {
   not_configured: "AI yorumu bu analiz için yapılandırılmamış.",
-  insufficient_evidence: "AI yorumu için yeterli başarılı repository evidence'ı oluşmadı.",
+  insufficient_evidence: "AI yorumu için yeterli başarılı repository kanıtı oluşmadı.",
   timeout: "AI yorumu geçici olarak kullanılamıyor.",
   rate_limit: "AI yorumu geçici olarak kullanılamıyor.",
   unavailable: "AI yorumu geçici olarak kullanılamıyor.",
@@ -22,10 +22,10 @@ const UNAVAILABLE_COPY: Record<InterpretationUnavailableReason, string> = {
 export function PortfolioInterpretationSection({ analysis, interpretation }: PortfolioInterpretationSectionProps) {
   return (
     <section aria-labelledby="ai-interpretation-heading" className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
-      <p className="text-sm font-medium uppercase tracking-[0.16em] text-slate-500">Optional AI layer</p>
+      <p className="text-sm font-medium uppercase tracking-[0.16em] text-slate-500">İsteğe Bağlı AI Katmanı</p>
       <h3 id="ai-interpretation-heading" className="mt-2 text-2xl font-semibold tracking-tight text-slate-950">AI Yorumu</h3>
       <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">
-        Bu bölüm, DevLens&apos;in ölçtüğü deterministic evidence sonuçlarını açıklar; skorları veya evidence&apos;ı değiştirmez.
+        Bu bölüm, DevLens&apos;in ölçtüğü deterministik kanıt sonuçlarını açıklar; skorları veya kanıtları değiştirmez.
       </p>
       {interpretation.status === "available" ? (
         <AvailableInterpretation analysis={analysis} interpretation={interpretation.interpretation} />
@@ -45,12 +45,12 @@ function AvailableInterpretation({ analysis, interpretation }: { analysis: GitHu
   return (
     <div className="mt-6 space-y-6 text-sm leading-6 text-slate-700">
       <p className="max-w-3xl break-words">{interpretation.summary}</p>
-      <ExplanationGroup title="Güçlü Evidence Sinyalleri" explanations={interpretation.strength_explanations} signalLabels={signalLabels} emptyMessage="Bu analiz için AI açıklamalı güçlü sinyal bulunmuyor." />
+      <ExplanationGroup title="Güçlü Kanıt Sinyalleri" explanations={interpretation.strength_explanations} signalLabels={signalLabels} emptyMessage="Bu analiz için AI açıklamalı güçlü sinyal bulunmuyor." />
       <ExplanationGroup title="İyileştirme Fırsatları" explanations={interpretation.improvement_explanations} signalLabels={signalLabels} emptyMessage="Bu analiz için AI açıklamalı iyileştirme sinyali bulunmuyor." />
-      {interpretation.technology_context && <ContextBlock title="Technology Context" text={interpretation.technology_context} />}
-      {interpretation.project_area_context && <ContextBlock title="Project Area Context" text={interpretation.project_area_context} />}
+      {interpretation.technology_context && <ContextBlock title="Teknoloji Bağlamı" text={interpretation.technology_context} />}
+      {interpretation.project_area_context && <ContextBlock title="Proje Alanı Bağlamı" text={interpretation.project_area_context} />}
       <RecommendationBlock recommendation={interpretation.next_project_recommendation} signalLabels={signalLabels} />
-      {interpretation.limitations_note && <ContextBlock title="AI interpretation note" text={interpretation.limitations_note} />}
+      {interpretation.limitations_note && <ContextBlock title="AI Yorum Notu" text={interpretation.limitations_note} />}
     </div>
   );
 }
@@ -70,7 +70,7 @@ function RecommendationBlock({ recommendation, signalLabels }: { recommendation:
           <div>
             <h5 className="font-semibold text-slate-950">Odak alanları</h5>
             <ul className="mt-2 list-disc space-y-1 pl-5 text-slate-700">
-              {recommendation.focus_signal_keys.map((key) => <li key={key} className="break-words">{signalLabels.get(key) || "Evidence sinyali"}</li>)}
+              {recommendation.focus_signal_keys.map((key) => <li key={key} className="break-words">{signalLabels.get(key) || "Kanıt sinyali"}</li>)}
             </ul>
           </div>
           <div>
@@ -81,7 +81,7 @@ function RecommendationBlock({ recommendation, signalLabels }: { recommendation:
           </div>
         </div>
       ) : (
-        <p className="mt-5 text-sm leading-6 text-slate-600">Bu analizde evidence-grounded bir sonraki proje önerisi oluşturmak için deterministic improvement sinyali bulunmuyor.</p>
+        <p className="mt-5 text-sm leading-6 text-slate-600">Bu analizde kanıta dayalı bir sonraki proje önerisi oluşturmak için deterministik gelişim sinyali bulunmuyor.</p>
       )}
     </section>
   );
@@ -93,7 +93,7 @@ function ExplanationGroup({ title, explanations, signalLabels, emptyMessage }: {
       <h4 id={`${title}-ai-heading`} className="text-base font-semibold text-slate-950">{title}</h4>
       {explanations.length > 0 ? (
         <ul className="mt-3 space-y-3">
-          {explanations.map((item) => <li key={item.signal_key} className="rounded-xl bg-slate-50 p-4"><p className="font-medium text-slate-900">{signalLabels.get(item.signal_key) || "Evidence sinyali"}</p><p className="mt-1 break-words">{item.explanation}</p></li>)}
+          {explanations.map((item) => <li key={item.signal_key} className="rounded-xl bg-slate-50 p-4"><p className="font-medium text-slate-900">{signalLabels.get(item.signal_key) || "Kanıt sinyali"}</p><p className="mt-1 break-words">{item.explanation}</p></li>)}
         </ul>
       ) : <p className="mt-3 text-slate-500">{emptyMessage}</p>}
     </section>

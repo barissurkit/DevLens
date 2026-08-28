@@ -30,7 +30,7 @@ CATEGORY_PRIORITY: tuple[RepositoryCategory, ...] = (
 
 CATEGORY_PRIORITY_INDEX = {category: index for index, category in enumerate(CATEGORY_PRIORITY)}
 STRUCTURE_SIGNAL_LABELS: dict[str, str] = {
-    "has_ci": "CI workflow",
+    "has_ci": "CI İş Akışı",
     "has_dockerfile": "Dockerfile",
     "has_compose": "Compose",
 }
@@ -304,12 +304,12 @@ def classify_repository(
             if _contains_phrase(normalized_description, phrase)
         )
 
-        topic_evidence = [f"GitHub topic: {topic}" for topic in matching_topics]
+        topic_evidence = [f"GitHub konusu: {topic}" for topic in matching_topics]
         technology_evidence = [
-            f"Detected technology: {technology}" for technology in matching_technologies
+            f"Tespit edilen teknoloji: {technology}" for technology in matching_technologies
         ]
         description_evidence = [
-            f'Description phrase: "{phrase}"' for phrase in matching_description_phrases
+            f'Açıklama ifadesi: "{phrase}"' for phrase in matching_description_phrases
         ]
         matching_readme_phrases = sorted(
             phrase for phrase in rule.text_phrases if _contains_phrase(normalized_readme, phrase)
@@ -318,10 +318,10 @@ def classify_repository(
             enabled_structure_signals.intersection(rule.structure_signals)
         )
         structure_evidence = [
-            f"Structure signal: {STRUCTURE_SIGNAL_LABELS[signal]}"
+            f"Yapı sinyali: {STRUCTURE_SIGNAL_LABELS[signal]}"
             for signal in matching_structure_signals
         ]
-        readme_evidence = [f'README phrase: "{phrase}"' for phrase in matching_readme_phrases]
+        readme_evidence = [f'README ifadesi: "{phrase}"' for phrase in matching_readme_phrases]
         evidence = (
             topic_evidence
             + technology_evidence
@@ -357,7 +357,7 @@ def classify_repository(
                 category=RepositoryCategory.FULL_STACK,
                 evidence_score=(backend_match.evidence_score + frontend_match.evidence_score),
                 evidence=[
-                    "Derived category: Backend and Frontend both met the evidence threshold."
+                    "Türetilen kategori: Backend ve Frontend kanıt eşiğini birlikte karşıladı."
                 ],
             )
         )
@@ -380,7 +380,7 @@ def classify_repository(
             RepositoryCategoryMatch(
                 category=RepositoryCategory.OTHER,
                 evidence_score=0,
-                evidence=["No meaningful classification evidence found."],
+                evidence=["Anlamlı bir sınıflandırma kanıtı bulunamadı."],
             )
         ],
         primary_category=RepositoryCategory.OTHER,

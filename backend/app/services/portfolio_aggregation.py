@@ -24,47 +24,47 @@ class PortfolioSignalDefinition:
 PORTFOLIO_SIGNAL_DEFINITIONS: tuple[PortfolioSignalDefinition, ...] = (
     PortfolioSignalDefinition(
         key="readme_exists",
-        label="README exists",
+        label="README mevcut",
         detect=lambda analysis: analysis.readme.exists,
     ),
     PortfolioSignalDefinition(
         key="readme_title",
-        label="README title",
+        label="README başlığı",
         detect=lambda analysis: analysis.readme.has_title,
     ),
     PortfolioSignalDefinition(
         key="readme_description",
-        label="README description",
+        label="README açıklaması",
         detect=lambda analysis: analysis.readme.has_description,
     ),
     PortfolioSignalDefinition(
         key="readme_installation",
-        label="README installation",
+        label="README kurulumu",
         detect=lambda analysis: analysis.readme.has_installation,
     ),
     PortfolioSignalDefinition(
         key="readme_usage",
-        label="README usage",
+        label="README kullanımı",
         detect=lambda analysis: analysis.readme.has_usage,
     ),
     PortfolioSignalDefinition(
         key="readme_technologies",
-        label="README technologies",
+        label="README teknolojileri",
         detect=lambda analysis: analysis.readme.has_technologies,
     ),
     PortfolioSignalDefinition(
         key="readme_requirements",
-        label="README requirements",
+        label="README gereksinimleri",
         detect=lambda analysis: analysis.readme.has_requirements,
     ),
     PortfolioSignalDefinition(
         key="tests_structure",
-        label="Tests structure",
+        label="Test Yapısı",
         detect=lambda analysis: analysis.structure.has_tests,
     ),
     PortfolioSignalDefinition(
         key="ci_workflow",
-        label="CI workflow",
+        label="CI İş Akışı",
         detect=lambda analysis: analysis.structure.has_ci,
     ),
     PortfolioSignalDefinition(

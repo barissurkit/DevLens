@@ -6,6 +6,7 @@ import type {
 } from "../lib/types";
 import { PortfolioInterpretationSection } from "./portfolio-interpretation-section";
 import { RepositoryAnalysisSection } from "./repository-analysis-section";
+import { categoryLabel } from "../lib/presentation";
 
 interface AnalysisResultShellProps {
   result: GitHubPortfolioInterpretationResponse;
@@ -19,7 +20,7 @@ const DIMENSION_LABELS: Record<string, string> = {
 };
 const DIMENSION_DESCRIPTIONS: Record<string, string> = {
   documentation_consistency: "README dokümantasyon sinyallerinin portfolio genelindeki tutarlılığı.",
-  testing_automation_adoption: "Test yapısı ve CI workflow sinyallerinin portfolio genelindeki görünümü.",
+  testing_automation_adoption: "Test yapısı ve CI iş akışı sinyallerinin portföy genelindeki görünümü.",
   repository_hygiene_consistency: ".gitignore, LICENSE ve CONTRIBUTING gibi repository pratiği sinyallerinin görünümü.",
 };
 
@@ -50,46 +51,46 @@ export function AnalysisResultShell({ result }: AnalysisResultShellProps) {
             GitHub profilini aç
           </a>
         </div>
-        {isPartial && <p className="mt-6 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">Bu sonuç, bazı repository verileri eksik olduğu için kısmi evidence içerebilir.</p>}
+        {isPartial && <p className="mt-6 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">Bu sonuç, bazı repository verileri eksik olduğu için kısmi kanıt içerebilir.</p>}
       </header>
 
       <section aria-labelledby="score-heading" className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
         <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
           <div>
-            <p className="text-sm font-medium uppercase tracking-[0.16em] text-slate-500">Portfolio Evidence Score</p>
+            <p className="text-sm font-medium uppercase tracking-[0.16em] text-slate-500">Portföy Kanıt Skoru</p>
             <h3 id="score-heading" className="mt-3 text-5xl font-semibold tracking-tight text-slate-950">
               {score.is_available && score.overall_score !== null ? `${score.overall_score} / 100` : "Kullanılamıyor"}
             </h3>
-            <p className="mt-3 max-w-xl text-sm leading-6 text-slate-600">Public repository&apos;lerde gözlemlenebilen documentation ve engineering-practice sinyallerine dayalı deterministic portfolio skoru.</p>
+            <p className="mt-3 max-w-xl text-sm leading-6 text-slate-600">Herkese açık repository&apos;lerde gözlemlenebilen dokümantasyon ve mühendislik pratiği sinyallerine dayalı deterministik portföy skoru.</p>
             <p className="mt-3 text-sm text-slate-500">
               {score.is_available ? `${score.scored_repository_count} başarılı repository üzerinden hesaplandı.` : score.limitations[0] || "Yeterli başarılı repository bulunmadığı için skor hesaplanamadı."}
             </p>
           </div>
-          {score.is_partial && <span className="rounded-full bg-amber-50 px-3 py-1.5 text-xs font-medium text-amber-800">Kısmi evidence</span>}
+          {score.is_partial && <span className="rounded-full bg-amber-50 px-3 py-1.5 text-xs font-medium text-amber-800">Kısmi kanıt</span>}
         </div>
-        {dimensions.length > 0 ? <div className="mt-8 grid gap-4 md:grid-cols-3">{dimensions.map((dimension) => <ScoreDimension key={dimension.key} dimension={dimension} />)}</div> : <p className="mt-8 rounded-xl bg-slate-50 px-4 py-3 text-sm text-slate-600">Skor kullanılabilir olduğunda dimension breakdown burada görünecek.</p>}
+        {dimensions.length > 0 ? <div className="mt-8 grid gap-4 md:grid-cols-3">{dimensions.map((dimension) => <ScoreDimension key={dimension.key} dimension={dimension} />)}</div> : <p className="mt-8 rounded-xl bg-slate-50 px-4 py-3 text-sm text-slate-600">Skor kullanılabilir olduğunda boyut dağılımı burada görünecek.</p>}
       </section>
 
       <section aria-labelledby="stats-heading" className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
         <SectionHeading id="stats-heading" title="Portfolio istatistikleri" />
         <div className="mt-5 grid grid-cols-1 gap-3 min-[420px]:grid-cols-2 sm:grid-cols-3 lg:grid-cols-6">
-          <StatItem label="Public repository" value={user.public_repos} />
+          <StatItem label="Herkese açık repository" value={user.public_repos} />
           <StatItem label="Seçilen" value={aggregation.selected_repository_count} />
           <StatItem label="Hariç tutulan" value={selection.excluded.length} />
           <StatItem label="Başarılı analiz" value={aggregation.successful_repository_count} />
           <StatItem label="Başarısız analiz" value={aggregation.failed_repository_count} />
-          <StatItem label="Kısmi evidence" value={aggregation.partial_evidence_repository_count} />
+          <StatItem label="Kısmi kanıt" value={aggregation.partial_evidence_repository_count} />
         </div>
       </section>
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <InsightSection id="strengths-heading" title="Güçlü Evidence Sinyalleri" items={intelligence.strength_signals} emptyMessage="Portfolio genelinde tekrar eden güçlü evidence sinyali belirlenmedi." />
-        <InsightSection id="improvements-heading" title="İyileştirme Fırsatları" items={intelligence.improvement_signals} emptyMessage="Bu analizde portfolio genelinde tekrarlayan bir improvement opportunity belirlenmedi." />
+        <InsightSection id="strengths-heading" title="Güçlü Kanıt Sinyalleri" items={intelligence.strength_signals} emptyMessage="Portföy genelinde tekrar eden güçlü kanıt sinyali belirlenmedi." />
+        <InsightSection id="improvements-heading" title="Gelişim Alanları" items={intelligence.improvement_signals} emptyMessage="Bu analizde portföy genelinde tekrarlayan bir gelişim alanı belirlenmedi." />
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <TagSection id="technologies-heading" title="Sık Tekrarlanan Teknolojiler" description="Birden fazla analyzed repository&apos;de tespit edilen teknolojiler." items={intelligence.recurring_technologies.map((item) => `${item.technology} · ${item.repository_count}`)} emptyMessage="Birden fazla repository&apos;de tekrar eden teknoloji tespit edilmedi." />
-        <TagSection id="areas-heading" title="Öne Çıkan Proje Alanları" description="Portfolio içinde tekrar eden proje kategorileri." items={intelligence.dominant_areas.map((item) => `${item.category} · ${item.repository_count}`)} emptyMessage="Portfolio içinde öne çıkan tekrar eden proje alanı belirlenmedi." />
+        <TagSection id="technologies-heading" title="Sık Tekrarlanan Teknolojiler" description="Birden fazla analiz edilen repository&apos;de tespit edilen teknolojiler." items={intelligence.recurring_technologies.map((item) => `${item.technology} · ${item.repository_count}`)} emptyMessage="Birden fazla repository&apos;de tekrar eden teknoloji tespit edilmedi." />
+        <TagSection id="areas-heading" title="Öne Çıkan Proje Alanları" description="Portföy içinde tekrar eden proje kategorileri." items={intelligence.dominant_areas.map((item) => `${categoryLabel(item.category)} · ${item.repository_count}`)} emptyMessage="Portföy içinde öne çıkan tekrar eden proje alanı belirlenmedi." />
       </div>
 
       {limitations.length > 0 && <section aria-labelledby="limitations-heading" className="rounded-2xl border border-slate-200 bg-slate-50 p-6 sm:p-8"><SectionHeading id="limitations-heading" title="Analiz notları" /><ul className="mt-4 list-disc space-y-2 pl-5 text-sm leading-6 text-slate-600">{limitations.map((limitation) => <li key={limitation}>{limitation}</li>)}</ul></section>}

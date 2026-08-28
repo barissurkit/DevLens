@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "DevLens | Developer Portfolio Intelligence",
+  title: "DevLens | Geliştirici Portföy Analizi",
   description:
     "DevLens ile geliştirici portföylerini anlamaya yönelik yeni nesil içgörüler.",
 };

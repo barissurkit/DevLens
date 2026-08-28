@@ -13,15 +13,15 @@ from app.services.portfolio_scoring import (
 )
 
 SIGNAL_LABELS: tuple[tuple[str, str], ...] = (
-    ("readme_exists", "README exists"),
-    ("readme_title", "README title"),
-    ("readme_description", "README description"),
-    ("readme_installation", "README installation"),
-    ("readme_usage", "README usage"),
-    ("readme_technologies", "README technologies"),
-    ("readme_requirements", "README requirements"),
-    ("tests_structure", "Tests structure"),
-    ("ci_workflow", "CI workflow"),
+    ("readme_exists", "README mevcut"),
+    ("readme_title", "README başlığı"),
+    ("readme_description", "README açıklaması"),
+    ("readme_installation", "README kurulumu"),
+    ("readme_usage", "README kullanımı"),
+    ("readme_technologies", "README teknolojileri"),
+    ("readme_requirements", "README gereksinimleri"),
+    ("tests_structure", "Test Yapısı"),
+    ("ci_workflow", "CI İş Akışı"),
     ("gitignore", ".gitignore"),
     ("license", "LICENSE"),
     ("contributing", "CONTRIBUTING"),
@@ -113,28 +113,28 @@ def test_policy_has_exact_order_and_weights() -> None:
     ] == [
         (
             "documentation_consistency",
-            "Documentation Consistency",
+                "Dokümantasyon Tutarlılığı",
             [
-                ("readme_exists", "README exists", 8),
-                ("readme_title", "README title", 5),
-                ("readme_description", "README description", 8),
-                ("readme_installation", "README installation", 9),
-                ("readme_usage", "README usage", 9),
-                ("readme_technologies", "README technologies", 6),
-                ("readme_requirements", "README requirements", 5),
+                ("readme_exists", "README mevcut", 8),
+                ("readme_title", "README başlığı", 5),
+                ("readme_description", "README açıklaması", 8),
+                ("readme_installation", "README kurulumu", 9),
+                ("readme_usage", "README kullanımı", 9),
+                ("readme_technologies", "README teknolojileri", 6),
+                ("readme_requirements", "README gereksinimleri", 5),
             ],
         ),
         (
             "testing_automation_adoption",
-            "Testing & Automation Adoption",
+                "Test ve Otomasyon Kullanımı",
             [
-                ("tests_structure", "Tests structure", 18),
-                ("ci_workflow", "CI workflow", 12),
+                ("tests_structure", "Test Yapısı", 18),
+                ("ci_workflow", "CI İş Akışı", 12),
             ],
         ),
         (
             "repository_hygiene_consistency",
-            "Repository Hygiene Consistency",
+                "Repository Hijyeni Tutarlılığı",
             [
                 ("gitignore", ".gitignore", 8),
                 ("license", "LICENSE", 7),
@@ -166,8 +166,7 @@ def test_small_portfolio_score_is_unavailable(successful: int) -> None:
     assert result.dimensions == []
     assert result.is_partial is False
     assert result.limitations == [
-        "Portfolio scoring requires at least two successfully analyzed "
-        "repositories."
+            "Portföy skoru için en az iki repository'nin başarıyla analiz edilmesi gerekir."
     ]
 
 
@@ -332,7 +331,7 @@ def test_rule_results_are_explainable_and_stably_ordered() -> None:
     assert [rule.key for rule in rules] == [key for key, _ in SIGNAL_LABELS]
     assert rules[0].model_dump() == {
         "key": "readme_exists",
-        "label": "README exists",
+        "label": "README mevcut",
         "weight": 8,
         "detected_repository_count": 3,
         "analyzed_repository_count": 4,
@@ -348,13 +347,11 @@ def test_rule_results_are_explainable_and_stably_ordered() -> None:
     [
         (
             1,
-            "1 selected repository could not be analyzed and was excluded "
-            "from portfolio scoring.",
+                "1 seçilen repository analiz edilemedi ve portföy skorundan çıkarıldı.",
         ),
         (
             2,
-            "2 selected repositories could not be analyzed and were excluded "
-            "from portfolio scoring.",
+                "2 seçilen repository analiz edilemedi ve portföy skorundan çıkarıldı.",
         ),
     ],
 )
@@ -385,13 +382,11 @@ def test_failures_do_not_enter_the_scoring_denominator(
     [
         (
             1,
-            "1 successfully analyzed repository has partial structure "
-            "evidence; structure-based scoring evidence may be incomplete.",
+                "1 başarıyla analiz edilen repository kısmi yapı kanıtına sahip; yapı tabanlı skor kanıtı eksik olabilir.",
         ),
         (
             2,
-            "2 successfully analyzed repositories have partial structure "
-            "evidence; structure-based scoring evidence may be incomplete.",
+                "2 başarıyla analiz edilen repository kısmi yapı kanıtına sahip; yapı tabanlı skor kanıtı eksik olabilir.",
         ),
     ],
 )
@@ -423,12 +418,9 @@ def test_unavailable_failure_and_partial_limitations_have_stable_order() -> None
     assert result.is_available is False
     assert result.is_partial is True
     assert result.limitations == [
-        "Portfolio scoring requires at least two successfully analyzed "
-        "repositories.",
-        "2 selected repositories could not be analyzed and were excluded "
-        "from portfolio scoring.",
-        "1 successfully analyzed repository has partial structure evidence; "
-        "structure-based scoring evidence may be incomplete.",
+            "Portföy skoru için en az iki repository'nin başarıyla analiz edilmesi gerekir.",
+            "2 seçilen repository analiz edilemedi ve portföy skorundan çıkarıldı.",
+            "1 başarıyla analiz edilen repository kısmi yapı kanıtına sahip; yapı tabanlı skor kanıtı eksik olabilir.",
     ]
 
 

@@ -26,14 +26,14 @@ def map_github_exception(error: Exception) -> HTTPException:
         return _error(
             status.HTTP_503_SERVICE_UNAVAILABLE,
             "github_timeout",
-            "GitHub is temporarily unavailable.",
+            "GitHub'a geçici olarak erişilemiyor.",
         )
 
     if isinstance(error, httpx.RequestError):
         return _error(
             status.HTTP_503_SERVICE_UNAVAILABLE,
             "github_unavailable",
-            "GitHub is temporarily unavailable.",
+            "GitHub'a geçici olarak erişilemiyor.",
         )
 
     if isinstance(error, httpx.HTTPStatusError):
@@ -43,7 +43,7 @@ def map_github_exception(error: Exception) -> HTTPException:
             return _error(
                 status.HTTP_404_NOT_FOUND,
                 "github_user_not_found",
-                "GitHub user was not found.",
+                "GitHub kullanıcısı bulunamadı.",
             )
 
         if github_status in {
@@ -53,20 +53,20 @@ def map_github_exception(error: Exception) -> HTTPException:
             return _error(
                 status.HTTP_429_TOO_MANY_REQUESTS,
                 "github_rate_limit",
-                "GitHub rate limit was reached.",
+                "GitHub istek limiti aşıldı.",
             )
 
         return _error(
             status.HTTP_502_BAD_GATEWAY,
             "github_upstream_error",
-            "GitHub returned an upstream error.",
+            "GitHub beklenmeyen bir upstream hatası döndürdü.",
         )
 
     if isinstance(error, ValidationError):
         return _error(
             status.HTTP_502_BAD_GATEWAY,
             "github_upstream_error",
-            "GitHub returned an invalid response.",
+            "GitHub geçersiz bir yanıt döndürdü.",
         )
 
     raise error
