@@ -19,7 +19,7 @@ const DIMENSION_LABELS: Record<string, string> = {
   repository_hygiene_consistency: "Repository Hijyeni",
 };
 const DIMENSION_DESCRIPTIONS: Record<string, string> = {
-  documentation_consistency: "README dokümantasyon sinyallerinin portfolio genelindeki tutarlılığı.",
+  documentation_consistency: "README dokümantasyon sinyallerinin portföy genelindeki tutarlılığı.",
   testing_automation_adoption: "Test yapısı ve CI iş akışı sinyallerinin portföy genelindeki görünümü.",
   repository_hygiene_consistency: ".gitignore, LICENSE ve CONTRIBUTING gibi repository pratiği sinyallerinin görünümü.",
 };

@@ -46,7 +46,7 @@ function AvailableInterpretation({ analysis, interpretation }: { analysis: GitHu
     <div className="mt-6 space-y-6 text-sm leading-6 text-slate-700">
       <p className="max-w-3xl break-words">{interpretation.summary}</p>
       <ExplanationGroup title="Güçlü Kanıt Sinyalleri" explanations={interpretation.strength_explanations} signalLabels={signalLabels} emptyMessage="Bu analiz için AI açıklamalı güçlü sinyal bulunmuyor." />
-      <ExplanationGroup title="İyileştirme Fırsatları" explanations={interpretation.improvement_explanations} signalLabels={signalLabels} emptyMessage="Bu analiz için AI açıklamalı iyileştirme sinyali bulunmuyor." />
+      <ExplanationGroup title="Gelişim Alanları" explanations={interpretation.improvement_explanations} signalLabels={signalLabels} emptyMessage="Bu analiz için AI açıklamalı gelişim sinyali bulunmuyor." />
       {interpretation.technology_context && <ContextBlock title="Teknoloji Bağlamı" text={interpretation.technology_context} />}
       {interpretation.project_area_context && <ContextBlock title="Proje Alanı Bağlamı" text={interpretation.project_area_context} />}
       <RecommendationBlock recommendation={interpretation.next_project_recommendation} signalLabels={signalLabels} />
