@@ -86,6 +86,28 @@ scikit-learn
     ]
 
 
+def test_parse_requirements_ignores_utf8_bom_at_file_start() -> None:
+    content = "\ufeffbeautifulsoup4==4.12.2"
+
+    assert parse_requirements(content) == parse_requirements(
+        "beautifulsoup4==4.12.2"
+    )
+
+
+def test_parse_requirements_preserves_dependencies_after_file_start_bom() -> None:
+    content = "\ufeffbeautifulsoup4==4.12.2\nrequests==2.32.0"
+
+    assert parse_requirements(content) == ["beautifulsoup4", "requests"]
+
+
+def test_parse_requirements_does_not_remove_bom_from_later_lines() -> None:
+    with pytest.raises(
+        ValueError,
+        match="Unsupported requirements.txt entry",
+    ):
+        parse_requirements("beautifulsoup4==4.12.2\n\ufeffrequests==2.32.0")
+
+
 @pytest.mark.parametrize(
     "content",
     [

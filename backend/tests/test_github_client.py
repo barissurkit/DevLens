@@ -1,4 +1,5 @@
 import asyncio
+import base64
 
 import httpx
 import pytest
@@ -110,6 +111,14 @@ def test_decode_github_file_content_returns_utf8_text() -> None:
     )
 
     assert result == "# DevLens"
+
+
+def test_decode_github_file_content_preserves_utf8_bom_for_parser_boundary() -> None:
+    content = base64.b64encode("\ufeffbeautifulsoup4==4.12.2".encode("utf-8")).decode(
+        "ascii"
+    )
+
+    assert decode_github_file_content(content, "base64") == "\ufeffbeautifulsoup4==4.12.2"
 
 
 def test_decode_github_file_content_rejects_unsupported_encoding() -> None:

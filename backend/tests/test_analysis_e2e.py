@@ -290,6 +290,29 @@ def test_analysis_e2e_ignores_malformed_readme_url() -> None:
     ] is False
 
 
+def test_analysis_e2e_ignores_requirements_file_bom() -> None:
+    repositories = [repository_payload("bom-requirements")]
+    files = {
+        "bom-requirements": {
+            "README.md": full_files()["README.md"],
+            "requirements.txt": (
+                "\ufeffbeautifulsoup4==4.12.2\n"
+                "requests==2.32.0\n"
+            ),
+        }
+    }
+    use_fake_github(repositories, files_by_repository=files)
+
+    response = request_app({"username": "synthetic-user"})
+    payload = response.json()
+
+    assert response.status_code == 200
+    assert payload["repository_analysis"]["failures"] == []
+    assert payload["repository_analysis"]["repositories"][0]["analysis"][
+        "technologies"
+    ]["dependencies"] == ["beautifulsoup4", "requests"]
+
+
 def test_analysis_e2e_response_is_deterministic() -> None:
     repositories, files = portfolio_fixture()
 

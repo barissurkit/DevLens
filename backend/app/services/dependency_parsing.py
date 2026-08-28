@@ -49,8 +49,9 @@ REQUIREMENTS_IGNORED_PREFIXES: tuple[str, ...] = (
 def parse_requirements(content: str) -> list[str]:
     dependencies: list[str] = []
     seen_dependencies: set[str] = set()
+    normalized_content = content.removeprefix("\ufeff")
 
-    for raw_line in content.splitlines():
+    for raw_line in normalized_content.splitlines():
         line = raw_line.strip()
 
         if not line or line.startswith("#"):
