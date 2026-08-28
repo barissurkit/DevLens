@@ -2,6 +2,18 @@ export interface PortfolioAnalysisRequest {
   username: string;
 }
 
+export interface AuthenticatedUser {
+  github_login: string;
+  display_name: string | null;
+  avatar_url: string | null;
+  github_html_url: string | null;
+}
+
+export interface AuthMeResponse {
+  authenticated: boolean;
+  user: AuthenticatedUser | null;
+}
+
 export interface GitHubUser {
   username: string;
   name: string | null;
