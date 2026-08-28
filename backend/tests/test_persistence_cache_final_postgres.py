@@ -129,7 +129,7 @@ def test_migrated_schema_has_single_final_cache_shape(database_url: str) -> None
                 heads = await connection.execute(
                     text("SELECT version_num FROM alembic_version")
                 )
-                assert {row[0] for row in heads} == {"20260823_02"}
+                assert {row[0] for row in heads} == {"20260828_03"}
                 assert {
                     "id", "github_username", "github_username_normalized",
                     "analysis_schema_version", "analysis_engine_version",
