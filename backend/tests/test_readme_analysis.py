@@ -1,6 +1,6 @@
 import pytest
 from app.schemas.analysis import ReadmeAnalysis
-from app.services.readme_analysis import analyze_readme
+from app.services.readme_analysis import _is_deployment_url, analyze_readme
 
 
 def test_readme_analysis_represents_missing_readme() -> None:
@@ -255,6 +255,22 @@ def test_analyze_readme_rejects_non_demo_links(
     result = analyze_readme(content)
 
     assert result.has_demo_link is False
+
+
+def test_is_deployment_url_ignores_malformed_url() -> None:
+    assert _is_deployment_url("http://localhost:3000]") is False
+
+
+def test_analyze_readme_handles_real_world_markdown_url_shape() -> None:
+    result = analyze_readme("Open [http://localhost:3000](http://localhost:3000).")
+
+    assert result.has_demo_link is False
+    assert result.exists is True
+    assert result.content_length > 0
+
+
+def test_is_deployment_url_preserves_valid_ipv6_url_parsing() -> None:
+    assert _is_deployment_url("http://[::1]:8000") is False
 
 
 def test_analyze_readme_detects_all_supported_signals() -> None:

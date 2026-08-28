@@ -265,6 +265,31 @@ def test_analysis_e2e_runs_real_pipeline_for_multi_repository_portfolio() -> Non
         assert secret_or_raw_data not in serialized
 
 
+def test_analysis_e2e_ignores_malformed_readme_url() -> None:
+    repositories = [repository_payload("malformed-readme")]
+    files = {
+        "malformed-readme": {
+            "README.md": (
+                "# Malformed README\n\n"
+                "This project provides a deterministic backend application "
+                "service for analyzing public portfolio evidence.\n\n"
+                "Open [http://localhost:3000](http://localhost:3000).\n"
+            ),
+            "requirements.txt": "fastapi>=0.115\n",
+        }
+    }
+    use_fake_github(repositories, files_by_repository=files)
+
+    response = request_app({"username": "synthetic-user"})
+    payload = response.json()
+
+    assert response.status_code == 200
+    assert payload["repository_analysis"]["failures"] == []
+    assert payload["repository_analysis"]["repositories"][0]["analysis"]["readme"][
+        "has_demo_link"
+    ] is False
+
+
 def test_analysis_e2e_response_is_deterministic() -> None:
     repositories, files = portfolio_fixture()
 

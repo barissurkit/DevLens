@@ -108,7 +108,10 @@ HTTP_URL_PATTERN = re.compile(
 
 
 def _is_deployment_url(url: str) -> bool:
-    hostname = urlparse(url).hostname
+    try:
+        hostname = urlparse(url).hostname
+    except ValueError:
+        return False
 
     if hostname is None:
         return False
