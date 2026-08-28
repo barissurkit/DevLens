@@ -69,6 +69,8 @@ DevLens uses a direct browser → Next.js → FastAPI boundary. The backend comb
 
 Read the full [architecture and technical story](docs/architecture.md), including the deterministic-versus-AI responsibility boundary and production request flow.
 
+Read the [portfolio case study](docs/case-study.md) for the product problem, engineering decisions, reliability model, and technical overview.
+
 The browser receives only the public frontend configuration. GitHub and Gemini credentials remain in the backend runtime environment.
 
 ## Testing and CI
