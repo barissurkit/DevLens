@@ -101,7 +101,7 @@ def test_classify_repository_returns_other_without_evidence() -> None:
     assert len(result.categories) == 1
     assert result.categories[0].category is RepositoryCategory.OTHER
     assert result.categories[0].evidence_score == 0
-    assert result.categories[0].evidence == ["No meaningful classification evidence found."]
+    assert result.categories[0].evidence == ["Anlamlı bir sınıflandırma kanıtı bulunamadı."]
 
 
 def test_classify_repository_uses_normalized_machine_learning_topic() -> None:
@@ -131,7 +131,7 @@ def test_classify_repository_uses_normalized_machine_learning_topic() -> None:
     assert result.primary_category is RepositoryCategory.MACHINE_LEARNING
     assert result.categories[0].category is RepositoryCategory.MACHINE_LEARNING
     assert result.categories[0].evidence_score == 5
-    assert result.categories[0].evidence == ["GitHub topic: machine learning"]
+    assert result.categories[0].evidence == ["GitHub konusu: machine learning"]
 
 
 def test_classify_repository_supports_multiple_topic_categories() -> None:
@@ -202,7 +202,7 @@ def test_classify_repository_uses_machine_learning_technology() -> None:
 
     assert result.primary_category is RepositoryCategory.MACHINE_LEARNING
     assert result.categories[0].evidence_score == 4
-    assert result.categories[0].evidence == ["Detected technology: Scikit-learn"]
+    assert result.categories[0].evidence == ["Tespit edilen teknoloji: Scikit-learn"]
 
 
 def test_classify_repository_uses_data_science_technologies() -> None:
@@ -243,8 +243,8 @@ def test_classify_repository_uses_data_science_technologies() -> None:
     assert result.primary_category is RepositoryCategory.DATA_SCIENCE
     assert result.categories[0].evidence_score == 8
     assert result.categories[0].evidence == [
-        "Detected technology: NumPy",
-        "Detected technology: Pandas",
+        "Tespit edilen teknoloji: NumPy",
+        "Tespit edilen teknoloji: Pandas",
     ]
 
 
@@ -324,7 +324,7 @@ def test_classify_repository_uses_backend_technology() -> None:
 
     assert result.primary_category is RepositoryCategory.BACKEND
     assert result.categories[0].evidence_score == 4
-    assert result.categories[0].evidence == ["Detected technology: FastAPI"]
+    assert result.categories[0].evidence == ["Tespit edilen teknoloji: FastAPI"]
 
 
 def test_classify_repository_uses_frontend_technology() -> None:
@@ -359,7 +359,7 @@ def test_classify_repository_uses_frontend_technology() -> None:
 
     assert result.primary_category is RepositoryCategory.FRONTEND
     assert result.categories[0].evidence_score == 4
-    assert result.categories[0].evidence == ["Detected technology: React"]
+    assert result.categories[0].evidence == ["Tespit edilen teknoloji: React"]
 
 
 def test_classify_repository_derives_full_stack_category() -> None:
@@ -405,7 +405,7 @@ def test_classify_repository_derives_full_stack_category() -> None:
     assert result.primary_category is RepositoryCategory.FULL_STACK
     assert result.categories[0].evidence_score == 8
     assert result.categories[0].evidence == [
-        "Derived category: Backend and Frontend both met the evidence threshold."
+        "Türetilen kategori: Backend ve Frontend kanıt eşiğini birlikte karşıladı."
     ]
 
 
@@ -435,7 +435,7 @@ def test_classify_repository_uses_explicit_devops_topic() -> None:
 
     assert result.primary_category is RepositoryCategory.DEVOPS
     assert result.categories[0].evidence_score == 5
-    assert result.categories[0].evidence == ["GitHub topic: devops"]
+    assert result.categories[0].evidence == ["GitHub konusu: devops"]
 
 
 def test_dockerfile_alone_does_not_produce_devops_category() -> None:
@@ -492,7 +492,7 @@ def test_classify_repository_uses_data_engineering_topic() -> None:
 
     assert result.primary_category is RepositoryCategory.DATA_ENGINEERING
     assert result.categories[0].evidence_score == 5
-    assert result.categories[0].evidence == ["GitHub topic: data pipeline"]
+    assert result.categories[0].evidence == ["GitHub konusu: data pipeline"]
 
 
 def test_classify_repository_uses_cli_topic() -> None:
@@ -521,7 +521,7 @@ def test_classify_repository_uses_cli_topic() -> None:
 
     assert result.primary_category is RepositoryCategory.CLI_DEVELOPER_TOOL
     assert result.categories[0].evidence_score == 5
-    assert result.categories[0].evidence == ["GitHub topic: command line"]
+    assert result.categories[0].evidence == ["GitHub konusu: command line"]
 
 
 def test_classify_repository_uses_explicit_learning_topic() -> None:
@@ -550,7 +550,7 @@ def test_classify_repository_uses_explicit_learning_topic() -> None:
 
     assert result.primary_category is RepositoryCategory.LEARNING_EXPERIMENT
     assert result.categories[0].evidence_score == 5
-    assert result.categories[0].evidence == ["GitHub topic: bootcamp"]
+    assert result.categories[0].evidence == ["GitHub konusu: bootcamp"]
 
 
 def test_classify_repository_uses_backend_topic() -> None:
@@ -579,7 +579,7 @@ def test_classify_repository_uses_backend_topic() -> None:
 
     assert result.primary_category is RepositoryCategory.BACKEND
     assert result.categories[0].evidence_score == 5
-    assert result.categories[0].evidence == ["GitHub topic: rest api"]
+    assert result.categories[0].evidence == ["GitHub konusu: rest api"]
 
 
 def test_classify_repository_uses_frontend_topic() -> None:
@@ -608,7 +608,7 @@ def test_classify_repository_uses_frontend_topic() -> None:
 
     assert result.primary_category is RepositoryCategory.FRONTEND
     assert result.categories[0].evidence_score == 5
-    assert result.categories[0].evidence == ["GitHub topic: frontend"]
+    assert result.categories[0].evidence == ["GitHub konusu: frontend"]
 
 
 def test_description_phrase_contributes_machine_learning_evidence() -> None:
@@ -638,8 +638,8 @@ def test_description_phrase_contributes_machine_learning_evidence() -> None:
     assert result.primary_category is RepositoryCategory.MACHINE_LEARNING
     assert result.categories[0].evidence_score == 8
     assert result.categories[0].evidence == [
-        "GitHub topic: machine learning",
-        'Description phrase: "classification model"',
+        "GitHub konusu: machine learning",
+        'Açıklama ifadesi: "classification model"',
     ]
 
 
@@ -676,8 +676,8 @@ def test_readme_phrase_contributes_machine_learning_evidence() -> None:
     assert result.primary_category is RepositoryCategory.MACHINE_LEARNING
     assert result.categories[0].evidence_score == 6
     assert result.categories[0].evidence == [
-        "Detected technology: Scikit-learn",
-        'README phrase: "regression model"',
+        "Tespit edilen teknoloji: Scikit-learn",
+        'README ifadesi: "regression model"',
     ]
 
 
@@ -742,8 +742,8 @@ def test_data_analysis_description_supports_data_science() -> None:
     assert result.primary_category is RepositoryCategory.DATA_SCIENCE
     assert result.categories[0].evidence_score == 7
     assert result.categories[0].evidence == [
-        "Detected technology: Pandas",
-        'Description phrase: "data analysis"',
+        "Tespit edilen teknoloji: Pandas",
+        'Açıklama ifadesi: "data analysis"',
     ]
 
 
@@ -838,8 +838,8 @@ def test_backend_description_supports_backend_technology() -> None:
     assert result.primary_category is RepositoryCategory.BACKEND
     assert result.categories[0].evidence_score == 7
     assert result.categories[0].evidence == [
-        "Detected technology: FastAPI",
-        'Description phrase: "rest api"',
+        "Tespit edilen teknoloji: FastAPI",
+        'Açıklama ifadesi: "rest api"',
     ]
 
 
@@ -876,8 +876,8 @@ def test_frontend_description_supports_frontend_technology() -> None:
     assert result.primary_category is RepositoryCategory.FRONTEND
     assert result.categories[0].evidence_score == 7
     assert result.categories[0].evidence == [
-        "Detected technology: React",
-        'Description phrase: "user interface"',
+        "Tespit edilen teknoloji: React",
+        'Açıklama ifadesi: "user interface"',
     ]
 
 
@@ -908,10 +908,10 @@ def test_structure_signals_support_explicit_devops_evidence() -> None:
     assert result.primary_category is RepositoryCategory.DEVOPS
     assert result.categories[0].evidence_score == 8
     assert result.categories[0].evidence == [
-        "GitHub topic: devops",
-        "Structure signal: CI workflow",
-        "Structure signal: Compose",
-        "Structure signal: Dockerfile",
+        "GitHub konusu: devops",
+        "Yapı sinyali: CI İş Akışı",
+        "Yapı sinyali: Compose",
+        "Yapı sinyali: Dockerfile",
     ]
 
 
@@ -970,8 +970,8 @@ def test_devops_description_combines_with_structure_evidence() -> None:
     assert result.primary_category is RepositoryCategory.DEVOPS
     assert result.categories[0].evidence_score == 4
     assert result.categories[0].evidence == [
-        'Description phrase: "deployment automation"',
-        "Structure signal: CI workflow",
+        'Açıklama ifadesi: "deployment automation"',
+        "Yapı sinyali: CI İş Akışı",
     ]
 
 
@@ -1002,8 +1002,8 @@ def test_text_sources_combine_for_data_engineering() -> None:
     assert result.primary_category is RepositoryCategory.DATA_ENGINEERING
     assert result.categories[0].evidence_score == 5
     assert result.categories[0].evidence == [
-        'Description phrase: "etl pipeline"',
-        'README phrase: "data ingestion"',
+        'Açıklama ifadesi: "etl pipeline"',
+        'README ifadesi: "data ingestion"',
     ]
 
 
@@ -1034,8 +1034,8 @@ def test_text_sources_combine_for_cli_tool() -> None:
     assert result.primary_category is RepositoryCategory.CLI_DEVELOPER_TOOL
     assert result.categories[0].evidence_score == 5
     assert result.categories[0].evidence == [
-        'Description phrase: "command line tool"',
-        'README phrase: "developer tool"',
+        'Açıklama ifadesi: "command line tool"',
+        'README ifadesi: "developer tool"',
     ]
 
 
@@ -1066,8 +1066,8 @@ def test_explicit_text_sources_produce_learning_category() -> None:
     assert result.primary_category is RepositoryCategory.LEARNING_EXPERIMENT
     assert result.categories[0].evidence_score == 5
     assert result.categories[0].evidence == [
-        'Description phrase: "bootcamp"',
-        'README phrase: "tutorial"',
+        'Açıklama ifadesi: "bootcamp"',
+        'README ifadesi: "tutorial"',
     ]
 
 
@@ -1118,6 +1118,6 @@ def test_classification_is_deterministic_and_deduplicates_evidence() -> None:
     assert first_result.primary_category is RepositoryCategory.MACHINE_LEARNING
     assert first_result.categories[0].evidence_score == 9
     assert first_result.categories[0].evidence == [
-        "GitHub topic: machine learning",
-        "Detected technology: Scikit-learn",
+        "GitHub konusu: machine learning",
+        "Tespit edilen teknoloji: Scikit-learn",
     ]

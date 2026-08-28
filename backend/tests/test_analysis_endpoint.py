@@ -267,7 +267,7 @@ def test_analysis_endpoint_maps_user_not_found() -> None:
     assert result.json() == {
         "detail": {
             "code": "github_user_not_found",
-            "message": "GitHub user was not found.",
+            "message": "GitHub kullanıcısı bulunamadı.",
         }
     }
 

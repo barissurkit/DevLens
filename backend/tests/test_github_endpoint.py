@@ -106,7 +106,7 @@ def test_get_github_user_returns_404_when_user_does_not_exist() -> None:
     assert response.json() == {
         "detail": {
             "code": "github_user_not_found",
-            "message": "GitHub user was not found.",
+            "message": "GitHub kullanıcısı bulunamadı.",
         }
     }
 
@@ -122,7 +122,7 @@ def test_get_github_user_returns_429_for_rate_limit() -> None:
     assert response.json() == {
         "detail": {
             "code": "github_rate_limit",
-            "message": "GitHub rate limit was reached.",
+            "message": "GitHub istek limiti aşıldı.",
         }
     }
 
@@ -138,7 +138,7 @@ def test_get_github_user_returns_502_for_upstream_error() -> None:
     assert response.json() == {
         "detail": {
             "code": "github_upstream_error",
-            "message": "GitHub returned an upstream error.",
+            "message": "GitHub beklenmeyen bir upstream hatası döndürdü.",
         }
     }
 
@@ -161,6 +161,6 @@ def test_get_github_user_returns_503_for_timeout() -> None:
     assert response.json() == {
         "detail": {
             "code": "github_timeout",
-            "message": "GitHub is temporarily unavailable.",
+            "message": "GitHub'a geçici olarak erişilemiyor.",
         }
     }

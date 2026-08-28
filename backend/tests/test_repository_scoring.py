@@ -160,17 +160,17 @@ def test_score_repository_returns_perfect_v1_score() -> None:
         )
         for dimension in result.dimensions
     ] == [
-        ("documentation", "Documentation", 50, 50, 100),
+        ("documentation", "Dokümantasyon", 50, 50, 100),
         (
             "testing_automation",
-            "Testing & Automation",
+            "Test ve Otomasyon",
             30,
             30,
             100,
         ),
         (
             "repository_hygiene",
-            "Repository Hygiene",
+            "Repository Hijyeni",
             20,
             20,
             100,
@@ -412,11 +412,11 @@ def test_score_result_explains_and_preserves_rule_math() -> None:
 
     assert documentation.rules[0].model_dump() == {
         "key": "readme_exists",
-        "label": "README exists",
+        "label": "README mevcut",
         "passed": True,
         "points_earned": 8,
         "points_possible": 8,
-        "evidence": "Root README.md content was available.",
+        "evidence": "Kök README.md içeriği kullanılabilir durumdaydı.",
     }
 
 
@@ -540,5 +540,5 @@ def test_truncated_tree_marks_score_partial_without_adjustment() -> None:
     assert testing.points_earned == 18
     assert result.is_partial is True
     assert result.limitations == [
-        "Repository tree response was truncated; structure-based signals may be incomplete."
+        "Repository tree yanıtı kısaltıldı; yapı tabanlı sinyaller eksik olabilir."
     ]

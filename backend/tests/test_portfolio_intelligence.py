@@ -1,19 +1,19 @@
 import pytest
 
 from app.schemas.analysis import PortfolioAggregation, RepositoryCategory
-from app.services.portfolio_intelligence import build_portfolio_intelligence
+from app.services.portfolio_intelligence import build_portfolio_intelligence, _signal_message
 
 
 SIGNAL_LABELS: tuple[tuple[str, str], ...] = (
-    ("readme_exists", "README exists"),
-    ("readme_title", "README title"),
-    ("readme_description", "README description"),
-    ("readme_installation", "README installation"),
-    ("readme_usage", "README usage"),
-    ("readme_technologies", "README technologies"),
-    ("readme_requirements", "README requirements"),
-    ("tests_structure", "Tests structure"),
-    ("ci_workflow", "CI workflow"),
+    ("readme_exists", "README mevcut"),
+    ("readme_title", "README başlığı"),
+    ("readme_description", "README açıklaması"),
+    ("readme_installation", "README kurulumu"),
+    ("readme_usage", "README kullanımı"),
+    ("readme_technologies", "README teknolojileri"),
+    ("readme_requirements", "README gereksinimleri"),
+    ("tests_structure", "Test Yapısı"),
+    ("ci_workflow", "CI İş Akışı"),
     ("gitignore", ".gitignore"),
     ("license", "LICENSE"),
     ("contributing", "CONTRIBUTING"),
@@ -105,7 +105,7 @@ def insight(
 ) -> dict[str, str | int]:
     return {
         "key": key,
-        "message": message,
+        "message": _signal_message(key, "strength" if detected_repository_count >= 3 else "improvement", detected_repository_count),
         "detected_repository_count": detected_repository_count,
         "analyzed_repository_count": analyzed_repository_count,
     }
@@ -124,8 +124,8 @@ def test_empty_portfolio_returns_only_the_minimum_size_limitation() -> None:
         "recurring_technologies": [],
         "dominant_areas": [],
         "limitations": [
-            "Portfolio-level patterns require at least two successfully "
-            "analyzed repositories."
+            "Portföy düzeyindeki örüntüler için en az iki repository'nin "
+            "başarıyla analiz edilmesi gerekir."
         ],
     }
 
@@ -148,8 +148,8 @@ def test_single_repository_does_not_create_portfolio_patterns() -> None:
         "recurring_technologies": [],
         "dominant_areas": [],
         "limitations": [
-            "Portfolio-level patterns require at least two successfully "
-            "analyzed repositories."
+            "Portföy düzeyindeki örüntüler için en az iki repository'nin "
+            "başarıyla analiz edilmesi gerekir."
         ],
     }
 
@@ -223,15 +223,15 @@ def test_improvement_messages_distinguish_zero_from_limited_presence() -> None:
     ] == [
         insight(
             "readme_installation",
-            "No README installation-section signal was detected across the "
-            "successfully analyzed public repositories.",
+                "Başarıyla analiz edilen herkese açık repository'lerin hiçbirinde "
+                "README kurulum bölümü sinyali tespit edilmedi.",
             0,
             6,
         ),
         insight(
             "readme_usage",
-            "README usage-section signals were detected in only a limited "
-            "portion of the successfully analyzed public repositories.",
+                "README kullanım bölümü sinyalleri, başarıyla analiz edilen herkese "
+                "açık repository'lerin yalnızca sınırlı bir bölümünde tespit edildi.",
             2,
             6,
         ),
@@ -243,13 +243,11 @@ def test_improvement_messages_distinguish_zero_from_limited_presence() -> None:
     [
         (
             1,
-            "1 selected repository could not be analyzed and was excluded "
-            "from portfolio intelligence.",
+                "1 seçilen repository analiz edilemedi ve portföy analizinden çıkarıldı.",
         ),
         (
             2,
-            "2 selected repositories could not be analyzed and were excluded "
-            "from portfolio intelligence.",
+                "2 seçilen repository analiz edilemedi ve portföy analizinden çıkarıldı.",
         ),
     ],
 )
@@ -273,8 +271,8 @@ def test_failures_use_only_successes_as_the_insight_denominator(
     )
     assert usage_insight.model_dump(mode="json") == insight(
         "readme_usage",
-        "No README usage-section signal was detected across the successfully "
-        "analyzed public repositories.",
+            "Başarıyla analiz edilen herkese açık repository'lerin hiçbirinde README "
+            "kullanım bölümü sinyali tespit edilmedi.",
         0,
         6,
     )
@@ -301,8 +299,8 @@ def test_partial_evidence_suppresses_structure_but_not_readme_improvements() -> 
     ] == [
         insight(
             "readme_usage",
-            "No README usage-section signal was detected across the "
-            "successfully analyzed public repositories.",
+                "Başarıyla analiz edilen herkese açık repository'lerin hiçbirinde "
+                "README kullanım bölümü sinyali tespit edilmedi.",
             0,
             6,
         )
@@ -323,8 +321,8 @@ def test_partial_evidence_preserves_positive_structure_strength() -> None:
     ] == [
         insight(
             "tests_structure",
-            "Test-directory structure signals were detected across multiple "
-            "successfully analyzed public repositories.",
+                "Test dizini yapısı sinyalleri, başarıyla analiz edilen birden fazla "
+                "herkese açık repository'de tespit edildi.",
             4,
             6,
         )
@@ -336,15 +334,13 @@ def test_partial_evidence_preserves_positive_structure_strength() -> None:
     [
         (
             1,
-            "1 successfully analyzed repository has partial structure "
-            "evidence; absence-based structure and repository-hygiene insights "
-            "may be incomplete.",
+                "1 başarıyla analiz edilen repository kısmi yapı kanıtına sahip; yokluğa dayalı "
+                "yapı ve repository hijyeni içgörüleri eksik olabilir.",
         ),
         (
             2,
-            "2 successfully analyzed repositories have partial structure "
-            "evidence; absence-based structure and repository-hygiene insights "
-            "may be incomplete.",
+                "2 başarıyla analiz edilen repository kısmi yapı kanıtına sahip; yokluğa dayalı "
+                "yapı ve repository hijyeni içgörüleri eksik olabilir.",
         ),
     ],
 )
@@ -496,28 +492,28 @@ def test_rule_registry_preserves_candidate_exclusions_messages_and_order() -> No
         ),
         insight(
             "readme_title",
-            "README title signals were detected across multiple successfully "
+            "README başlığı signals were detected across multiple successfully "
             "analyzed public repositories.",
             3,
             6,
         ),
         insight(
             "readme_description",
-            "README description signals were detected across multiple "
+            "README açıklaması signals were detected across multiple "
             "successfully analyzed public repositories.",
             3,
             6,
         ),
         insight(
             "readme_installation",
-            "README installation-section signals were detected across "
+            "README kurulumu-section signals were detected across "
             "multiple successfully analyzed public repositories.",
             3,
             6,
         ),
         insight(
             "readme_usage",
-            "README usage-section signals were detected across multiple "
+            "README kullanımı-section signals were detected across multiple "
             "successfully analyzed public repositories.",
             3,
             6,
@@ -531,7 +527,7 @@ def test_rule_registry_preserves_candidate_exclusions_messages_and_order() -> No
         ),
         insight(
             "readme_requirements",
-            "README requirements-section signals were detected across multiple "
+            "README gereksinimleri-section signals were detected across multiple "
             "successfully analyzed public repositories.",
             3,
             6,
@@ -578,28 +574,28 @@ def test_rule_registry_preserves_candidate_exclusions_messages_and_order() -> No
         ),
         insight(
             "readme_description",
-            "No meaningful README description signal was detected across the "
+            "No meaningful README açıklaması signal was detected across the "
             "successfully analyzed public repositories.",
             0,
             6,
         ),
         insight(
             "readme_installation",
-            "No README installation-section signal was detected across the "
+            "No README kurulumu-section signal was detected across the "
             "successfully analyzed public repositories.",
             0,
             6,
         ),
         insight(
             "readme_usage",
-            "No README usage-section signal was detected across the "
+            "No README kullanımı-section signal was detected across the "
             "successfully analyzed public repositories.",
             0,
             6,
         ),
         insight(
             "readme_requirements",
-            "No README requirements-section signal was detected across the "
+            "No README gereksinimleri-section signal was detected across the "
             "successfully analyzed public repositories.",
             0,
             6,
@@ -668,11 +664,9 @@ def test_result_is_deterministic_with_version_and_stable_limitation_order() -> N
     assert second == first
     assert first.version == "v1"
     assert first.limitations == [
-        "2 selected repositories could not be analyzed and were excluded "
-        "from portfolio intelligence.",
-        "1 successfully analyzed repository has partial structure evidence; "
-        "absence-based structure and repository-hygiene insights may be "
-        "incomplete.",
-        "Portfolio-level patterns require at least two successfully analyzed "
-        "repositories.",
+            "2 seçilen repository analiz edilemedi ve portföy analizinden çıkarıldı.",
+            "1 başarıyla analiz edilen repository kısmi yapı kanıtına sahip; yokluğa dayalı "
+            "yapı ve repository hijyeni içgörüleri eksik olabilir.",
+            "Portföy düzeyindeki örüntüler için en az iki repository'nin başarıyla "
+            "analiz edilmesi gerekir.",
     ]

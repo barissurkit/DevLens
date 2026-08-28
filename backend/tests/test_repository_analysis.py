@@ -153,7 +153,7 @@ Run the application.
         for match in result.classification.categories
         if match.category is RepositoryCategory.BACKEND
     )
-    assert 'README phrase: "rest api"' in backend_match.evidence
+    assert 'README ifadesi: "rest api"' in backend_match.evidence
 
     assert set(result.model_dump()) == {
         "repository",

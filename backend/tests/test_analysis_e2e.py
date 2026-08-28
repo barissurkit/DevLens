@@ -400,9 +400,9 @@ def test_analysis_e2e_preserves_partial_repository_failures(
 @pytest.mark.parametrize(
     ("user_status", "expected_status", "expected_code", "expected_message"),
     [
-        (404, 404, "github_user_not_found", "GitHub user was not found."),
-        (429, 429, "github_rate_limit", "GitHub rate limit was reached."),
-        (500, 502, "github_upstream_error", "GitHub returned an upstream error."),
+        (404, 404, "github_user_not_found", "GitHub kullanıcısı bulunamadı."),
+        (429, 429, "github_rate_limit", "GitHub istek limiti aşıldı."),
+        (500, 502, "github_upstream_error", "GitHub beklenmeyen bir upstream hatası döndürdü."),
     ],
 )
 def test_analysis_e2e_maps_github_user_errors(
@@ -430,7 +430,7 @@ def test_analysis_e2e_maps_network_unavailable_to_503() -> None:
     assert response.json() == {
         "detail": {
             "code": "github_unavailable",
-            "message": "GitHub is temporarily unavailable.",
+            "message": "GitHub'a geçici olarak erişilemiyor.",
         }
     }
 

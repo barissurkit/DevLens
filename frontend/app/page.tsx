@@ -14,13 +14,13 @@ export default function Home() {
             </div>
             <span className="text-lg font-semibold tracking-tight">DevLens</span>
           </div>
-          <span className="text-right text-sm text-slate-500">Public portfolio intelligence</span>
+          <span className="text-right text-sm text-slate-500">Herkese Açık Portföy Analizi</span>
         </header>
 
         <section aria-labelledby="landing-heading" className="flex flex-1 items-center py-16 sm:py-28">
           <div className="w-full min-w-0 max-w-2xl">
             <p className="mb-5 text-sm font-medium uppercase tracking-[0.18em] text-slate-500">
-              Developer Portfolio Intelligence
+              Geliştirici Portföy Analizi
             </p>
             <h1 id="landing-heading" className="text-4xl font-semibold tracking-tight text-slate-950 sm:text-6xl">
               GitHub portföyündeki kanıtları daha net gör.

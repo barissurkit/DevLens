@@ -357,6 +357,6 @@ def test_deterministic_github_failure_keeps_existing_error_contract_and_skips_co
     assert response.json() == {
         "detail": {
             "code": "github_user_not_found",
-            "message": "GitHub user was not found.",
+            "message": "GitHub kullanıcısı bulunamadı.",
         }
     }

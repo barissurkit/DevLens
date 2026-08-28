@@ -457,15 +457,14 @@ def test_partial_structure_evidence_is_preserved_in_final_result() -> None:
     assert result.repository_analysis.has_failures is False
     assert result.aggregation.partial_evidence_repository_count == 1
     assert result.intelligence.limitations == [
-        "1 successfully analyzed repository has partial structure evidence; "
-        "absence-based structure and repository-hygiene insights may be "
-        "incomplete."
+        "1 başarıyla analiz edilen repository kısmi yapı kanıtına sahip; yokluğa dayalı "
+        "yapı ve repository hijyeni içgörüleri eksik olabilir."
     ]
     assert result.score.is_available is True
     assert result.score.is_partial is True
     assert result.score.limitations == [
-        "1 successfully analyzed repository has partial structure evidence; "
-        "structure-based scoring evidence may be incomplete."
+        "1 başarıyla analiz edilen repository kısmi yapı kanıtına sahip; yapı tabanlı "
+        "skor kanıtı eksik olabilir."
     ]
 
 
