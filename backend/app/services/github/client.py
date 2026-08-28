@@ -211,6 +211,23 @@ class GitHubClient:
 
         return GitHubUser.model_validate(response.json())
 
+    async def get_authenticated_user(self, access_token: str) -> GitHubUser:
+        headers = {
+            **self._headers,
+            "Authorization": f"Bearer {access_token}",
+        }
+        async with httpx.AsyncClient(
+            base_url=self._base_url,
+            headers=headers,
+            timeout=httpx.Timeout(DEFAULT_TIMEOUT_SECONDS),
+            transport=self._transport,
+        ) as client:
+            response = await self._request(
+                client, operation="authenticated_user", method="GET", url="user"
+            )
+            response.raise_for_status()
+        return GitHubUser.model_validate(response.json())
+
     async def get_file_content(
         self,
         owner: str,

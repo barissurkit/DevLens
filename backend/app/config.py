@@ -17,6 +17,11 @@ class Settings(BaseSettings):
     database_url: str | None = None
     analysis_cache_ttl_seconds: int = Field(default=900, ge=0)
     cors_allowed_origins: str = DEFAULT_CORS_ALLOWED_ORIGINS
+    github_app_client_id: str | None = None
+    github_app_client_secret: str | None = None
+    github_app_callback_url: str | None = None
+    auth_state_encryption_key: str | None = None
+    frontend_origin: str | None = None
 
     @field_validator("cors_allowed_origins")
     @classmethod
@@ -48,6 +53,17 @@ class Settings(BaseSettings):
     @property
     def cors_origins(self) -> list[str]:
         return self._parse_cors_origins(self.cors_allowed_origins)
+
+    @property
+    def auth_frontend_origin(self) -> str:
+        origin = self.frontend_origin or self.cors_origins[0]
+        if origin not in self.cors_origins:
+            raise ValueError("FRONTEND_ORIGIN must be included in CORS_ALLOWED_ORIGINS.")
+        return origin
+
+    @property
+    def auth_cookie_secure(self) -> bool:
+        return bool(self.github_app_callback_url and self.github_app_callback_url.startswith("https://"))
 
     model_config = SettingsConfigDict(
         env_file=PROJECT_ROOT / ".env",

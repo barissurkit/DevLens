@@ -7,6 +7,7 @@ from pydantic import ValidationError
 
 def create_github_user_payload() -> dict[str, object]:
     return {
+        "id": 583231,
         "login": "octocat",
         "name": "The Octocat",
         "avatar_url": "https://avatars.githubusercontent.com/u/583231?v=4",
@@ -50,7 +51,7 @@ def test_github_user_rejects_missing_required_field() -> None:
     with pytest.raises(ValidationError) as error:
         GitHubUser.model_validate(payload)
 
-    assert error.value.errors()[0]["loc"] == ("login",)
+    assert any(item["loc"] == ("login",) for item in error.value.errors())
 
 
 def create_github_repository_payload() -> dict[str, object]:

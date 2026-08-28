@@ -26,6 +26,7 @@ from app.services.github_portfolio_analysis import analyze_github_portfolio
 def create_user(*, public_repos: int = 0) -> GitHubUser:
     return GitHubUser.model_validate(
         {
+            "id": 583231,
             "login": "octocat",
             "name": "The Octocat",
             "avatar_url": "https://avatars.example/octocat.png",

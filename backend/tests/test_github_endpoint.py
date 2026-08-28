@@ -13,7 +13,8 @@ from app.services.github.client import GitHubClient
 def create_github_user() -> GitHubUser:
     return GitHubUser.model_validate(
         {
-            "login": "octocat",
+        "id": 583231,
+        "login": "octocat",
             "name": "The Octocat",
             "avatar_url": "https://avatars.githubusercontent.com/u/583231?v=4",
             "bio": None,
