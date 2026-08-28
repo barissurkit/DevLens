@@ -1,4 +1,5 @@
 import { AnalysisForm } from "../components/analysis-form";
+import { AuthControls } from "../components/auth-controls";
 
 export default function Home() {
   return (
@@ -14,7 +15,10 @@ export default function Home() {
             </div>
             <span className="text-lg font-semibold tracking-tight">DevLens</span>
           </div>
-          <span className="text-right text-sm text-slate-500">Herkese Açık Portföy Analizi</span>
+          <div className="flex flex-wrap items-center justify-end gap-3">
+            <span className="hidden text-right text-sm text-slate-500 sm:inline">Herkese Açık Portföy Analizi</span>
+            <AuthControls />
+          </div>
         </header>
 
         <section aria-labelledby="landing-heading" className="flex flex-1 items-center py-16 sm:py-28">

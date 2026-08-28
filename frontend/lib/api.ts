@@ -4,10 +4,14 @@ import type {
   InterpretationUnavailableReason,
   OperationalErrorResponse,
   PortfolioAnalysisRequest,
+  AuthMeResponse,
 } from "./types";
 
 const ANALYSIS_PATH = "/api/v1/analysis";
 const INTERPRETATION_PATH = "/api/v1/interpretation";
+const AUTH_START_PATH = "/api/v1/auth/github";
+const AUTH_ME_PATH = "/api/v1/auth/me";
+const AUTH_LOGOUT_PATH = "/api/v1/auth/logout";
 const DEFAULT_ERROR_MESSAGE = "Analiz sırasında beklenmeyen bir hata oluştu.";
 
 export class ApiError extends Error {
@@ -52,6 +56,25 @@ function isOperationalErrorResponse(value: unknown): value is OperationalErrorRe
     "message" in detail &&
     typeof detail.code === "string" &&
     typeof detail.message === "string"
+  );
+}
+
+function isAuthMeResponse(value: unknown): value is AuthMeResponse {
+  if (typeof value !== "object" || value === null || !("authenticated" in value) || !("user" in value)) {
+    return false;
+  }
+
+  if (typeof value.authenticated !== "boolean") return false;
+  if (value.user === null) return !value.authenticated;
+  if (typeof value.user !== "object" || value.user === null) return false;
+
+  const user = value.user as Record<string, unknown>;
+  return (
+    value.authenticated &&
+    typeof user.github_login === "string" &&
+    (typeof user.display_name === "string" || user.display_name === null) &&
+    (typeof user.avatar_url === "string" || user.avatar_url === null) &&
+    (typeof user.github_html_url === "string" || user.github_html_url === null)
   );
 }
 
@@ -182,4 +205,38 @@ export async function analyzePortfolioWithInterpretation(
   }
 
   throw new ApiError(DEFAULT_ERROR_MESSAGE, response.status, "unexpected_api_error");
+}
+
+export function getAuthStartUrl(): string {
+  return getApiUrl(AUTH_START_PATH);
+}
+
+export async function getAuthMe(): Promise<AuthMeResponse> {
+  let response: Response;
+
+  try {
+    response = await fetch(getApiUrl(AUTH_ME_PATH), { credentials: "include" });
+  } catch {
+    throw new ApiError("Oturum durumu doğrulanamadı.", 0, "auth_bootstrap_network_error");
+  }
+
+  const payload = await readJson(response);
+  if (response.ok && isAuthMeResponse(payload)) return payload;
+  throw new ApiError("Oturum durumu doğrulanamadı.", response.status, "auth_bootstrap_error");
+}
+
+export async function logout(): Promise<void> {
+  let response: Response;
+
+  try {
+    response = await fetch(getApiUrl(AUTH_LOGOUT_PATH), {
+      method: "POST",
+      credentials: "include",
+    });
+  } catch {
+    throw new ApiError("Oturum kapatılamadı.", 0, "logout_network_error");
+  }
+
+  if (response.status === 204) return;
+  throw new ApiError("Oturum kapatılamadı.", response.status, "logout_error");
 }
