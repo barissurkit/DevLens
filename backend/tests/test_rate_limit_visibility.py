@@ -12,6 +12,7 @@ from app.services.github.client import GitHubClient
 
 def github_user_payload() -> dict[str, object]:
     return {
+        "id": 583231,
         "login": "octocat",
         "name": "The Octocat",
         "avatar_url": "https://avatars.githubusercontent.com/u/1",

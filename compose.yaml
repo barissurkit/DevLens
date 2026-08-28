@@ -38,6 +38,11 @@ services:
       GEMINI_MODEL: ${GEMINI_MODEL:-gemini-3.6-flash}
       ANALYSIS_CACHE_TTL_SECONDS: ${ANALYSIS_CACHE_TTL_SECONDS:-900}
       CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:3000,http://127.0.0.1:3000}
+      GITHUB_APP_CLIENT_ID: ${GITHUB_APP_CLIENT_ID:-}
+      GITHUB_APP_CLIENT_SECRET: ${GITHUB_APP_CLIENT_SECRET:-}
+      GITHUB_APP_CALLBACK_URL: ${GITHUB_APP_CALLBACK_URL:-http://localhost:8000/api/v1/auth/github/callback}
+      AUTH_STATE_ENCRYPTION_KEY: ${AUTH_STATE_ENCRYPTION_KEY:-}
+      FRONTEND_ORIGIN: ${FRONTEND_ORIGIN:-http://localhost:3000}
     depends_on:
       migrate:
         condition: service_completed_successfully

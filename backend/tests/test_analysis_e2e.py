@@ -14,6 +14,7 @@ from app.config import Settings
 
 def user_payload(username: str = "synthetic-user") -> dict[str, Any]:
     return {
+        "id": 1,
         "login": username,
         "name": "Synthetic User",
         "avatar_url": "https://avatars.example/user.png",

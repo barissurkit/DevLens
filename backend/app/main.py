@@ -8,6 +8,7 @@ from pydantic import BaseModel
 from app.api.analysis import router as analysis_router
 from app.api.github import router as github_router
 from app.api.interpretation import router as interpretation_router
+from app.api.auth import router as auth_router
 from app.config import Settings, get_settings
 from app.observability import REQUEST_ID, configure_logging, emit_event, new_request_id
 
@@ -65,6 +66,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     application.include_router(github_router)
     application.include_router(analysis_router)
     application.include_router(interpretation_router)
+    application.include_router(auth_router)
     application.get("/health", response_model=HealthResponse)(health_check)
     return application
 

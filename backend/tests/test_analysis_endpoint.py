@@ -27,6 +27,7 @@ from app.services.github.client import GitHubClient
 def create_result() -> GitHubPortfolioAnalysis:
     user = GitHubUser.model_validate(
         {
+            "id": 1,
             "login": "synthetic-user",
             "name": None,
             "avatar_url": "https://avatars.example/user.png",

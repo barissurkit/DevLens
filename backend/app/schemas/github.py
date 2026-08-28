@@ -8,6 +8,7 @@ from pydantic import BaseModel, ConfigDict, Field
 class GitHubUser(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
 
+    github_user_id: int = Field(validation_alias="id", ge=1)
     username: str = Field(validation_alias="login")  # login -> username
     name: str | None
     avatar_url: str
