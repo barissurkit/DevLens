@@ -6,7 +6,7 @@ import type {
 } from "../lib/types";
 import { PortfolioInterpretationSection } from "./portfolio-interpretation-section";
 import { RepositoryAnalysisSection } from "./repository-analysis-section";
-import { categoryLabel } from "../lib/presentation";
+import { categoryLabel, portfolioModeLabel } from "../lib/presentation";
 
 interface AnalysisResultShellProps {
   result: GitHubPortfolioInterpretationResponse;
@@ -42,7 +42,7 @@ export function AnalysisResultShell({ result }: AnalysisResultShellProps) {
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <p className="text-sm font-medium uppercase tracking-[0.16em] text-emerald-600">
-              {viewer_context.mode === "my_workspace" ? "Your Portfolio" : "Viewing public portfolio"}
+              {portfolioModeLabel(viewer_context)}
             </p>
             <h2 ref={dashboardHeadingRef} id="portfolio-dashboard" tabIndex={-1} className="mt-2 text-2xl font-semibold tracking-tight text-slate-950 focus:outline-none focus:ring-2 focus:ring-slate-950 focus:ring-offset-2 sm:text-3xl">
               {user.name || `@${user.username}`} portföyü
