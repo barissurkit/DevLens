@@ -157,7 +157,10 @@ def test_cold_warm_analysis_and_process_restart_reuse(
 
         cold = await _request("/api/v1/analysis", {"username": "synthetic-user"})
         assert cold.status_code == 200
-        assert cold.json() == result.model_dump(mode="json")
+        assert cold.json() == {
+            **result.model_dump(mode="json"),
+            "viewer_context": {"is_owner": False, "mode": "explore"},
+        }
         assert len(calls) == 1
         assert len(await _rows(database_url, "synthetic-user")) == 1
 
