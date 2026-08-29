@@ -11,6 +11,7 @@ from app.api.github import (
     get_github_client,
     get_snapshot_persistence_service,
 )
+from app.api.auth import get_optional_authenticated_user
 from app.main import app
 from app.schemas.analysis import (
     GitHubPortfolioAnalysis,
@@ -19,8 +20,10 @@ from app.schemas.analysis import (
     PortfolioRepositoryAnalysis,
     PortfolioRepositorySelection,
     PortfolioScore,
+    GitHubPortfolioAnalysisResponse,
 )
 from app.schemas.github import GitHubUser
+from app.db.models import User
 from app.services.github.client import GitHubClient
 
 
@@ -118,6 +121,13 @@ def use_mock_cache(mock_cache: object) -> None:
     app.dependency_overrides[get_analysis_snapshot_cache_service] = override_cache
 
 
+def use_authenticated_user(user: User | None) -> None:
+    async def override_user() -> User | None:
+        return user
+
+    app.dependency_overrides[get_optional_authenticated_user] = override_user
+
+
 @pytest.fixture(autouse=True)
 def clear_dependency_overrides() -> Iterator[None]:
     yield
@@ -132,7 +142,7 @@ def test_analysis_route_is_registered_with_typed_response() -> None:
     )
 
     assert "POST" in route.methods
-    assert route.response_model is GitHubPortfolioAnalysis
+    assert route.response_model is GitHubPortfolioAnalysisResponse
 
 
 def test_analysis_openapi_documents_public_contract() -> None:
@@ -144,7 +154,7 @@ def test_analysis_openapi_documents_public_contract() -> None:
         "$ref": "#/components/schemas/PortfolioAnalysisRequest"
     }
     assert operation["responses"]["200"]["content"]["application/json"]["schema"] == {
-        "$ref": "#/components/schemas/GitHubPortfolioAnalysis"
+        "$ref": "#/components/schemas/GitHubPortfolioAnalysisResponse"
     }
 
     for status_code in ("404", "429", "502", "503"):
@@ -177,6 +187,7 @@ def test_analysis_endpoint_calls_application_service_once() -> None:
         "aggregation",
         "intelligence",
         "score",
+        "viewer_context",
     }
     assert response.json()["score"]["overall_score"] is None
     application_mock.assert_awaited_once_with(
@@ -226,9 +237,45 @@ def test_analysis_endpoint_returns_fresh_cached_analysis_without_pipeline_or_wri
         analysis_api.run_github_portfolio_analysis = original
 
     assert response.status_code == 200
-    assert response.json() == cached.model_dump(mode="json")
+    assert response.json()["user"] == cached.model_dump(mode="json")["user"]
+    assert response.json()["viewer_context"] == {"is_owner": False, "mode": "explore"}
     application_mock.assert_not_awaited()
     persistence.persist.assert_not_awaited()
+
+
+@pytest.mark.parametrize(
+    ("authenticated_id", "expected"),
+    [(1, {"is_owner": True, "mode": "my_workspace"}), (2, {"is_owner": False, "mode": "explore"})],
+)
+def test_analysis_endpoint_derives_context_from_target_id_for_each_viewer(
+    authenticated_id: int, expected: dict[str, object]
+) -> None:
+    use_authenticated_user(User(github_user_id=authenticated_id, github_login="synthetic-user"))
+    mock_client = AsyncMock(spec=GitHubClient)
+    use_mock_client(mock_client)
+    use_mock_persistence(AsyncMock())
+    application_mock = AsyncMock(return_value=create_result())
+    original = analysis_api.run_github_portfolio_analysis
+    analysis_api.run_github_portfolio_analysis = application_mock
+    try:
+        response = request_app({"username": "synthetic-user"})
+    finally:
+        analysis_api.run_github_portfolio_analysis = original
+    assert response.status_code == 200
+    assert response.json()["viewer_context"] == expected
+
+
+def test_cached_owner_context_is_not_reused_by_anonymous_viewer() -> None:
+    cached = create_result()
+    cache = AsyncMock()
+    cache.get_fresh_analysis.return_value = type("CachedAnalysis", (), {"analysis": cached})()
+    use_mock_cache(cache)
+    use_authenticated_user(User(github_user_id=1, github_login="synthetic-user"))
+    owner_response = request_app({"username": "synthetic-user"})
+    use_authenticated_user(None)
+    anonymous_response = request_app({"username": "synthetic-user"})
+    assert owner_response.json()["viewer_context"] == {"is_owner": True, "mode": "my_workspace"}
+    assert anonymous_response.json()["viewer_context"] == {"is_owner": False, "mode": "explore"}
 
 
 @pytest.mark.parametrize(

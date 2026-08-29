@@ -1,19 +1,30 @@
 "use client";
 
-import { type FormEvent, useRef, useState } from "react";
+import { type FormEvent, useEffect, useRef, useState } from "react";
 import { analyzePortfolioWithInterpretation, ApiError } from "../lib/api";
 import type { GitHubPortfolioInterpretationResponse } from "../lib/types";
 import { AnalysisErrorState } from "./analysis-error-state";
 import { AnalysisLoadingState } from "./analysis-loading-state";
 import { AnalysisResultShell } from "./analysis-result-shell";
+import { useAuth } from "./auth-provider";
 
 const MAX_USERNAME_LENGTH = 39;
 
 export function AnalysisForm() {
+  const { status, user } = useAuth();
   const [username, setUsername] = useState("");
   const [state, setState] = useState<AnalysisState>({ status: "idle" });
   const [validationMessage, setValidationMessage] = useState<string | null>(null);
   const usernameInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (status !== "authenticated" || !user || typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("workspace") !== "1" || params.get("username") !== user.github_login) return;
+    const target = user.github_login;
+    window.history.replaceState({}, "", "/");
+    void submitUsername(target);
+  }, [status, user]);
 
   async function submitUsername(normalizedUsername: string) {
     setValidationMessage(null);

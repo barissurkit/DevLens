@@ -1,6 +1,7 @@
 import type {
   GitHubPortfolioInterpretationResponse,
   GitHubPortfolioAnalysis,
+  GitHubPortfolioAnalysisResponse,
   InterpretationUnavailableReason,
   OperationalErrorResponse,
   PortfolioAnalysisRequest,
@@ -85,6 +86,12 @@ function isGitHubPortfolioAnalysis(value: unknown): value is GitHubPortfolioAnal
   );
 }
 
+function isViewerContext(value: unknown): boolean {
+  if (typeof value !== "object" || value === null) return false;
+  const context = value as Record<string, unknown>;
+  return typeof context.is_owner === "boolean" && (context.mode === "my_workspace" || context.mode === "explore");
+}
+
 function isInterpretationUnavailableReason(value: unknown): value is InterpretationUnavailableReason {
   return typeof value === "string" && [
     "not_configured",
@@ -98,7 +105,8 @@ function isInterpretationUnavailableReason(value: unknown): value is Interpretat
 }
 
 function isGitHubPortfolioInterpretationResponse(value: unknown): value is GitHubPortfolioInterpretationResponse {
-  if (typeof value !== "object" || value === null || !("analysis" in value) || !("interpretation" in value)) return false;
+  if (typeof value !== "object" || value === null || !("analysis" in value) || !("interpretation" in value) || !("viewer_context" in value)) return false;
+  if (!isViewerContext(value.viewer_context)) return false;
   if (!isGitHubPortfolioAnalysis(value.analysis)) return false;
   const interpretation = value.interpretation;
   if (typeof interpretation !== "object" || interpretation === null || !("status" in interpretation)) return false;
@@ -143,7 +151,7 @@ async function readJson(response: Response): Promise<unknown> {
 
 export async function analyzePortfolio(
   username: string,
-): Promise<GitHubPortfolioAnalysis> {
+): Promise<GitHubPortfolioAnalysisResponse> {
   const request: PortfolioAnalysisRequest = { username };
   let response: Response;
 
@@ -151,6 +159,7 @@ export async function analyzePortfolio(
     response = await fetch(getAnalysisUrl(), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
+      credentials: "include",
       body: JSON.stringify(request),
     });
   } catch {
@@ -159,7 +168,7 @@ export async function analyzePortfolio(
 
   const payload = await readJson(response);
   if (response.ok) {
-    if (isGitHubPortfolioAnalysis(payload)) return payload;
+    if (isGitHubPortfolioAnalysis(payload) && "viewer_context" in payload && isViewerContext(payload.viewer_context)) return payload as GitHubPortfolioAnalysisResponse;
     throw new ApiError("Analiz servisi geçersiz bir yanıt döndürdü.", response.status, "malformed_response");
   }
 
@@ -183,6 +192,7 @@ export async function analyzePortfolioWithInterpretation(
   try {
     response = await fetch(getApiUrl(INTERPRETATION_PATH), {
       method: "POST",
+      credentials: "include",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(request),
     });

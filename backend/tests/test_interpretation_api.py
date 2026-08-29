@@ -124,7 +124,8 @@ def test_available_response_is_composite_and_emits_one_safe_outcome_event(
 
     assert response.status_code == 200
     body = response.json()
-    assert set(body) == {"analysis", "interpretation"}
+    assert set(body) == {"analysis", "interpretation", "viewer_context"}
+    assert body["viewer_context"] == {"is_owner": False, "mode": "explore"}
     assert body["interpretation"] == {
         "status": "available",
         "interpretation": {"summary": "Grounded.", "strength_explanations": [], "improvement_explanations": [], "technology_context": None, "project_area_context": None, "limitations_note": None, "next_project_recommendation": None},

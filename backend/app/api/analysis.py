@@ -4,12 +4,15 @@ from fastapi import APIRouter, Depends
 from pydantic import ValidationError
 
 from app.api.errors import APIErrorResponse, map_github_exception
+from app.api.auth import get_optional_authenticated_user
 from app.api.github import (
     get_analysis_snapshot_cache_service,
     get_github_client,
     get_snapshot_persistence_service,
 )
-from app.schemas.analysis import GitHubPortfolioAnalysis, PortfolioAnalysisRequest
+from app.auth.ownership import derive_viewer_context
+from app.db.models import User
+from app.schemas.analysis import GitHubPortfolioAnalysisResponse, PortfolioAnalysisRequest
 from app.services.analysis_snapshot_persistence import AnalysisSnapshotPersistenceService
 from app.services.analysis_snapshot_cache import AnalysisSnapshotCacheService
 from app.services.github.client import GitHubClient
@@ -25,7 +28,7 @@ router = APIRouter(
 
 @router.post(
     "/analysis",
-    response_model=GitHubPortfolioAnalysis,
+    response_model=GitHubPortfolioAnalysisResponse,
     summary="Analyze a GitHub portfolio",
     responses={
         404: {"model": APIErrorResponse, "description": "GitHub user not found."},
@@ -44,13 +47,19 @@ async def analyze_portfolio(
         get_snapshot_persistence_service
     ),
     cache: AnalysisSnapshotCacheService = Depends(get_analysis_snapshot_cache_service),
-) -> GitHubPortfolioAnalysis:
+    authenticated_user: User | None = Depends(get_optional_authenticated_user),
+) -> GitHubPortfolioAnalysisResponse:
     cached = await cache.get_fresh_analysis(
         username=request.username,
         request_kind="analysis",
     )
     if cached is not None:
-        return cached.analysis
+        return GitHubPortfolioAnalysisResponse(
+            **cached.analysis.model_dump(),
+            viewer_context=derive_viewer_context(
+                authenticated_user=authenticated_user, target_github_user=cached.analysis.user
+            ),
+        )
 
     try:
         analysis = await run_github_portfolio_analysis(
@@ -71,4 +80,9 @@ async def analyze_portfolio(
         analysis_generated_at=analysis_generated_at,
         request_kind="analysis",
     )
-    return analysis
+    return GitHubPortfolioAnalysisResponse(
+        **analysis.model_dump(),
+        viewer_context=derive_viewer_context(
+            authenticated_user=authenticated_user, target_github_user=analysis.user
+        ),
+    )
