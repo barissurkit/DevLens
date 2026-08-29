@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends
 from pydantic import ValidationError
 
 from app.api.errors import APIErrorResponse, map_github_exception
+from app.api.auth import get_optional_authenticated_user
 from app.api.github import (
     get_gemini_client,
     get_github_client,
@@ -13,6 +14,8 @@ from app.api.github import (
     get_snapshot_persistence_service,
 )
 from app.schemas.analysis import PortfolioAnalysisRequest
+from app.auth.ownership import derive_viewer_context
+from app.db.models import User
 from app.schemas.interpretation import (
     GitHubPortfolioInterpretationResponse,
     PortfolioInterpretationResult,
@@ -77,6 +80,7 @@ async def interpret_portfolio(
         get_snapshot_persistence_service
     ),
     cache: AnalysisSnapshotCacheService = Depends(get_analysis_snapshot_cache_service),
+    authenticated_user: User | None = Depends(get_optional_authenticated_user),
 ) -> GitHubPortfolioInterpretationResponse:
     cached = await cache.get_fresh_analysis(
         username=request.username,
@@ -118,6 +122,9 @@ async def interpret_portfolio(
     response = GitHubPortfolioInterpretationResponse(
         analysis=result.analysis,
         interpretation=public_interpretation,
+        viewer_context=derive_viewer_context(
+            authenticated_user=authenticated_user, target_github_user=result.analysis.user
+        ),
     )
     await persistence.persist(
         analysis=response.analysis,

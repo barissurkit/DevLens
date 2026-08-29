@@ -61,6 +61,10 @@ describe("frontend authentication state", () => {
     renderAuthControls();
 
     expect(await screen.findByText("Example User")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "My Workspace" })).toHaveAttribute(
+      "href",
+      "/?workspace=1&username=example",
+    );
     expect(screen.getByRole("button", { name: "Çıkış yap" })).toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "Sign in with GitHub" })).not.toBeInTheDocument();
   });

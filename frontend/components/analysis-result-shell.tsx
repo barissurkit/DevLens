@@ -6,7 +6,7 @@ import type {
 } from "../lib/types";
 import { PortfolioInterpretationSection } from "./portfolio-interpretation-section";
 import { RepositoryAnalysisSection } from "./repository-analysis-section";
-import { categoryLabel } from "../lib/presentation";
+import { categoryLabel, portfolioModeLabel } from "../lib/presentation";
 
 interface AnalysisResultShellProps {
   result: GitHubPortfolioInterpretationResponse;
@@ -26,7 +26,7 @@ const DIMENSION_DESCRIPTIONS: Record<string, string> = {
 
 export function AnalysisResultShell({ result }: AnalysisResultShellProps) {
   const dashboardHeadingRef = useRef<HTMLHeadingElement>(null);
-  const { analysis, interpretation } = result;
+  const { analysis, interpretation, viewer_context } = result;
   const { aggregation, intelligence, score, selection, user } = analysis;
   const dimensions = orderDimensions(score.dimensions);
   const limitations = uniqueItems([...score.limitations, ...intelligence.limitations]);
@@ -41,7 +41,9 @@ export function AnalysisResultShell({ result }: AnalysisResultShellProps) {
       <header className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <p className="text-sm font-medium uppercase tracking-[0.16em] text-emerald-600">Analiz tamamlandı</p>
+            <p className="text-sm font-medium uppercase tracking-[0.16em] text-emerald-600">
+              {portfolioModeLabel(viewer_context)}
+            </p>
             <h2 ref={dashboardHeadingRef} id="portfolio-dashboard" tabIndex={-1} className="mt-2 text-2xl font-semibold tracking-tight text-slate-950 focus:outline-none focus:ring-2 focus:ring-slate-950 focus:ring-offset-2 sm:text-3xl">
               {user.name || `@${user.username}`} portföyü
             </h2>

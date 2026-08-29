@@ -23,6 +23,12 @@ export function AuthControls() {
 
     return (
       <div className="flex flex-wrap items-center justify-end gap-2">
+        <a
+          href={`/?workspace=1&username=${encodeURIComponent(user.github_login)}`}
+          className={`${controlClassName} border border-slate-300 bg-white text-slate-700 hover:bg-slate-100`}
+        >
+          My Workspace
+        </a>
         <span className="max-w-36 truncate text-sm font-medium text-slate-700" title={user.display_name ?? user.github_login}>
           {user.display_name ?? `@${user.github_login}`}
         </span>

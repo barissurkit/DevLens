@@ -2,6 +2,11 @@ export interface PortfolioAnalysisRequest {
   username: string;
 }
 
+export interface ViewerContext {
+  is_owner: boolean;
+  mode: "my_workspace" | "explore";
+}
+
 export interface AuthenticatedUser {
   github_login: string;
   display_name: string | null;
@@ -244,6 +249,10 @@ export interface GitHubPortfolioAnalysis {
   score: PortfolioScore;
 }
 
+export interface GitHubPortfolioAnalysisResponse extends GitHubPortfolioAnalysis {
+  viewer_context: ViewerContext;
+}
+
 export interface OperationalErrorDetail {
   code: string;
   message: string;
@@ -302,4 +311,5 @@ export type PublicPortfolioInterpretationResult =
 export interface GitHubPortfolioInterpretationResponse {
   analysis: GitHubPortfolioAnalysis;
   interpretation: PublicPortfolioInterpretationResult;
+  viewer_context: ViewerContext;
 }

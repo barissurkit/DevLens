@@ -94,7 +94,9 @@ async def _run_public_snapshot_flow() -> None:
 
         assert len(rows) == 2
         assert rows[0].interpretation_payload is None
-        assert rows[0].analysis_payload == analysis_response.json()
+        analysis_response_payload = analysis_response.json()
+        analysis_response_payload.pop("viewer_context", None)
+        assert rows[0].analysis_payload == analysis_response_payload
         assert rows[1].analysis_payload == interpretation_response.json()["analysis"]
         assert rows[1].interpretation_payload == interpretation_response.json()["interpretation"]
     finally:

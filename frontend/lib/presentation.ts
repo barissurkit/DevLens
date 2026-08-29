@@ -14,3 +14,8 @@ const CATEGORY_LABELS: Record<string, string> = {
 export function categoryLabel(category: string): string {
   return CATEGORY_LABELS[category] ?? category;
 }
+
+export function portfolioModeLabel(viewerContext: ViewerContext): string {
+  return viewerContext.mode === "my_workspace" ? "Your Portfolio" : "Viewing public portfolio";
+}
+import type { ViewerContext } from "./types";

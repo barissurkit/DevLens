@@ -3,7 +3,7 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, Field, model_validator
 
-from app.schemas.analysis import GitHubPortfolioAnalysis, RepositoryCategory
+from app.schemas.analysis import GitHubPortfolioAnalysis, RepositoryCategory, ViewerContext
 
 
 class InterpretationSignal(BaseModel):
@@ -132,3 +132,4 @@ PublicPortfolioInterpretationResult = Annotated[
 class GitHubPortfolioInterpretationResponse(BaseModel):
     analysis: GitHubPortfolioAnalysis
     interpretation: PublicPortfolioInterpretationResult
+    viewer_context: ViewerContext

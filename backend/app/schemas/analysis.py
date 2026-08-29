@@ -18,6 +18,13 @@ class PortfolioAnalysisRequest(BaseModel):
         return normalize_github_username(value) if isinstance(value, str) else value
 
 
+class ViewerContext(BaseModel):
+    """Request-scoped mode derived from the authenticated viewer and target ID."""
+
+    is_owner: bool
+    mode: Literal["my_workspace", "explore"]
+
+
 class RepositoryStructureSignals(BaseModel):
     has_tests: bool
     has_ci: bool
@@ -269,3 +276,7 @@ class GitHubPortfolioAnalysis(BaseModel):
     aggregation: PortfolioAggregation
     intelligence: PortfolioIntelligence
     score: PortfolioScore
+
+
+class GitHubPortfolioAnalysisResponse(GitHubPortfolioAnalysis):
+    viewer_context: ViewerContext
