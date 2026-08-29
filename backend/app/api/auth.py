@@ -120,7 +120,7 @@ async def get_auth_github_api_client() -> GitHubClient:
     return GitHubClient(get_settings())
 
 
-async def get_optional_authenticated_user(request: Request) -> User | None:
+async def get_optional_authenticated_user(request: Request, response: Response) -> User | None:
     """Resolve a session when present; public endpoints stay anonymous on bad sessions."""
     settings = get_settings()
     cookie = request.cookies.get(_cookie_name(settings))
@@ -128,7 +128,10 @@ async def get_optional_authenticated_user(request: Request) -> User | None:
         return None
     try:
         async with get_session_factory(settings)() as session:
-            return await get_user_by_session_token(session, sha256_digest(cookie))
+            user = await get_user_by_session_token(session, sha256_digest(cookie))
+            if user is None:
+                _clear_session_cookie(response, settings)
+            return user
     except (DatabaseNotConfiguredError, SQLAlchemyError, OSError):
         return None
 

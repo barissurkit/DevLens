@@ -1,10 +1,16 @@
+import asyncio
+from datetime import datetime, timezone
+from unittest.mock import AsyncMock
+
+from fastapi import Request, Response
+
+import app.api.auth as auth_api
 from app.auth.ownership import derive_viewer_context, is_owner
+from app.config import Settings
 from app.db.models import User
 from app.db.repositories.analysis_snapshots import AnalysisSnapshotRepository
 from app.schemas.analysis import GitHubPortfolioAnalysisResponse, ViewerContext
 from app.schemas.github import GitHubUser
-
-
 def target(*, github_user_id: int, username: str = "same-login") -> GitHubUser:
     return GitHubUser.model_validate({
         "id": github_user_id, "login": username, "name": None,
@@ -64,5 +70,27 @@ def test_snapshot_serialization_excludes_viewer_context() -> None:
     )
     assert "viewer_context" not in session.row.analysis_payload
     assert record.analysis.user.github_user_id == 1
-import asyncio
-from datetime import datetime, timezone
+
+
+def test_optional_analysis_session_clears_invalid_cookie(monkeypatch) -> None:
+    class Session:
+        async def __aenter__(self) -> "Session":
+            return self
+
+        async def __aexit__(self, exception_type, exception, traceback) -> None:
+            return None
+
+    settings = Settings(
+        _env_file=None,
+        database_url="postgresql+asyncpg://local/test",
+        auth_cookie_secure=False,
+    )
+    monkeypatch.setattr(auth_api, "get_settings", lambda: settings)
+    monkeypatch.setattr(auth_api, "get_session_factory", lambda _: lambda: Session())
+    monkeypatch.setattr(auth_api, "get_user_by_session_token", AsyncMock(return_value=None))
+    request = Request({"type": "http", "headers": [(b"cookie", b"devlens_session=expired")]})
+    response = Response()
+
+    assert asyncio.run(auth_api.get_optional_authenticated_user(request, response)) is None
+    assert 'devlens_session="";' in response.headers["set-cookie"]
+    assert "Max-Age=0" in response.headers["set-cookie"]
