@@ -21,6 +21,17 @@ def test_unknown_evidence_reference_is_rejected() -> None:
         validate_suggestions(result, {"signal:readme": "README kanıtı"})
 
 
+def test_duplicate_evidence_references_and_overlong_fields_are_rejected() -> None:
+    with pytest.raises(ValidationError):
+        AISuggestions.model_validate({"suggestions": [{
+            "title": "README düzenle", "description": "Kurulum ekle", "reason": "Kanıt", "evidence_refs": ["signal:readme", "signal:readme"]
+        }]})
+    with pytest.raises(ValidationError):
+        AISuggestions.model_validate({"suggestions": [{
+            "title": "x" * 201, "description": "Kurulum ekle", "reason": "Kanıt", "evidence_refs": ["signal:readme"]
+        }]})
+
+
 def test_prompt_injection_text_is_serialized_as_data() -> None:
     from test_gemini_foundation import context
 

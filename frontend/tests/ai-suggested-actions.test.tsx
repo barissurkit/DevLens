@@ -36,4 +36,16 @@ describe("AI suggested actions", () => {
     await user.click(screen.getByRole("button", { name: "Dismiss" }));
     expect(screen.queryByText("İkinci öneri")).not.toBeInTheDocument();
   });
+
+  it("ignores a late response after workspace identity changes", async () => {
+    let resolve: (value: { status: "available"; suggestions: [] }) => void = () => undefined;
+    mockedGenerate.mockReturnValue(new Promise((complete) => { resolve = complete; }));
+    const user = userEvent.setup();
+    const { rerender } = render(<AISuggestedActions key="alice" username="alice" />);
+    await user.click(screen.getByRole("button", { name: "Generate suggestions" }));
+    rerender(<AISuggestedActions key="bob" username="bob" />);
+    resolve({ status: "available", suggestions: [] });
+    await waitFor(() => expect(screen.getByRole("button", { name: "Generate suggestions" })).toBeInTheDocument());
+    expect(screen.queryByText("AI önerileri şu anda kullanılamıyor.")).not.toBeInTheDocument();
+  });
 });

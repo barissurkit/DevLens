@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ApiError, createActionPlanTask, generateAISuggestions } from "../lib/api";
 import type { AISuggestion, ActionPlanTask } from "../lib/types";
 
@@ -14,14 +14,22 @@ export function AISuggestedActions({ username }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [editing, setEditing] = useState<number | null>(null);
   const [adding, setAdding] = useState<number | null>(null);
+  const requestVersion = useRef(0);
+
+  useEffect(() => () => { requestVersion.current += 1; }, []);
 
   async function generate() {
+    if (state === "loading") return;
+    const version = requestVersion.current + 1;
+    requestVersion.current = version;
     setState("loading"); setError(null);
     try {
       const result = await generateAISuggestions(username);
+      if (requestVersion.current !== version) return;
       if (result.status === "available") { setSuggestions(result.suggestions); setState("success"); }
       else { setSuggestions([]); setState(result.reason === "insufficient_evidence" ? "success" : "error"); setError(result.reason === "insufficient_evidence" ? null : "AI önerileri şu anda kullanılamıyor."); }
     } catch (cause) {
+      if (requestVersion.current !== version) return;
       setState("error"); setError(cause instanceof ApiError ? cause.message : "AI önerileri oluşturulamadı.");
     }
   }

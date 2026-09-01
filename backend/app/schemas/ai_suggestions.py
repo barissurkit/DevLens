@@ -1,7 +1,7 @@
 from enum import StrEnum
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 
 class AISuggestion(BaseModel):
@@ -11,6 +11,12 @@ class AISuggestion(BaseModel):
     description: str = Field(min_length=1, max_length=2000)
     reason: str = Field(min_length=1, max_length=600)
     evidence_refs: list[str] = Field(min_length=1, max_length=3)
+
+    @model_validator(mode="after")
+    def validate_unique_evidence_refs(self) -> "AISuggestion":
+        if len(set(self.evidence_refs)) != len(self.evidence_refs):
+            raise ValueError("Evidence references must be unique.")
+        return self
 
 
 class AISuggestions(BaseModel):
