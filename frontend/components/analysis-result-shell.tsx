@@ -6,6 +6,7 @@ import type {
 } from "../lib/types";
 import { PortfolioInterpretationSection } from "./portfolio-interpretation-section";
 import { ActionPlan } from "./action-plan";
+import { AISuggestedActions } from "./ai-suggested-actions";
 import { RepositoryAnalysisSection } from "./repository-analysis-section";
 import { categoryLabel, portfolioModeLabel } from "../lib/presentation";
 
@@ -99,7 +100,10 @@ export function AnalysisResultShell({ result }: AnalysisResultShellProps) {
       {limitations.length > 0 && <section aria-labelledby="limitations-heading" className="rounded-2xl border border-slate-200 bg-slate-50 p-6 sm:p-8"><SectionHeading id="limitations-heading" title="Analiz notları" /><ul className="mt-4 list-disc space-y-2 pl-5 text-sm leading-6 text-slate-600">{limitations.map((limitation) => <li key={limitation}>{limitation}</li>)}</ul></section>}
 
       <PortfolioInterpretationSection analysis={analysis} interpretation={interpretation} />
-      {viewer_context.mode === "my_workspace" && <ActionPlan />}
+      {viewer_context.mode === "my_workspace" && <>
+        <AISuggestedActions key={user.username} username={user.username} />
+        <ActionPlan />
+      </>}
       <RepositoryAnalysisSection repositories={analysis.repository_analysis.repositories} failures={analysis.repository_analysis.failures} excluded={selection.excluded} />
     </section>
   );

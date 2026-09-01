@@ -18,6 +18,12 @@ from app.prompts.portfolio_interpretation import (
     SYSTEM_INSTRUCTION,
     build_interpretation_content,
 )
+from app.prompts.ai_suggestions import (
+    AI_SUGGESTIONS_SYSTEM_INSTRUCTION,
+    build_suggestions_content,
+    build_suggestions_response_schema,
+)
+from app.schemas.ai_suggestions import AISuggestions
 from app.schemas.interpretation import (
     PortfolioInterpretation,
     PortfolioInterpretationContext,
@@ -504,3 +510,43 @@ class GeminiClient:
             response_bytes=len(_safe_response_text(response).encode("utf-8")),
         )
         return interpretation
+
+    async def suggest_actions(
+        self,
+        context: PortfolioInterpretationContext,
+        evidence_catalog: dict[str, str],
+    ) -> AISuggestions:
+        config = types.GenerateContentConfig(
+            system_instruction=AI_SUGGESTIONS_SYSTEM_INSTRUCTION,
+            response_mime_type="application/json",
+            response_schema=build_suggestions_response_schema(),
+            candidate_count=1,
+        )
+        started_at = time.monotonic()
+        try:
+            response = await self._client.aio.models.generate_content(
+                model=self._model,
+                contents=build_suggestions_content(context, evidence_catalog),
+                config=config,
+            )
+        except Exception as error:
+            _log_gemini_failure(
+                error=error,
+                model=self._model,
+                elapsed_ms=round((time.monotonic() - started_at) * 1000),
+            )
+            normalized = _normalize_sdk_error(error)
+            if normalized is None:
+                raise
+            raise normalized from error
+        try:
+            parsed = getattr(response, "parsed", None)
+            return parsed if isinstance(parsed, AISuggestions) else AISuggestions.model_validate_json(response.text)
+        except (AttributeError, TypeError, ValidationError, ValueError) as error:
+            _log_invalid_response_failure(
+                response=response,
+                error=error,
+                model=self._model,
+                elapsed_ms=round((time.monotonic() - started_at) * 1000),
+            )
+            raise GeminiInvalidResponseError("Gemini returned invalid AI suggestions.") from error
