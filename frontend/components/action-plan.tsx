@@ -1,6 +1,6 @@
 "use client";
 
-import { startTransition, useEffect, useState } from "react";
+import { startTransition, useEffect, useRef, useState } from "react";
 import { ApiError, createActionPlanTask, deleteActionPlanTask, getActionPlan, updateActionPlanTask } from "../lib/api";
 import type { ActionPlanStatus, ActionPlanTask } from "../lib/types";
 import { useAuth } from "./auth-provider";
@@ -14,11 +14,31 @@ export function ActionPlan() {
   const [loadedFor, setLoadedFor] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const loadRequest = useRef(0);
+  const locallyCreatedTaskIds = useRef(new Set<string>());
 
   useEffect(() => {
-    if (status !== "authenticated") return;
+    const requestId = loadRequest.current + 1;
+    loadRequest.current = requestId;
+    locallyCreatedTaskIds.current.clear();
+    if (status !== "authenticated") {
+      startTransition(() => { setTasks([]); setLoadedFor(null); setLoading(false); });
+      return;
+    }
     startTransition(() => { setLoading(true); setTasks([]); setError(null); setLoadedFor(null); });
-    void getActionPlan().then((result) => { setTasks(result.tasks); setLoadedFor(user?.github_login || null); }).catch((reason) => setError(reason instanceof ApiError ? reason.message : "Action Plan yüklenemedi.")).finally(() => setLoading(false));
+    void getActionPlan().then((result) => {
+      if (requestId !== loadRequest.current) return;
+      setTasks((current) => {
+        const serverTaskIds = new Set(result.tasks.map((task) => task.id));
+        const pendingCreatedTasks = current.filter((task) => locallyCreatedTaskIds.current.has(task.id) && !serverTaskIds.has(task.id));
+        return [...pendingCreatedTasks, ...result.tasks].filter((task, index, allTasks) => allTasks.findIndex((item) => item.id === task.id) === index);
+      });
+      setLoadedFor(user?.github_login || null);
+    }).catch((reason) => {
+      if (requestId === loadRequest.current) setError(reason instanceof ApiError ? reason.message : "Action Plan yüklenemedi.");
+    }).finally(() => {
+      if (requestId === loadRequest.current) setLoading(false);
+    });
   }, [status, user?.github_login]);
 
   if (status !== "authenticated") return null;
@@ -26,11 +46,17 @@ export function ActionPlan() {
   async function createTask(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!title.trim() || busy) return;
+    const requestId = loadRequest.current;
     setBusy(true); setError(null);
     try {
       const task = await createActionPlanTask({ title, description: description || undefined });
-      setTasks((current) => [task, ...current]); setTitle(""); setDescription("");
-    } catch (reason) { setError(reason instanceof ApiError ? reason.message : "Görev oluşturulamadı."); }
+      if (requestId !== loadRequest.current) return;
+      locallyCreatedTaskIds.current.add(task.id);
+      setTasks((current) => current.some((item) => item.id === task.id) ? current : [task, ...current]);
+      setTitle(""); setDescription("");
+    } catch (reason) {
+      if (requestId === loadRequest.current) setError(reason instanceof ApiError ? reason.message : "Görev oluşturulamadı.");
+    }
     finally { setBusy(false); }
   }
 
