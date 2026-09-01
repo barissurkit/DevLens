@@ -9,6 +9,7 @@ import type {
   ActionPlanResponse,
   ActionPlanTask,
   ActionPlanStatus,
+  AISuggestionsResponse,
 } from "./types";
 
 const ANALYSIS_PATH = "/api/v1/analysis";
@@ -17,6 +18,7 @@ const AUTH_START_PATH = "/api/v1/auth/github";
 const AUTH_ME_PATH = "/api/v1/auth/me";
 const AUTH_LOGOUT_PATH = "/api/v1/auth/logout";
 const ACTION_PLAN_PATH = "/api/v1/workspace/action-plan";
+const AI_SUGGESTIONS_PATH = "/api/v1/workspace/ai-suggestions";
 const DEFAULT_ERROR_MESSAGE = "Analiz sırasında beklenmeyen bir hata oluştu.";
 
 export class ApiError extends Error {
@@ -194,6 +196,25 @@ export async function updateActionPlanTask(id: string, input: { title?: string; 
 
 export async function deleteActionPlanTask(id: string): Promise<void> {
   await actionPlanRequest(`${ACTION_PLAN_PATH}/${encodeURIComponent(id)}`, { method: "DELETE" });
+}
+
+export async function generateAISuggestions(username: string): Promise<AISuggestionsResponse> {
+  let response: Response;
+  try {
+    response = await fetch(getApiUrl(AI_SUGGESTIONS_PATH), {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username }),
+    });
+  } catch {
+    throw new ApiError("AI öneri servisine ulaşılamadı.", 0, "network_error");
+  }
+  const payload = await readJson(response);
+  if (!response.ok) throw new ApiError("AI önerileri oluşturulamadı.", response.status, "ai_suggestions_error");
+  if (typeof payload === "object" && payload !== null && (payload as { status?: unknown }).status === "available" && Array.isArray((payload as { suggestions?: unknown }).suggestions)) return payload as AISuggestionsResponse;
+  if (typeof payload === "object" && payload !== null && (payload as { status?: unknown }).status === "unavailable" && typeof (payload as { reason?: unknown }).reason === "string") return payload as AISuggestionsResponse;
+  throw new ApiError("AI öneri servisi geçersiz bir yanıt döndürdü.", response.status, "malformed_response");
 }
 
 export async function analyzePortfolio(

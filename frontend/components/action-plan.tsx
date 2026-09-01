@@ -14,6 +14,14 @@ export function ActionPlan() {
   const [loadedFor, setLoadedFor] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  useEffect(() => {
+    function handleSuggestedTask(event: Event) {
+      const task = (event as CustomEvent<ActionPlanTask>).detail;
+      if (task) setTasks((current) => current.some((item) => item.id === task.id) ? current : [...current, task]);
+    }
+    window.addEventListener("devlens:suggested-task-added", handleSuggestedTask);
+    return () => window.removeEventListener("devlens:suggested-task-added", handleSuggestedTask);
+  }, []);
   const loadRequest = useRef(0);
   const locallyCreatedTaskIds = useRef(new Set<string>());
 

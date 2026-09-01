@@ -35,6 +35,25 @@ export interface ActionPlanResponse {
   tasks: ActionPlanTask[];
 }
 
+export interface AISuggestion {
+  title: string;
+  description: string;
+  reason: string;
+  evidence_refs: string[];
+}
+
+export interface AISuggestionsAvailable {
+  status: "available";
+  suggestions: AISuggestion[];
+}
+
+export interface AISuggestionsUnavailable {
+  status: "unavailable";
+  reason: "not_configured" | "insufficient_evidence" | "timeout" | "unavailable" | "rate_limit" | "upstream_error" | "invalid_response";
+}
+
+export type AISuggestionsResponse = AISuggestionsAvailable | AISuggestionsUnavailable;
+
 export interface GitHubUser {
   username: string;
   name: string | null;
