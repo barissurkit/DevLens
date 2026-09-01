@@ -24,6 +24,19 @@ async def require_task(request: Request, response: Response, session: AsyncSessi
     return await get_required_authenticated_user(request, response, session)
 
 
+def apply_task_update(task: ActionPlanTask, changes: dict[str, object]) -> None:
+    status = changes.get("status")
+    if status is not None:
+        status_value = str(status)
+        if status_value == ActionPlanStatus.DONE and task.status != ActionPlanStatus.DONE:
+            task.completed_at = utc_now()
+        elif status_value != ActionPlanStatus.DONE:
+            task.completed_at = None
+        changes["status"] = status_value
+    for key, value in changes.items():
+        setattr(task, key, value)
+
+
 @router.get("", response_model=ActionPlanResponse)
 async def get_action_plan(user: User = Depends(require_task), session: AsyncSession = Depends(get_session)) -> ActionPlanResponse:
     return ActionPlanResponse(tasks=await list_tasks(session, user.id))
@@ -61,11 +74,7 @@ async def update_action_plan_task(
     if task is None:
         raise HTTPException(status_code=404, detail="Task not found.")
     changes = payload.model_dump(exclude_unset=True)
-    if "status" in changes:
-        changes["status"] = str(changes["status"])
-        task.completed_at = utc_now() if changes["status"] == ActionPlanStatus.DONE else None
-    for key, value in changes.items():
-        setattr(task, key, value)
+    apply_task_update(task, changes)
     await session.commit()
     await session.refresh(task)
     return task
