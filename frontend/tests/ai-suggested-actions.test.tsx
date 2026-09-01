@@ -48,4 +48,16 @@ describe("AI suggested actions", () => {
     await waitFor(() => expect(screen.getByRole("button", { name: "Generate suggestions" })).toBeInTheDocument());
     expect(screen.queryByText("AI önerileri şu anda kullanılamıyor.")).not.toBeInTheDocument();
   });
+
+  it("ignores a late error after the suggestion component unmounts", async () => {
+    let reject: (reason: Error) => void = () => undefined;
+    mockedGenerate.mockReturnValue(new Promise((_, fail) => { reject = fail; }));
+    const user = userEvent.setup();
+    const { unmount } = render(<AISuggestedActions username="alice" />);
+    await user.click(screen.getByRole("button", { name: "Generate suggestions" }));
+    unmount();
+    reject(new Error("late failure"));
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+  });
 });
