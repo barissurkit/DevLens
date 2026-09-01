@@ -22,7 +22,7 @@ export function AISuggestedActions({ username }: Props) {
     if (state === "loading") return;
     const version = requestVersion.current + 1;
     requestVersion.current = version;
-    setState("loading"); setError(null);
+    setSuggestions([]); setEditing(null); setState("loading"); setError(null);
     try {
       const result = await generateAISuggestions(username);
       if (requestVersion.current !== version) return;
@@ -53,7 +53,7 @@ export function AISuggestedActions({ username }: Props) {
   return <section aria-labelledby="ai-suggestions-heading" className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
     <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
       <div><h3 id="ai-suggestions-heading" className="text-xl font-semibold tracking-tight text-slate-950">AI Suggested Actions</h3><p className="mt-2 text-sm text-slate-600">Yalnızca bu analizdeki deterministik kanıtlara dayalı, gözden geçirilebilir öneriler.</p></div>
-      <button type="button" onClick={() => void generate()} disabled={state === "loading"} className="min-h-10 rounded-xl bg-slate-950 px-4 text-sm font-medium text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-400">{state === "loading" ? "Öneriler oluşturuluyor..." : state === "success" ? "Yeniden oluştur" : "Generate suggestions"}</button>
+      <button type="button" onClick={() => void generate()} disabled={state === "loading" || adding !== null} className="min-h-10 rounded-xl bg-slate-950 px-4 text-sm font-medium text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-400">{state === "loading" ? "Öneriler oluşturuluyor..." : state === "success" ? "Yeniden oluştur" : "Generate suggestions"}</button>
     </div>
     {state === "loading" && <p className="mt-5 text-sm text-slate-500" role="status">Deterministik kanıtlar yorumlanıyor...</p>}
     {error && <div className="mt-5 flex flex-wrap items-center gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800" role="alert"><span>{error}</span><button type="button" onClick={() => void generate()} className="font-medium underline">Tekrar dene</button></div>}

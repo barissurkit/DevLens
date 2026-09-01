@@ -88,6 +88,15 @@ describe("Action Plan workspace UI", () => {
     expect(screen.getAllByDisplayValue(createdTask.title)).toHaveLength(1);
   });
 
+  it("keeps a suggested task when the initial load resolves with a stale snapshot", async () => {
+    let resolveLoad: (result: { tasks: ActionPlanTask[] }) => void = () => undefined;
+    mockedGet.mockReturnValue(new Promise((resolve) => { resolveLoad = resolve; }));
+    render(<ActionPlan />);
+    window.dispatchEvent(new CustomEvent<ActionPlanTask>("devlens:suggested-task-added", { detail: { ...task, id: "suggested-1", title: "AI görevi" } }));
+    resolveLoad({ tasks: [] });
+    expect(await screen.findByDisplayValue("AI görevi")).toBeInTheDocument();
+  });
+
   it("uses the later server version when a GET contains the created task ID", async () => {
     let resolveLoad: (result: { tasks: ActionPlanTask[] }) => void = () => undefined;
     mockedGet.mockReturnValue(new Promise((resolve) => { resolveLoad = resolve; }));

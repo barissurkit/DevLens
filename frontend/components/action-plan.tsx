@@ -17,7 +17,10 @@ export function ActionPlan() {
   useEffect(() => {
     function handleSuggestedTask(event: Event) {
       const task = (event as CustomEvent<ActionPlanTask>).detail;
-      if (task) setTasks((current) => current.some((item) => item.id === task.id) ? current : [...current, task]);
+      if (task) {
+        locallyCreatedTaskIds.current.add(task.id);
+        setTasks((current) => current.some((item) => item.id === task.id) ? current : [...current, task]);
+      }
     }
     window.addEventListener("devlens:suggested-task-added", handleSuggestedTask);
     return () => window.removeEventListener("devlens:suggested-task-added", handleSuggestedTask);

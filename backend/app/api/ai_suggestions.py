@@ -4,6 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from pydantic import ValidationError
 
 from app.api.action_plan import require_workspace_origin
+from app.api.errors import map_github_exception
 from app.api.auth import get_required_authenticated_user
 from app.api.github import get_analysis_snapshot_cache_service, get_gemini_client, get_github_client
 from app.auth.ownership import is_owner
@@ -76,4 +77,4 @@ async def generate_ai_suggestions(
     except (GeminiNotConfiguredError, GeminiTimeoutError, GeminiRateLimitError, GeminiUnavailableError, GeminiUpstreamError, GeminiInvalidResponseError) as exc:
         return AISuggestionsUnavailable(reason=_reason(exc))
     except (httpx.TimeoutException, httpx.RequestError, httpx.HTTPStatusError, ValidationError) as exc:
-        raise HTTPException(status_code=502, detail="Deterministic analysis could not be completed.") from exc
+        raise map_github_exception(exc) from exc
