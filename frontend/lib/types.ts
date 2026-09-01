@@ -19,6 +19,22 @@ export interface AuthMeResponse {
   user: AuthenticatedUser | null;
 }
 
+export type ActionPlanStatus = "todo" | "in_progress" | "done";
+
+export interface ActionPlanTask {
+  id: string;
+  title: string;
+  description: string | null;
+  status: ActionPlanStatus;
+  created_at: string;
+  updated_at: string;
+  completed_at: string | null;
+}
+
+export interface ActionPlanResponse {
+  tasks: ActionPlanTask[];
+}
+
 export interface GitHubUser {
   username: string;
   name: string | null;
