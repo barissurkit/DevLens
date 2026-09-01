@@ -54,7 +54,9 @@ export function ActionPlan() {
       locallyCreatedTaskIds.current.add(task.id);
       setTasks((current) => current.some((item) => item.id === task.id) ? current : [task, ...current]);
       setTitle(""); setDescription("");
-    } catch (reason) { setError(reason instanceof ApiError ? reason.message : "Görev oluşturulamadı."); }
+    } catch (reason) {
+      if (requestId === loadRequest.current) setError(reason instanceof ApiError ? reason.message : "Görev oluşturulamadı.");
+    }
     finally { setBusy(false); }
   }
 
