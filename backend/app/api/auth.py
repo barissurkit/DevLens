@@ -136,6 +136,21 @@ async def get_optional_authenticated_user(request: Request, response: Response) 
         return None
 
 
+async def get_required_authenticated_user(
+    request: Request, response: Response, session: AsyncSession
+) -> User:
+    """Resolve a valid session for private workspace endpoints; never fail open."""
+    settings = request.app.state.settings
+    cookie = request.cookies.get(_cookie_name(settings))
+    if not cookie:
+        raise HTTPException(status_code=401, detail="Authentication required.")
+    user = await get_user_by_session_token(session, sha256_digest(cookie))
+    if user is None:
+        _clear_session_cookie(response, settings)
+        raise HTTPException(status_code=401, detail="Authentication required.")
+    return user
+
+
 @router.get("/github")
 async def begin_github_login(
     next_path: str | None = Query(default=None, alias="next"),

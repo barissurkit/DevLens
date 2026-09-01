@@ -1,7 +1,7 @@
 from datetime import datetime
 from uuid import UUID, uuid4
 
-from sqlalchemy import BigInteger, DateTime, ForeignKey, Index, LargeBinary, String, UniqueConstraint, func, text
+from sqlalchemy import BigInteger, DateTime, ForeignKey, Index, LargeBinary, String, UniqueConstraint, func, text, CheckConstraint
 from sqlalchemy.dialects.postgresql import JSONB, UUID as PostgreSQLUUID
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
@@ -88,3 +88,23 @@ class OAuthLoginState(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=func.now())
     expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     consumed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+
+class ActionPlanTask(Base):
+    __tablename__ = "action_plan_tasks"
+    __table_args__ = (
+        CheckConstraint("length(trim(title)) > 0", name="ck_action_plan_tasks_title_not_blank"),
+        CheckConstraint("status IN ('todo', 'in_progress', 'done')", name="ck_action_plan_tasks_status"),
+        Index("ix_action_plan_tasks_user_updated_at", "user_id", text("updated_at DESC")),
+    )
+
+    id: Mapped[UUID] = mapped_column(PostgreSQLUUID(as_uuid=True), primary_key=True, default=uuid4)
+    user_id: Mapped[UUID] = mapped_column(
+        PostgreSQLUUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+    )
+    title: Mapped[str] = mapped_column(String(200), nullable=False)
+    description: Mapped[str | None] = mapped_column(String(2000), nullable=True)
+    status: Mapped[str] = mapped_column(String(20), nullable=False, server_default="todo")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=func.now(), onupdate=func.now())
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)

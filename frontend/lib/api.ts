@@ -6,6 +6,9 @@ import type {
   OperationalErrorResponse,
   PortfolioAnalysisRequest,
   AuthMeResponse,
+  ActionPlanResponse,
+  ActionPlanTask,
+  ActionPlanStatus,
 } from "./types";
 
 const ANALYSIS_PATH = "/api/v1/analysis";
@@ -13,6 +16,7 @@ const INTERPRETATION_PATH = "/api/v1/interpretation";
 const AUTH_START_PATH = "/api/v1/auth/github";
 const AUTH_ME_PATH = "/api/v1/auth/me";
 const AUTH_LOGOUT_PATH = "/api/v1/auth/logout";
+const ACTION_PLAN_PATH = "/api/v1/workspace/action-plan";
 const DEFAULT_ERROR_MESSAGE = "Analiz sırasında beklenmeyen bir hata oluştu.";
 
 export class ApiError extends Error {
@@ -147,6 +151,48 @@ async function readJson(response: Response): Promise<unknown> {
   } catch {
     return null;
   }
+}
+
+function isActionPlanResponse(value: unknown): value is ActionPlanResponse {
+  return typeof value === "object" && value !== null && Array.isArray((value as { tasks?: unknown }).tasks);
+}
+
+async function actionPlanRequest(path: string, init: RequestInit = {}): Promise<unknown> {
+  let response: Response;
+  try {
+    response = await fetch(getApiUrl(path), {
+      ...init,
+      credentials: "include",
+      headers: { "Content-Type": "application/json", ...(init.headers || {}) },
+    });
+  } catch {
+    throw new ApiError("Action Plan servisine ulaşılamadı.", 0, "network_error");
+  }
+  const payload = await readJson(response);
+  if (!response.ok) throw new ApiError("Action Plan işlemi tamamlanamadı.", response.status, "action_plan_error");
+  return payload;
+}
+
+export async function getActionPlan(): Promise<ActionPlanResponse> {
+  const payload = await actionPlanRequest(ACTION_PLAN_PATH);
+  if (isActionPlanResponse(payload)) return payload;
+  throw new ApiError("Action Plan geçersiz bir yanıt döndürdü.", 200, "malformed_response");
+}
+
+export async function createActionPlanTask(input: { title: string; description?: string }): Promise<ActionPlanTask> {
+  const payload = await actionPlanRequest(ACTION_PLAN_PATH, { method: "POST", body: JSON.stringify(input) });
+  if (typeof payload === "object" && payload !== null && "id" in payload) return payload as ActionPlanTask;
+  throw new ApiError("Action Plan geçersiz bir yanıt döndürdü.", 201, "malformed_response");
+}
+
+export async function updateActionPlanTask(id: string, input: { title?: string; description?: string | null; status?: ActionPlanStatus }): Promise<ActionPlanTask> {
+  const payload = await actionPlanRequest(`${ACTION_PLAN_PATH}/${encodeURIComponent(id)}`, { method: "PATCH", body: JSON.stringify(input) });
+  if (typeof payload === "object" && payload !== null && "id" in payload) return payload as ActionPlanTask;
+  throw new ApiError("Action Plan geçersiz bir yanıt döndürdü.", 200, "malformed_response");
+}
+
+export async function deleteActionPlanTask(id: string): Promise<void> {
+  await actionPlanRequest(`${ACTION_PLAN_PATH}/${encodeURIComponent(id)}`, { method: "DELETE", body: "{}" });
 }
 
 export async function analyzePortfolio(
