@@ -18,16 +18,20 @@ export function ActionPlan() {
   const locallyCreatedTaskIds = useRef(new Set<string>());
 
   useEffect(() => {
-    if (status !== "authenticated") return;
     const requestId = loadRequest.current + 1;
     loadRequest.current = requestId;
     locallyCreatedTaskIds.current.clear();
+    if (status !== "authenticated") {
+      startTransition(() => { setTasks([]); setLoadedFor(null); setLoading(false); });
+      return;
+    }
     startTransition(() => { setLoading(true); setTasks([]); setError(null); setLoadedFor(null); });
     void getActionPlan().then((result) => {
       if (requestId !== loadRequest.current) return;
       setTasks((current) => {
-        const createdTasks = current.filter((task) => locallyCreatedTaskIds.current.has(task.id));
-        return [...createdTasks, ...result.tasks].filter((task, index, allTasks) => allTasks.findIndex((item) => item.id === task.id) === index);
+        const serverTaskIds = new Set(result.tasks.map((task) => task.id));
+        const pendingCreatedTasks = current.filter((task) => locallyCreatedTaskIds.current.has(task.id) && !serverTaskIds.has(task.id));
+        return [...pendingCreatedTasks, ...result.tasks].filter((task, index, allTasks) => allTasks.findIndex((item) => item.id === task.id) === index);
       });
       setLoadedFor(user?.github_login || null);
     }).catch((reason) => {
@@ -42,9 +46,11 @@ export function ActionPlan() {
   async function createTask(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!title.trim() || busy) return;
+    const requestId = loadRequest.current;
     setBusy(true); setError(null);
     try {
       const task = await createActionPlanTask({ title, description: description || undefined });
+      if (requestId !== loadRequest.current) return;
       locallyCreatedTaskIds.current.add(task.id);
       setTasks((current) => current.some((item) => item.id === task.id) ? current : [task, ...current]);
       setTitle(""); setDescription("");

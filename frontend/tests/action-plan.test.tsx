@@ -88,6 +88,24 @@ describe("Action Plan workspace UI", () => {
     expect(screen.getAllByDisplayValue(createdTask.title)).toHaveLength(1);
   });
 
+  it("uses the later server version when a GET contains the created task ID", async () => {
+    let resolveLoad: (result: { tasks: ActionPlanTask[] }) => void = () => undefined;
+    mockedGet.mockReturnValue(new Promise((resolve) => { resolveLoad = resolve; }));
+    const createdTask: ActionPlanTask = { ...task, id: "task-2", title: "İlk başlık" };
+    mockedCreate.mockResolvedValue(createdTask);
+    const userActions = userEvent.setup();
+    render(<ActionPlan />);
+
+    await userActions.type(screen.getByLabelText("Yeni görev"), createdTask.title);
+    await userActions.click(screen.getByRole("button", { name: "Görev ekle" }));
+    await waitFor(() => expect(mockedCreate).toHaveBeenCalled());
+    resolveLoad({ tasks: [{ ...createdTask, title: "Sunucudaki başlık" }] });
+
+    expect(await screen.findByDisplayValue("Sunucudaki başlık")).toBeInTheDocument();
+    expect(screen.queryByDisplayValue("İlk başlık")).not.toBeInTheDocument();
+    expect(screen.getAllByLabelText("Görev başlığı")).toHaveLength(1);
+  });
+
   it("keeps private state isolated and reports failed mutations", async () => {
     mockedGet.mockResolvedValue({ tasks: [task] });
     mockedCreate.mockRejectedValue(new Error("failed"));
@@ -110,5 +128,27 @@ describe("Action Plan workspace UI", () => {
     await waitFor(() => expect(mockedGet).toHaveBeenCalledTimes(2));
     expect(await screen.findByText("Henüz görev yok.")).toBeInTheDocument();
     expect(screen.queryByDisplayValue("README geliştir")).not.toBeInTheDocument();
+  });
+
+  it("rejects late responses from the previous user", async () => {
+    let resolveUserAGet: (result: { tasks: ActionPlanTask[] }) => void = () => undefined;
+    let resolveUserACreate: (result: ActionPlanTask) => void = () => undefined;
+    mockedGet
+      .mockReturnValueOnce(new Promise((resolve) => { resolveUserAGet = resolve; }))
+      .mockResolvedValueOnce({ tasks: [] });
+    mockedCreate.mockReturnValue(new Promise((resolve) => { resolveUserACreate = resolve; }));
+    const userActions = userEvent.setup();
+    const { rerender } = render(<ActionPlan />);
+
+    await userActions.type(screen.getByLabelText("Yeni görev"), "A özel görev");
+    await userActions.click(screen.getByRole("button", { name: "Görev ekle" }));
+    mockedAuth.mockReturnValue({ status: "authenticated", user: { ...user, github_login: "bob" }, errorMessage: null, refresh: vi.fn(), logout: vi.fn() });
+    rerender(<ActionPlan />);
+
+    resolveUserAGet({ tasks: [task] });
+    resolveUserACreate({ ...task, title: "A özel görev" });
+    await waitFor(() => expect(mockedGet).toHaveBeenCalledTimes(2));
+    expect(await screen.findByText("Henüz görev yok.")).toBeInTheDocument();
+    expect(screen.queryAllByLabelText("Görev başlığı")).toHaveLength(0);
   });
 });
