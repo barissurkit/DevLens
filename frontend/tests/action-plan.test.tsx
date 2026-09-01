@@ -51,8 +51,12 @@ describe("Action Plan workspace UI", () => {
     render(<ActionPlan />);
     expect(await screen.findByDisplayValue("README geliştir")).toBeInTheDocument();
     await userActions.type(screen.getByLabelText("Yeni görev"), "Yeni görev");
+    await userActions.type(screen.getAllByLabelText("Görev açıklaması")[0], "Kullanım ekle");
     await userActions.click(screen.getByRole("button", { name: "Görev ekle" }));
-    await waitFor(() => expect(mockedCreate).toHaveBeenCalledWith({ title: "Yeni görev", description: undefined }));
+    await waitFor(() => expect(mockedCreate).toHaveBeenCalledWith({ title: "Yeni görev", description: "Kullanım ekle" }));
+    expect(screen.getByLabelText("Yeni görev")).toHaveValue("");
+    expect(screen.getAllByLabelText("Görev açıklaması")[0]).toHaveValue("");
+    expect(screen.getAllByDisplayValue("Yeni görev")).toHaveLength(1);
     const titleInput = screen.getByDisplayValue("README geliştir");
     await userActions.clear(titleInput);
     await userActions.type(titleInput, "Güncel görev");
@@ -62,6 +66,26 @@ describe("Action Plan workspace UI", () => {
     await waitFor(() => expect(mockedUpdate).toHaveBeenCalledWith("task-1", { status: "done" }));
     await userActions.click(screen.getAllByRole("button", { name: "Sil" })[1]);
     await waitFor(() => expect(mockedDelete).toHaveBeenCalledWith("task-1"));
+  });
+
+  it("keeps a successful create visible when the initial load resolves with a stale snapshot", async () => {
+    let resolveLoad: (result: { tasks: ActionPlanTask[] }) => void = () => undefined;
+    mockedGet.mockReturnValue(new Promise((resolve) => { resolveLoad = resolve; }));
+    const createdTask: ActionPlanTask = { ...task, id: "task-2", title: "README kullanımını geliştir", description: "Kurulum adımlarını ekle" };
+    mockedCreate.mockResolvedValue(createdTask);
+    const userActions = userEvent.setup();
+    render(<ActionPlan />);
+
+    await userActions.type(screen.getByLabelText("Yeni görev"), createdTask.title);
+    await userActions.type(screen.getByLabelText("Görev açıklaması"), createdTask.description ?? "");
+    await userActions.click(screen.getByRole("button", { name: "Görev ekle" }));
+    await waitFor(() => expect(mockedCreate).toHaveBeenCalled());
+    expect(screen.getByLabelText("Yeni görev")).toHaveValue("");
+    expect(screen.getByLabelText("Görev açıklaması")).toHaveValue("");
+
+    resolveLoad({ tasks: [] });
+    expect(await screen.findByDisplayValue(createdTask.title)).toBeInTheDocument();
+    expect(screen.getAllByDisplayValue(createdTask.title)).toHaveLength(1);
   });
 
   it("keeps private state isolated and reports failed mutations", async () => {
@@ -75,8 +99,11 @@ describe("Action Plan workspace UI", () => {
     expect(screen.getByDisplayValue("README geliştir")).toBeInTheDocument();
     expect(mockedGet).toHaveBeenCalledOnce();
     await userActions.type(screen.getByLabelText("Yeni görev"), "Başarısız");
+    await userActions.type(screen.getAllByLabelText("Görev açıklaması")[0], "Daha sonra tekrar dene");
     await userActions.click(screen.getByRole("button", { name: "Görev ekle" }));
     expect(await screen.findByRole("alert")).toHaveTextContent("Görev oluşturulamadı.");
+    expect(screen.getByLabelText("Yeni görev")).toHaveValue("Başarısız");
+    expect(screen.getAllByLabelText("Görev açıklaması")[0]).toHaveValue("Daha sonra tekrar dene");
     mockedAuth.mockReturnValue({ status: "authenticated", user: { ...user, github_login: "bob" }, errorMessage: null, refresh: vi.fn(), logout: vi.fn() });
     mockedGet.mockResolvedValue({ tasks: [] });
     rerender(<ActionPlan />);
