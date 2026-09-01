@@ -237,6 +237,7 @@ def _log_gemini_failure(
     *,
     error: Exception,
     model: str,
+    operation: str,
     elapsed_ms: int,
     attempt: int = 1,
 ) -> None:
@@ -258,7 +259,7 @@ def _log_gemini_failure(
             extra={
                 "event": "gemini.request.completed",
                 "provider": "gemini",
-                "operation": "interpret",
+                "operation": operation,
                 "model": model,
                 "attempt": attempt,
                 "duration_ms": elapsed_ms,
@@ -288,7 +289,7 @@ def _log_gemini_failure(
         extra={
             "event": "gemini.request.completed",
             "provider": "gemini",
-            "operation": "interpret",
+            "operation": operation,
             "model": model,
             "attempt": attempt,
             "duration_ms": elapsed_ms,
@@ -450,6 +451,7 @@ class GeminiClient:
                 _log_gemini_failure(
                     error=error,
                     model=self._model,
+                    operation="interpret",
                     elapsed_ms=elapsed_ms,
                     attempt=attempt + 1,
                 )
@@ -533,6 +535,7 @@ class GeminiClient:
             _log_gemini_failure(
                 error=error,
                 model=self._model,
+                operation="suggest_actions",
                 elapsed_ms=round((time.monotonic() - started_at) * 1000),
             )
             normalized = _normalize_sdk_error(error)

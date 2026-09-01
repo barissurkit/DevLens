@@ -167,7 +167,9 @@ def test_gemini_diagnostics_log_safe_fields_only(caplog: pytest.LogCaptureFixtur
         {"error": {"status": "UNAVAILABLE", "message": secret}},
     )
 
-    _log_gemini_failure(error=error, model="gemini-3.7-flash", elapsed_ms=321)
+    _log_gemini_failure(
+        error=error, model="gemini-3.7-flash", operation="interpret", elapsed_ms=321
+    )
 
     message = caplog.text
     assert "upstream_status_code=503" in message
@@ -175,6 +177,20 @@ def test_gemini_diagnostics_log_safe_fields_only(caplog: pytest.LogCaptureFixtur
     assert "elapsed_ms=321" in message
     assert "error_category=UNAVAILABLE" in message
     assert secret not in message
+
+
+def test_gemini_diagnostics_preserve_suggestion_operation(caplog: pytest.LogCaptureFixture) -> None:
+    error = genai_errors.APIError(400, {"error": {"status": "INVALID_ARGUMENT"}})
+
+    _log_gemini_failure(
+        error=error,
+        model="gemini-3.6-flash",
+        operation="suggest_actions",
+        elapsed_ms=10,
+    )
+
+    record = next(record for record in caplog.records if record.name == "app.clients.gemini")
+    assert record.operation == "suggest_actions"
 
 
 @pytest.mark.parametrize(

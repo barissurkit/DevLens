@@ -93,6 +93,7 @@ def test_gemini_rate_limit_events_keep_semantic_and_provider_status_separate(
                 {"error": {"status": provider_status, "message": "TEST_RAW_ERROR"}},
             ),
             model="gemini-3.6-flash",
+            operation="interpret",
             elapsed_ms=42,
             attempt=1,
         )
