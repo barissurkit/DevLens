@@ -70,6 +70,10 @@ describe("Action Plan workspace UI", () => {
     const userActions = userEvent.setup();
     const { rerender } = render(<ActionPlan />);
     expect(await screen.findByDisplayValue("README geliştir")).toBeInTheDocument();
+    mockedAuth.mockReturnValue({ status: "authenticated", user: { ...user }, errorMessage: null, refresh: vi.fn(), logout: vi.fn() });
+    rerender(<ActionPlan />);
+    expect(screen.getByDisplayValue("README geliştir")).toBeInTheDocument();
+    expect(mockedGet).toHaveBeenCalledOnce();
     await userActions.type(screen.getByLabelText("Yeni görev"), "Başarısız");
     await userActions.click(screen.getByRole("button", { name: "Görev ekle" }));
     expect(await screen.findByRole("alert")).toHaveTextContent("Görev oluşturulamadı.");

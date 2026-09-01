@@ -54,10 +54,11 @@ describe("authentication API helpers", () => {
     await updateActionPlanTask("task-1", { status: "done" });
     await deleteActionPlanTask("task-1");
 
-    expect(fetchMock).toHaveBeenNthCalledWith(1, "http://localhost:8000/api/v1/workspace/action-plan", expect.objectContaining({ credentials: "include" }));
+    expect(fetchMock).toHaveBeenNthCalledWith(1, "http://localhost:8000/api/v1/workspace/action-plan", { credentials: "include" });
     expect(fetchMock).toHaveBeenNthCalledWith(2, "http://localhost:8000/api/v1/workspace/action-plan", expect.objectContaining({ method: "POST", credentials: "include", headers: { "Content-Type": "application/json" } }));
     expect(fetchMock).toHaveBeenNthCalledWith(3, "http://localhost:8000/api/v1/workspace/action-plan/task-1", expect.objectContaining({ method: "PATCH", credentials: "include" }));
-    expect(fetchMock).toHaveBeenNthCalledWith(4, "http://localhost:8000/api/v1/workspace/action-plan/task-1", expect.objectContaining({ method: "DELETE", credentials: "include" }));
+    expect(fetchMock).toHaveBeenNthCalledWith(4, "http://localhost:8000/api/v1/workspace/action-plan/task-1", expect.objectContaining({ method: "DELETE", credentials: "include", headers: { "Content-Type": "application/json" } }));
+    expect(fetchMock.mock.calls[3][1]).not.toHaveProperty("body");
   });
 
   it("includes the HttpOnly session cookie on public analysis without adding an auth header", async () => {

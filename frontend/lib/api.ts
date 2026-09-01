@@ -159,12 +159,13 @@ function isActionPlanResponse(value: unknown): value is ActionPlanResponse {
 
 async function actionPlanRequest(path: string, init: RequestInit = {}): Promise<unknown> {
   let response: Response;
+  const isMutation = Boolean(init.method && init.method !== "GET");
+  const request: RequestInit = { ...init, credentials: "include" };
+  if (isMutation) {
+    request.headers = { "Content-Type": "application/json", ...(init.headers || {}) };
+  }
   try {
-    response = await fetch(getApiUrl(path), {
-      ...init,
-      credentials: "include",
-      headers: { "Content-Type": "application/json", ...(init.headers || {}) },
-    });
+    response = await fetch(getApiUrl(path), request);
   } catch {
     throw new ApiError("Action Plan servisine ulaşılamadı.", 0, "network_error");
   }
@@ -192,7 +193,7 @@ export async function updateActionPlanTask(id: string, input: { title?: string; 
 }
 
 export async function deleteActionPlanTask(id: string): Promise<void> {
-  await actionPlanRequest(`${ACTION_PLAN_PATH}/${encodeURIComponent(id)}`, { method: "DELETE", body: "{}" });
+  await actionPlanRequest(`${ACTION_PLAN_PATH}/${encodeURIComponent(id)}`, { method: "DELETE" });
 }
 
 export async function analyzePortfolio(
