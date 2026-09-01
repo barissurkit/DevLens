@@ -39,7 +39,14 @@ def build_suggestions_response_schema() -> object:
             if isinstance(reference, str) and reference.startswith("#/$defs/"):
                 return inline(definitions.get(reference.removeprefix("#/$defs/"), {}))
             return {
-                key: inline(nested)
+                key: (
+                    {
+                        property_name: inline(property_schema)
+                        for property_name, property_schema in nested.items()
+                    }
+                    if key == "properties" and isinstance(nested, dict)
+                    else inline(nested)
+                )
                 for key, nested in value.items()
                 if key in supported
             }
@@ -48,7 +55,7 @@ def build_suggestions_response_schema() -> object:
         return value
 
     suggestion = inline(definitions.get("AISuggestion", {}))
-    return {
+    schema = {
         "type": "object",
         "properties": {
             "suggestions": {
@@ -59,3 +66,21 @@ def build_suggestions_response_schema() -> object:
         },
         "required": ["suggestions"],
     }
+
+    def validate_object_requirements(value: object) -> None:
+        if isinstance(value, dict):
+            properties = value.get("properties")
+            required = value.get("required")
+            if isinstance(properties, dict) and isinstance(required, list):
+                if not set(required) <= set(properties):
+                    raise ValueError("Structured schema required fields must be properties.")
+                for property_schema in properties.values():
+                    validate_object_requirements(property_schema)
+            for nested in value.values():
+                validate_object_requirements(nested)
+        elif isinstance(value, list):
+            for nested in value:
+                validate_object_requirements(nested)
+
+    validate_object_requirements(schema)
+    return schema
