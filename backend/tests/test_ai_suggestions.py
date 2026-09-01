@@ -53,7 +53,8 @@ def test_gemini_suggestion_schema_is_bounded_and_inlined() -> None:
 
     assert set(item["properties"]) == {"title", "description", "reason", "evidence_refs"}
     assert set(item["required"]) <= set(item["properties"])
-    assert "$ref" not in schema
+    schema_text = str(schema)
+    assert "$ref" not in schema_text
 
     def assert_object_requirements(value: object) -> None:
         if isinstance(value, dict):
@@ -68,7 +69,6 @@ def test_gemini_suggestion_schema_is_bounded_and_inlined() -> None:
                 assert_object_requirements(nested)
 
     assert_object_requirements(schema)
-    schema_text = str(schema)
     assert "minLength" not in schema_text
     assert "maxLength" not in schema_text
     assert "maxItems" in schema_text
