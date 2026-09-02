@@ -108,3 +108,28 @@ class ActionPlanTask(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=func.now(), onupdate=func.now())
     completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+
+class PortfolioAnalysisHistory(Base):
+    """Immutable, owner-scoped deterministic portfolio checkpoints."""
+
+    __tablename__ = "portfolio_analysis_history"
+    __table_args__ = (
+        UniqueConstraint("user_id", "analysis_fingerprint", name="uq_portfolio_history_user_fingerprint"),
+        Index("ix_portfolio_history_user_captured_at", "user_id", text("captured_at DESC"), text("id DESC")),
+    )
+
+    id: Mapped[UUID] = mapped_column(PostgreSQLUUID(as_uuid=True), primary_key=True, default=uuid4)
+    user_id: Mapped[UUID] = mapped_column(
+        PostgreSQLUUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+    )
+    github_user_id: Mapped[int] = mapped_column(BigInteger, nullable=False)
+    github_username: Mapped[str] = mapped_column(String(39), nullable=False)
+    captured_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=func.now())
+    analysis_version: Mapped[str] = mapped_column(String(32), nullable=False)
+    analysis_schema_version: Mapped[str] = mapped_column(String(32), nullable=False)
+    analysis_fingerprint: Mapped[str] = mapped_column(String(64), nullable=False)
+    portfolio_score: Mapped[int | None] = mapped_column(nullable=True)
+    category_scores: Mapped[list[dict[str, object]]] = mapped_column(JSONB, nullable=False)
+    passed_checks: Mapped[list[str]] = mapped_column(JSONB, nullable=False)
+    failed_checks: Mapped[list[str]] = mapped_column(JSONB, nullable=False)

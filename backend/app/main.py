@@ -11,6 +11,7 @@ from app.api.interpretation import router as interpretation_router
 from app.api.auth import router as auth_router
 from app.api.action_plan import router as action_plan_router
 from app.api.ai_suggestions import router as ai_suggestions_router
+from app.api.history import router as history_router
 from app.config import Settings, get_settings
 from app.observability import REQUEST_ID, configure_logging, emit_event, new_request_id
 
@@ -71,6 +72,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     application.include_router(auth_router)
     application.include_router(action_plan_router)
     application.include_router(ai_suggestions_router)
+    application.include_router(history_router)
     application.get("/health", response_model=HealthResponse)(health_check)
     return application
 

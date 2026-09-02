@@ -12,6 +12,7 @@ from app.api.github import (
     get_github_client,
     get_analysis_snapshot_cache_service,
     get_snapshot_persistence_service,
+    get_portfolio_history_service,
 )
 from app.schemas.analysis import PortfolioAnalysisRequest
 from app.auth.ownership import derive_viewer_context
@@ -33,6 +34,7 @@ from app.services.portfolio_interpretation_composition import (
     PortfolioInterpretationCompositionResult,
 )
 from app.observability import emit_event
+from app.services.portfolio_history import PortfolioHistoryService
 
 router = APIRouter(
     prefix="/api/v1",
@@ -81,6 +83,7 @@ async def interpret_portfolio(
     ),
     cache: AnalysisSnapshotCacheService = Depends(get_analysis_snapshot_cache_service),
     authenticated_user: User | None = Depends(get_optional_authenticated_user),
+    history: PortfolioHistoryService = Depends(get_portfolio_history_service),
 ) -> GitHubPortfolioInterpretationResponse:
     cached = await cache.get_fresh_analysis(
         username=request.username,
@@ -132,4 +135,6 @@ async def interpret_portfolio(
         analysis_generated_at=analysis_generated_at,
         request_kind="interpretation",
     )
+    if authenticated_user is not None and response.viewer_context.is_owner:
+        await history.capture(user=authenticated_user, analysis=response.analysis)
     return response

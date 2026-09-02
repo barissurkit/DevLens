@@ -9,6 +9,7 @@ from app.api.github import (
     get_analysis_snapshot_cache_service,
     get_github_client,
     get_snapshot_persistence_service,
+    get_portfolio_history_service,
 )
 from app.auth.ownership import derive_viewer_context
 from app.db.models import User
@@ -19,6 +20,7 @@ from app.services.github.client import GitHubClient
 from app.services.github_portfolio_analysis import (
     analyze_github_portfolio as run_github_portfolio_analysis,
 )
+from app.services.portfolio_history import PortfolioHistoryService
 
 router = APIRouter(
     prefix="/api/v1",
@@ -48,18 +50,22 @@ async def analyze_portfolio(
     ),
     cache: AnalysisSnapshotCacheService = Depends(get_analysis_snapshot_cache_service),
     authenticated_user: User | None = Depends(get_optional_authenticated_user),
+    history: PortfolioHistoryService = Depends(get_portfolio_history_service),
 ) -> GitHubPortfolioAnalysisResponse:
     cached = await cache.get_fresh_analysis(
         username=request.username,
         request_kind="analysis",
     )
     if cached is not None:
-        return GitHubPortfolioAnalysisResponse(
+        response = GitHubPortfolioAnalysisResponse(
             **cached.analysis.model_dump(),
             viewer_context=derive_viewer_context(
                 authenticated_user=authenticated_user, target_github_user=cached.analysis.user
             ),
         )
+        if authenticated_user is not None and response.viewer_context.is_owner:
+            await history.capture(user=authenticated_user, analysis=response)
+        return response
 
     try:
         analysis = await run_github_portfolio_analysis(
@@ -80,9 +86,12 @@ async def analyze_portfolio(
         analysis_generated_at=analysis_generated_at,
         request_kind="analysis",
     )
-    return GitHubPortfolioAnalysisResponse(
+    response = GitHubPortfolioAnalysisResponse(
         **analysis.model_dump(),
         viewer_context=derive_viewer_context(
             authenticated_user=authenticated_user, target_github_user=analysis.user
         ),
     )
+    if authenticated_user is not None and response.viewer_context.is_owner:
+        await history.capture(user=authenticated_user, analysis=response)
+    return response

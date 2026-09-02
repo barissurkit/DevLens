@@ -8,6 +8,7 @@ from app.config import get_settings
 from app.schemas.github import GitHubUser
 from app.services.analysis_snapshot_persistence import AnalysisSnapshotPersistenceService
 from app.services.analysis_snapshot_cache import AnalysisSnapshotCacheService
+from app.services.portfolio_history import PortfolioHistoryService
 from app.services.github.client import GitHubClient
 
 router = APIRouter(
@@ -36,6 +37,10 @@ async def get_snapshot_persistence_service() -> AnalysisSnapshotPersistenceServi
 
 async def get_analysis_snapshot_cache_service() -> AnalysisSnapshotCacheService:
     return AnalysisSnapshotCacheService(get_settings())
+
+
+async def get_portfolio_history_service() -> PortfolioHistoryService:
+    return PortfolioHistoryService(get_settings())
 
 
 @router.get(

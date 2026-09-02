@@ -7,6 +7,7 @@ import type {
 import { PortfolioInterpretationSection } from "./portfolio-interpretation-section";
 import { ActionPlan } from "./action-plan";
 import { AISuggestedActions } from "./ai-suggested-actions";
+import { AnalysisHistory } from "./analysis-history";
 import { RepositoryAnalysisSection } from "./repository-analysis-section";
 import { categoryLabel, portfolioModeLabel } from "../lib/presentation";
 
@@ -101,6 +102,7 @@ export function AnalysisResultShell({ result }: AnalysisResultShellProps) {
 
       <PortfolioInterpretationSection analysis={analysis} interpretation={interpretation} />
       {viewer_context.mode === "my_workspace" && <>
+        <AnalysisHistory key={user.username} visible={viewer_context.is_owner} />
         <AISuggestedActions key={user.username} username={user.username} />
         <ActionPlan />
       </>}

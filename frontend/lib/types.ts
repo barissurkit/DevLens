@@ -19,6 +19,34 @@ export interface AuthMeResponse {
   user: AuthenticatedUser | null;
 }
 
+export interface HistoryCategoryScore { key: string; label: string; score: number; }
+export interface HistoryRecord {
+  id: string;
+  github_user_id: number;
+  github_username: string;
+  captured_at: string;
+  analysis_version: string;
+  analysis_schema_version: string;
+  portfolio_score: number | null;
+  category_scores: HistoryCategoryScore[];
+  passed_checks: string[];
+  failed_checks: string[];
+}
+export interface HistoryComparison {
+  portfolio_score: number | null;
+  category_scores: Array<{ key: string; label: string; delta: number }>;
+  newly_passing_checks: string[];
+  newly_failing_checks: string[];
+  comparable: boolean;
+  note: string | null;
+}
+export interface HistoryResponse {
+  latest: HistoryRecord | null;
+  previous: HistoryRecord | null;
+  comparison: HistoryComparison | null;
+  history: HistoryRecord[];
+}
+
 export type ActionPlanStatus = "todo" | "in_progress" | "done";
 
 export interface ActionPlanTask {
