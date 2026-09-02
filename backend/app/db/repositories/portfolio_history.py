@@ -10,6 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.db.constants import ANALYSIS_SNAPSHOT_SCHEMA_VERSION
 from app.db.models import PortfolioAnalysisHistory, User
 from app.schemas.analysis import GitHubPortfolioAnalysis
+from app.services.portfolio_scoring import is_portfolio_rule_passing
 
 
 @dataclass(frozen=True)
@@ -28,8 +29,26 @@ def project_analysis(analysis: GitHubPortfolioAnalysis) -> HistoryProjection:
         {"key": dimension.key, "label": dimension.label, "score": dimension.score}
         for dimension in analysis.score.dimensions
     ]
-    passed = sorted(rule.key for dimension in analysis.score.dimensions for rule in dimension.rules if rule.passed)
-    failed = sorted(rule.key for dimension in analysis.score.dimensions for rule in dimension.rules if not rule.passed)
+    # Portfolio score rules expose coverage counts rather than the repository
+    # score rule's boolean ``passed`` field.
+    passed = sorted(
+        rule.key
+        for dimension in analysis.score.dimensions
+        for rule in dimension.rules
+        if is_portfolio_rule_passing(
+            detected_repository_count=rule.detected_repository_count,
+            analyzed_repository_count=rule.analyzed_repository_count,
+        )
+    )
+    failed = sorted(
+        rule.key
+        for dimension in analysis.score.dimensions
+        for rule in dimension.rules
+        if not is_portfolio_rule_passing(
+            detected_repository_count=rule.detected_repository_count,
+            analyzed_repository_count=rule.analyzed_repository_count,
+        )
+    )
     payload = {
         "portfolio_score": analysis.score.overall_score,
         "category_scores": categories,

@@ -9,6 +9,7 @@ import app.api.analysis as analysis_api
 from app.api.github import (
     get_analysis_snapshot_cache_service,
     get_github_client,
+    get_portfolio_history_service,
     get_snapshot_persistence_service,
 )
 from app.api.auth import get_optional_authenticated_user
@@ -25,6 +26,10 @@ from app.schemas.analysis import (
 from app.schemas.github import GitHubUser
 from app.db.models import User
 from app.services.github.client import GitHubClient
+from app.services.portfolio_history import PortfolioHistoryService
+from app.config import Settings
+from types import SimpleNamespace
+from uuid import uuid4
 
 
 def create_result() -> GitHubPortfolioAnalysis:
@@ -194,6 +199,29 @@ def test_analysis_endpoint_calls_application_service_once() -> None:
         username="synthetic-user",
         client=mock_client,
     )
+
+
+def test_owner_analysis_survives_history_projection_failure(monkeypatch) -> None:
+    use_authenticated_user(SimpleNamespace(id=uuid4(), github_user_id=1))
+    app.dependency_overrides[get_portfolio_history_service] = lambda: PortfolioHistoryService(
+        Settings(_env_file=None, database_url="postgresql+asyncpg://local/test")
+    )
+    monkeypatch.setattr(
+        "app.services.portfolio_history.project_analysis",
+        lambda analysis: (_ for _ in ()).throw(AttributeError("synthetic projection failure")),
+    )
+    use_mock_client(AsyncMock(spec=GitHubClient))
+    application_mock = AsyncMock(return_value=create_result())
+    original = analysis_api.run_github_portfolio_analysis
+    analysis_api.run_github_portfolio_analysis = application_mock
+
+    try:
+        response = request_app({"username": "synthetic-user"})
+    finally:
+        analysis_api.run_github_portfolio_analysis = original
+
+    assert response.status_code == 200
+    assert response.json()["viewer_context"] == {"is_owner": True, "mode": "my_workspace"}
 
 
 def test_analysis_endpoint_persists_one_analysis_only_snapshot() -> None:

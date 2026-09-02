@@ -8,6 +8,7 @@ from app.schemas.analysis import (
     PortfolioRecurringTechnology,
     RepositoryCategory,
 )
+from app.services.portfolio_scoring import is_portfolio_rule_passing
 
 PORTFOLIO_INTELLIGENCE_VERSION = "v1"
 MIN_REPOSITORIES_FOR_PATTERN = 2
@@ -248,7 +249,10 @@ def _strength_signals(
         if (
             rule.strength_message is not None
             and detected_count >= MIN_DETECTIONS_FOR_STRENGTH
-            and detected_count * 2 >= analyzed_count
+            and is_portfolio_rule_passing(
+                detected_repository_count=detected_count,
+                analyzed_repository_count=analyzed_count,
+            )
         ):
             strengths.append(
                 PortfolioInsight(
@@ -280,7 +284,10 @@ def _improvement_signals(
         if (
             rule.improvement_zero_message is None
             or rule.improvement_limited_message is None
-            or detected_count * 2 >= analyzed_count
+            or is_portfolio_rule_passing(
+                detected_repository_count=detected_count,
+                analyzed_repository_count=analyzed_count,
+            )
             or (
                 rule.suppress_improvement_with_partial_evidence
                 and aggregation.partial_evidence_repository_count > 0

@@ -9,20 +9,30 @@ from sqlalchemy.exc import IntegrityError
 from app.api.history import compare_history
 from app.db.models import PortfolioAnalysisHistory
 from app.db.repositories.portfolio_history import project_analysis
+from app.schemas.analysis import PortfolioScore, PortfolioScoreDimensionResult, PortfolioScoreRuleResult
 from app.services.portfolio_history import PortfolioHistoryService
+from app.services.portfolio_scoring import is_portfolio_rule_passing
 from app.config import Settings
 
 
 def analysis(*, score: int = 68, version: str = "v1") -> SimpleNamespace:
     return SimpleNamespace(
         user=SimpleNamespace(github_user_id=42, username="owner"),
-        score=SimpleNamespace(
+        score=PortfolioScore(
             overall_score=score,
+            is_available=True,
+            scored_repository_count=4,
             version=version,
-            dimensions=[SimpleNamespace(
+            dimensions=[PortfolioScoreDimensionResult(
                 key="docs", label="Dokümantasyon", score=score,
-                rules=[SimpleNamespace(key="readme", passed=score >= 60), SimpleNamespace(key="tests", passed=False)],
+                points_earned=34, points_possible=50,
+                rules=[
+                    PortfolioScoreRuleResult(key="readme", label="README", weight=10, detected_repository_count=3, analyzed_repository_count=4),
+                    PortfolioScoreRuleResult(key="tests", label="Tests", weight=10, detected_repository_count=1, analyzed_repository_count=4),
+                ],
             )],
+            limitations=[],
+            is_partial=False,
         ),
     )
 
@@ -41,7 +51,41 @@ def test_projection_is_small_deterministic_and_excludes_ai_or_viewer_data() -> N
     assert projection.portfolio_score == 68
     assert projection.category_scores == [{"key": "docs", "label": "Dokümantasyon", "score": 68}]
     assert projection.passed_checks == ["readme"]
+    assert projection.failed_checks == ["tests"]
     assert "fingerprint" not in projection.category_scores[0]
+
+
+def test_projection_uses_portfolio_rule_coverage_threshold_and_stable_keys() -> None:
+    value = analysis(score=68)
+    value.score = value.score.model_copy(update={
+        "overall_score": None,
+        "dimensions": [value.score.dimensions[0].model_copy(update={
+            "rules": [
+                PortfolioScoreRuleResult(key="zulu", label="Z", weight=1, detected_repository_count=2, analyzed_repository_count=4),
+                PortfolioScoreRuleResult(key="alpha", label="A", weight=1, detected_repository_count=1, analyzed_repository_count=4),
+                PortfolioScoreRuleResult(key="bravo", label="B", weight=2, detected_repository_count=2, analyzed_repository_count=4),
+            ],
+        })],
+    })
+
+    projection = project_analysis(value)
+
+    assert projection.portfolio_score is None
+    assert projection.passed_checks == ["bravo", "zulu"]
+    assert projection.failed_checks == ["alpha"]
+
+
+@pytest.mark.parametrize(
+    ("detected", "analyzed", "expected"),
+    [(0, 0, False), (0, 1, False), (1, 1, True), (1, 2, True), (1, 3, False), (2, 3, True)],
+)
+def test_portfolio_rule_pass_policy_handles_zero_and_boundary_counts(
+    detected: int, analyzed: int, expected: bool
+) -> None:
+    assert is_portfolio_rule_passing(
+        detected_repository_count=detected,
+        analyzed_repository_count=analyzed,
+    ) is expected
 
 
 def test_comparison_calculates_score_categories_and_check_deltas() -> None:
@@ -76,3 +120,14 @@ def test_concurrent_unique_conflict_is_reported_as_deduplicated(monkeypatch) -> 
     service = PortfolioHistoryService(Settings(_env_file=None, database_url="postgresql+asyncpg://local/test"), lambda _: factory)
     user = SimpleNamespace(id=uuid4())
     assert asyncio.run(service.capture(user=user, analysis=analysis())) is True
+
+
+def test_projection_failure_is_best_effort_and_logged(monkeypatch, caplog) -> None:
+    monkeypatch.setattr("app.services.portfolio_history.project_analysis", lambda analysis: (_ for _ in ()).throw(AttributeError("bad shape")))
+    service = PortfolioHistoryService(Settings(_env_file=None, database_url="postgresql+asyncpg://local/test"))
+
+    assert asyncio.run(service.capture(user=SimpleNamespace(id=uuid4()), analysis=analysis())) is False
+    assert any(
+        getattr(record, "error_category", None) == "projection_error"
+        for record in caplog.records
+    )
