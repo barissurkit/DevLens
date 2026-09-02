@@ -10,6 +10,7 @@ import type {
   ActionPlanTask,
   ActionPlanStatus,
   AISuggestionsResponse,
+  HistoryResponse,
 } from "./types";
 
 const ANALYSIS_PATH = "/api/v1/analysis";
@@ -19,6 +20,7 @@ const AUTH_ME_PATH = "/api/v1/auth/me";
 const AUTH_LOGOUT_PATH = "/api/v1/auth/logout";
 const ACTION_PLAN_PATH = "/api/v1/workspace/action-plan";
 const AI_SUGGESTIONS_PATH = "/api/v1/workspace/ai-suggestions";
+const HISTORY_PATH = "/api/v1/workspace/analysis-history";
 const DEFAULT_ERROR_MESSAGE = "Analiz sırasında beklenmeyen bir hata oluştu.";
 
 export class ApiError extends Error {
@@ -159,6 +161,36 @@ function isActionPlanResponse(value: unknown): value is ActionPlanResponse {
   return typeof value === "object" && value !== null && Array.isArray((value as { tasks?: unknown }).tasks);
 }
 
+function isHistoryRecord(value: unknown): boolean {
+  if (typeof value !== "object" || value === null) return false;
+  const record = value as Record<string, unknown>;
+  return typeof record.id === "string" && typeof record.github_user_id === "number" && typeof record.github_username === "string" &&
+    typeof record.captured_at === "string" && typeof record.analysis_version === "string" && typeof record.analysis_schema_version === "string" &&
+    (record.portfolio_score === null || typeof record.portfolio_score === "number") && Array.isArray(record.category_scores) &&
+    record.category_scores.every((item) => typeof item === "object" && item !== null && typeof (item as Record<string, unknown>).key === "string" && typeof (item as Record<string, unknown>).label === "string" && typeof (item as Record<string, unknown>).score === "number") &&
+    Array.isArray(record.passed_checks) && record.passed_checks.every((item) => typeof item === "string") &&
+    Array.isArray(record.failed_checks) && record.failed_checks.every((item) => typeof item === "string");
+}
+
+function isHistoryComparison(value: unknown): boolean {
+  if (value === null) return true;
+  if (typeof value !== "object") return false;
+  const comparison = value as Record<string, unknown>;
+  return (comparison.portfolio_score === null || typeof comparison.portfolio_score === "number") &&
+    Array.isArray(comparison.category_scores) && comparison.category_scores.every((item) => typeof item === "object" && item !== null && typeof (item as Record<string, unknown>).key === "string" && typeof (item as Record<string, unknown>).label === "string" && typeof (item as Record<string, unknown>).delta === "number") &&
+    Array.isArray(comparison.newly_passing_checks) && comparison.newly_passing_checks.every((item) => typeof item === "string") &&
+    Array.isArray(comparison.newly_failing_checks) && comparison.newly_failing_checks.every((item) => typeof item === "string") &&
+    typeof comparison.comparable === "boolean" && (comparison.note === null || typeof comparison.note === "string");
+}
+
+function isHistoryResponse(value: unknown): value is HistoryResponse {
+  if (typeof value !== "object" || value === null) return false;
+  const response = value as Record<string, unknown>;
+  return (response.latest === null || isHistoryRecord(response.latest)) &&
+    (response.previous === null || isHistoryRecord(response.previous)) && isHistoryComparison(response.comparison) &&
+    Array.isArray(response.history) && response.history.every(isHistoryRecord);
+}
+
 async function actionPlanRequest(path: string, init: RequestInit = {}): Promise<unknown> {
   let response: Response;
   const isMutation = Boolean(init.method && init.method !== "GET");
@@ -180,6 +212,16 @@ export async function getActionPlan(): Promise<ActionPlanResponse> {
   const payload = await actionPlanRequest(ACTION_PLAN_PATH);
   if (isActionPlanResponse(payload)) return payload;
   throw new ApiError("Action Plan geçersiz bir yanıt döndürdü.", 200, "malformed_response");
+}
+
+export async function getAnalysisHistory(): Promise<HistoryResponse> {
+  let response: Response;
+  try { response = await fetch(getApiUrl(HISTORY_PATH), { credentials: "include" }); }
+  catch { throw new ApiError("Geçmiş analizlere ulaşılamadı.", 0, "network_error"); }
+  const payload = await readJson(response);
+  if (!response.ok) throw new ApiError("Geçmiş analizler yüklenemedi.", response.status, "history_error");
+  if (isHistoryResponse(payload)) return payload;
+  throw new ApiError("Geçmiş analiz servisi geçersiz bir yanıt döndürdü.", response.status, "malformed_response");
 }
 
 export async function createActionPlanTask(input: { title: string; description?: string }): Promise<ActionPlanTask> {
