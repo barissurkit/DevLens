@@ -13,8 +13,10 @@ from app.api.github import (
     get_analysis_snapshot_cache_service,
     get_gemini_client,
     get_github_client,
+    get_portfolio_history_service,
     get_snapshot_persistence_service,
 )
+from app.api.auth import get_optional_authenticated_user
 from app.main import app
 from app.schemas.interpretation import (
     InterpretationUnavailableReason,
@@ -23,6 +25,9 @@ from app.schemas.interpretation import (
 )
 from app.services.github.client import GitHubClient
 from app.services.analysis_snapshot_cache import CachedAnalysis
+from app.services.portfolio_history import PortfolioHistoryService
+from app.config import Settings
+from uuid import uuid4
 
 from test_analysis_e2e import portfolio_fixture, use_fake_github
 from test_analysis_endpoint import create_result
@@ -63,6 +68,13 @@ def use_mock_cache(mock_cache: object) -> None:
         return mock_cache
 
     app.dependency_overrides[get_analysis_snapshot_cache_service] = override
+
+
+def use_authenticated_user(user: object) -> None:
+    async def override() -> object:
+        return user
+
+    app.dependency_overrides[get_optional_authenticated_user] = override
 
 
 @pytest.fixture(autouse=True)
@@ -324,6 +336,41 @@ def test_unavailable_interpretation_is_http_200_and_safe(
     assert events[0].result == "unavailable"
     assert events[0].error_category == reason.value
     assert "synthetic-user" not in caplog.text
+
+
+def test_owner_interpretation_timeout_survives_history_projection_failure(monkeypatch) -> None:
+    use_authenticated_user(SimpleNamespace(id=uuid4(), github_user_id=1))
+    app.dependency_overrides[get_portfolio_history_service] = lambda: PortfolioHistoryService(
+        Settings(_env_file=None, database_url="postgresql+asyncpg://local/test")
+    )
+    monkeypatch.setattr(
+        "app.services.portfolio_history.project_analysis",
+        lambda analysis: (_ for _ in ()).throw(AttributeError("synthetic projection failure")),
+    )
+    use_mock_cache(AsyncMock(get_fresh_analysis=AsyncMock(return_value=None)))
+    use_mock_persistence(AsyncMock())
+    original = interpretation_api.analyze_and_interpret_github_portfolio
+    composition = AsyncMock(
+        return_value=SimpleNamespace(
+            analysis=create_result(),
+            interpretation=PortfolioInterpretationResult(
+                available=False,
+                reason=InterpretationUnavailableReason.TIMEOUT,
+            ),
+        )
+    )
+    interpretation_api.analyze_and_interpret_github_portfolio = composition
+
+    try:
+        response = request_app({"username": "synthetic-user"})
+    finally:
+        interpretation_api.analyze_and_interpret_github_portfolio = original
+
+    assert response.status_code == 200
+    assert response.json()["interpretation"] == {
+        "status": "unavailable",
+        "reason": "timeout",
+    }
 
 
 @pytest.mark.parametrize(

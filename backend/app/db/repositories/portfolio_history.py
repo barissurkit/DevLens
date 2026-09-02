@@ -28,8 +28,22 @@ def project_analysis(analysis: GitHubPortfolioAnalysis) -> HistoryProjection:
         {"key": dimension.key, "label": dimension.label, "score": dimension.score}
         for dimension in analysis.score.dimensions
     ]
-    passed = sorted(rule.key for dimension in analysis.score.dimensions for rule in dimension.rules if rule.passed)
-    failed = sorted(rule.key for dimension in analysis.score.dimensions for rule in dimension.rules if not rule.passed)
+    # Portfolio score rules expose coverage counts rather than the repository
+    # score rule's boolean ``passed`` field. Keep the history classification in
+    # line with the portfolio insight threshold: a rule passes when it appears
+    # in at least half of the analyzed repositories.
+    passed = sorted(
+        rule.key
+        for dimension in analysis.score.dimensions
+        for rule in dimension.rules
+        if rule.detected_repository_count * 2 >= rule.analyzed_repository_count
+    )
+    failed = sorted(
+        rule.key
+        for dimension in analysis.score.dimensions
+        for rule in dimension.rules
+        if rule.detected_repository_count * 2 < rule.analyzed_repository_count
+    )
     payload = {
         "portfolio_score": analysis.score.overall_score,
         "category_scores": categories,

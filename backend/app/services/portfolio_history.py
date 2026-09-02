@@ -26,8 +26,8 @@ class PortfolioHistoryService:
     async def capture(self, *, user: User, analysis: GitHubPortfolioAnalysis) -> bool:
         if not self._settings.database_url:
             return False
-        projection = project_analysis(analysis)
         try:
+            projection = project_analysis(analysis)
             async with self._session_factory_provider(self._settings)() as session:
                 async with session.begin():
                     await capture_history(session, user, analysis)
@@ -50,6 +50,15 @@ class PortfolioHistoryService:
             except (DatabaseNotConfiguredError, SQLAlchemyError, OSError):
                 pass
             emit_event(logger, "history.capture.failed", level=logging.WARNING, result="failed_operational", error_category="IntegrityError")
+            return False
+        except (AttributeError, TypeError, ValueError):
+            emit_event(
+                logger,
+                "history.capture.failed",
+                level=logging.WARNING,
+                result="failed_operational",
+                error_category="projection_error",
+            )
             return False
         except (DatabaseNotConfiguredError, SQLAlchemyError, OSError) as exc:
             emit_event(logger, "history.capture.failed", level=logging.WARNING, result="failed_operational", error_category=type(exc).__name__)
