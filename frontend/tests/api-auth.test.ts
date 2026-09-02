@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { analyzePortfolioWithInterpretation, createActionPlanTask, deleteActionPlanTask, getActionPlan, getAuthMe, getAuthStartUrl, logout, updateActionPlanTask } from "../lib/api";
+import { analyzePortfolioWithInterpretation, createActionPlanTask, deleteActionPlanTask, getActionPlan, getAnalysisHistory, getAuthMe, getAuthStartUrl, logout, updateActionPlanTask } from "../lib/api";
 
 describe("authentication API helpers", () => {
   beforeEach(() => {
@@ -72,5 +72,20 @@ describe("authentication API helpers", () => {
       credentials: "include",
       body: JSON.stringify({ username: "example" }),
     });
+  });
+
+  it("validates the private history response at runtime", async () => {
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response(JSON.stringify({ latest: null, previous: null, comparison: null, history: [] }), { status: 200 }));
+    await expect(getAnalysisHistory()).resolves.toMatchObject({ history: [] });
+    expect(fetchMock).toHaveBeenCalledWith("http://localhost:8000/api/v1/workspace/analysis-history", { credentials: "include" });
+  });
+
+  it.each([
+    { history: [] },
+    { latest: null, previous: null, comparison: null, history: [{ id: 7 }] },
+    { latest: null, previous: null, comparison: { comparable: true }, history: [] },
+  ])("rejects malformed history response %#", async (payload) => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response(JSON.stringify(payload), { status: 200 }));
+    await expect(getAnalysisHistory()).rejects.toMatchObject({ code: "malformed_response" });
   });
 });

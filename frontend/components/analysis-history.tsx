@@ -1,28 +1,32 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ApiError, getAnalysisHistory } from "../lib/api";
 import type { HistoryResponse } from "../lib/types";
 import { useAuth } from "./auth-provider";
 
 export function AnalysisHistory({ visible }: { visible: boolean }) {
   const { user } = useAuth();
-  const [state, setState] = useState<{ status: "loading" | "ready" | "error"; data: HistoryResponse | null; message: string | null }>({ status: "loading", data: null, message: null });
+  const [state, setState] = useState<{ status: "loading" | "ready" | "error"; data: HistoryResponse | null; message: string | null; loadedFor: string | null }>({ status: "loading", data: null, message: null, loadedFor: null });
   const identity = user?.github_login ?? null;
+  const requestGeneration = useRef(0);
+  const requestKey = visible && identity ? identity : null;
 
   useEffect(() => {
     let active = true;
+    const generation = ++requestGeneration.current;
     if (!visible || !identity) return () => { active = false; };
     void getAnalysisHistory().then((data) => {
-      if (active) setState({ status: "ready", data, message: null });
+      if (active && requestGeneration.current === generation) setState({ status: "ready", data, message: null, loadedFor: identity });
     }).catch((error: unknown) => {
-      if (active) setState({ status: "error", data: null, message: error instanceof ApiError ? error.message : "Geçmiş analizler yüklenemedi." });
+      if (active && requestGeneration.current === generation) setState({ status: "error", data: null, message: error instanceof ApiError ? error.message : "Geçmiş analizler yüklenemedi.", loadedFor: identity });
     });
     return () => { active = false; };
   }, [identity, visible]);
 
   if (!visible || !identity) return null;
-  if (state.status === "loading") return <section aria-labelledby="history-heading" className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"><h3 id="history-heading" className="text-xl font-semibold">İlerleme</h3><p className="mt-3 text-sm text-slate-500">Geçmiş analizler yükleniyor...</p></section>;
+  const isCurrentRequest = state.loadedFor === requestKey;
+  if (state.status === "loading" || !isCurrentRequest) return <section aria-labelledby="history-heading" className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"><h3 id="history-heading" className="text-xl font-semibold">İlerleme</h3><p className="mt-3 text-sm text-slate-500">Geçmiş analizler yükleniyor...</p></section>;
   if (state.status === "error") return <section aria-labelledby="history-heading" className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"><h3 id="history-heading" className="text-xl font-semibold">İlerleme</h3><p role="alert" className="mt-3 text-sm text-red-700">{state.message}</p></section>;
   const data = state.data;
   if (!data || !data.latest) return <HistoryCard title="İlerleme"><p className="text-sm leading-6 text-slate-600">Henüz bir geçmiş analiz kaydı yok. Bu analiz başlangıç noktası olarak kullanılacak.</p></HistoryCard>;

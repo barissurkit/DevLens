@@ -41,11 +41,13 @@ describe("Analysis history privacy and progress UI", () => {
   });
 
   it("ignores a late response after leaving workspace", async () => {
-    let resolve: (value: HistoryResponse) => void = () => undefined;
-    mockedGet.mockReturnValue(new Promise((done) => { resolve = done; }));
+    let resolveA: (value: HistoryResponse) => void = () => undefined;
+    mockedGet.mockReturnValueOnce(new Promise((done) => { resolveA = done; })).mockResolvedValueOnce({ latest: record("b", 68, "2026-09-02T00:00:00Z"), previous: null, comparison: null, history: [] });
     const { rerender } = render(<AnalysisHistory visible />);
     rerender(<AnalysisHistory visible={false} />);
-    resolve({ latest: record("a", 99, "2026-09-02T00:00:00Z"), previous: null, comparison: null, history: [] });
-    await waitFor(() => expect(screen.queryByText("99")).not.toBeInTheDocument());
+    rerender(<AnalysisHistory visible />);
+    resolveA({ latest: record("a", 99, "2026-09-02T00:00:00Z"), previous: null, comparison: null, history: [] });
+    await waitFor(() => expect(screen.getByText("68")).toBeInTheDocument());
+    expect(screen.queryByText("99")).not.toBeInTheDocument();
   });
 });
