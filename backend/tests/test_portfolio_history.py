@@ -1,9 +1,16 @@
+import asyncio
 from types import SimpleNamespace
+from unittest.mock import AsyncMock
 from uuid import uuid4
+
+import pytest
+from sqlalchemy.exc import IntegrityError
 
 from app.api.history import compare_history
 from app.db.models import PortfolioAnalysisHistory
 from app.db.repositories.portfolio_history import project_analysis
+from app.services.portfolio_history import PortfolioHistoryService
+from app.config import Settings
 
 
 def analysis(*, score: int = 68, version: str = "v1") -> SimpleNamespace:
@@ -49,3 +56,23 @@ def test_comparison_suppresses_delta_when_versions_differ() -> None:
     comparison = compare_history(row(score=68), row(score=61, version="v2"))
     assert comparison.comparable is False
     assert comparison.portfolio_score is None
+
+
+def test_concurrent_unique_conflict_is_reported_as_deduplicated(monkeypatch) -> None:
+    class Context:
+        def __init__(self, value): self.value = value
+        async def __aenter__(self): return self.value
+        async def __aexit__(self, *args): return None
+
+    first_session = SimpleNamespace(begin=lambda: Context(None))
+    second_session = SimpleNamespace(scalar=AsyncMock(return_value=object()))
+    sessions = iter([first_session, second_session])
+    factory = lambda: Context(next(sessions))
+
+    async def conflict(*args, **kwargs):
+        raise IntegrityError("insert", {}, Exception("duplicate"))
+
+    monkeypatch.setattr("app.services.portfolio_history.capture_history", conflict)
+    service = PortfolioHistoryService(Settings(_env_file=None, database_url="postgresql+asyncpg://local/test"), lambda _: factory)
+    user = SimpleNamespace(id=uuid4())
+    assert asyncio.run(service.capture(user=user, analysis=analysis())) is True
