@@ -12,6 +12,12 @@ PORTFOLIO_SCORING_MAX_POINTS = 100
 MIN_REPOSITORIES_FOR_PORTFOLIO_SCORE = 2
 
 
+def is_portfolio_rule_passing(*, detected_repository_count: int, analyzed_repository_count: int) -> bool:
+    """Return the deterministic half-coverage policy used for portfolio rules."""
+
+    return analyzed_repository_count > 0 and detected_repository_count * 2 >= analyzed_repository_count
+
+
 @dataclass(frozen=True, slots=True)
 class PortfolioScoringRuleDefinition:
     key: str

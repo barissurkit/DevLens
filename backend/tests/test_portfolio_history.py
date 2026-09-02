@@ -11,6 +11,7 @@ from app.db.models import PortfolioAnalysisHistory
 from app.db.repositories.portfolio_history import project_analysis
 from app.schemas.analysis import PortfolioScore, PortfolioScoreDimensionResult, PortfolioScoreRuleResult
 from app.services.portfolio_history import PortfolioHistoryService
+from app.services.portfolio_scoring import is_portfolio_rule_passing
 from app.config import Settings
 
 
@@ -72,6 +73,19 @@ def test_projection_uses_portfolio_rule_coverage_threshold_and_stable_keys() -> 
     assert projection.portfolio_score is None
     assert projection.passed_checks == ["bravo", "zulu"]
     assert projection.failed_checks == ["alpha"]
+
+
+@pytest.mark.parametrize(
+    ("detected", "analyzed", "expected"),
+    [(0, 0, False), (0, 1, False), (1, 1, True), (1, 2, True), (1, 3, False), (2, 3, True)],
+)
+def test_portfolio_rule_pass_policy_handles_zero_and_boundary_counts(
+    detected: int, analyzed: int, expected: bool
+) -> None:
+    assert is_portfolio_rule_passing(
+        detected_repository_count=detected,
+        analyzed_repository_count=analyzed,
+    ) is expected
 
 
 def test_comparison_calculates_score_categories_and_check_deltas() -> None:
