@@ -29,6 +29,7 @@ def health_check() -> HealthResponse:
 def create_app(settings: Settings | None = None) -> FastAPI:
     configure_logging()
     application_settings = settings or get_settings()
+    application_settings.validate_runtime_configuration()
     application = FastAPI(title="DevLens API", version="0.1.0")
     application.state.settings = application_settings
 

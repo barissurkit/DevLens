@@ -1,6 +1,7 @@
 from collections.abc import AsyncIterator
 from functools import lru_cache
 
+from fastapi import Request
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
 
 from app.config import Settings, get_settings
@@ -37,6 +38,6 @@ async def dispose_engine(engine: AsyncEngine) -> None:
     await engine.dispose()
 
 
-async def get_session() -> AsyncIterator[AsyncSession]:
-    async with get_session_factory()() as session:
+async def get_session(request: Request) -> AsyncIterator[AsyncSession]:
+    async with get_session_factory(request.app.state.settings)() as session:
         yield session

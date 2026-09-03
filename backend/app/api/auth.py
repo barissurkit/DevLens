@@ -30,7 +30,7 @@ from app.auth.repositories import (
     upsert_user,
     utc_now,
 )
-from app.config import Settings, get_settings
+from app.config import Settings
 from app.db.database import DatabaseNotConfiguredError, get_session, get_session_factory
 from app.db.models import OAuthLoginState, User
 from app.schemas.auth import AuthErrorResponse, MeResponse
@@ -50,6 +50,10 @@ def _cookie_name(settings: Settings) -> str:
     return SESSION_COOKIE if settings.auth_cookie_secure else DEV_SESSION_COOKIE
 
 
+def _settings(request: Request) -> Settings:
+    return request.app.state.settings
+
+
 def _safe_redirect_path(value: str | None) -> str:
     path = value or "/"
     parsed = urlsplit(path)
@@ -67,6 +71,8 @@ def _frontend_redirect(settings: Settings, *, error: str | None = None, path: st
 
 
 def _configuration_error(settings: Settings) -> str | None:
+    if not settings.auth_enabled:
+        return "Authentication is not configured."
     required = (
         settings.github_app_client_id,
         settings.github_app_client_secret,
@@ -109,20 +115,23 @@ async def _safe_failure_redirect(settings: Settings, path: str = "/") -> Redirec
     return RedirectResponse(_frontend_redirect(settings, error="authentication_failed", path=path), status_code=303)
 
 
-async def get_auth_github_client() -> GitHubAuthClient | None:
+async def get_auth_github_client(request: Request) -> GitHubAuthClient | None:
+    settings = _settings(request)
+    if not settings.auth_enabled:
+        return None
     try:
-        return GitHubAuthClient(get_settings())
+        return GitHubAuthClient(settings)
     except GitHubAuthError:
         return None
 
 
-async def get_auth_github_api_client() -> GitHubClient:
-    return GitHubClient(get_settings())
+async def get_auth_github_api_client(request: Request) -> GitHubClient:
+    return GitHubClient(_settings(request))
 
 
 async def get_optional_authenticated_user(request: Request, response: Response) -> User | None:
     """Resolve a session when present; public endpoints stay anonymous on bad sessions."""
-    settings = get_settings()
+    settings = _settings(request)
     cookie = request.cookies.get(_cookie_name(settings))
     if not cookie or not settings.database_url:
         return None
@@ -140,7 +149,7 @@ async def get_required_authenticated_user(
     request: Request, response: Response, session: AsyncSession
 ) -> User:
     """Resolve a valid session for private workspace endpoints; never fail open."""
-    settings = request.app.state.settings
+    settings = _settings(request)
     cookie = request.cookies.get(_cookie_name(settings))
     if not cookie:
         raise HTTPException(status_code=401, detail="Authentication required.")
@@ -153,10 +162,11 @@ async def get_required_authenticated_user(
 
 @router.get("/github")
 async def begin_github_login(
+    request: Request,
     next_path: str | None = Query(default=None, alias="next"),
     session: AsyncSession = Depends(get_session),
 ) -> RedirectResponse:
-    settings = get_settings()
+    settings = _settings(request)
     if _configuration_error(settings):
         return await _safe_failure_redirect(settings)
     try:
@@ -204,7 +214,7 @@ async def github_callback(
     auth_client: GitHubAuthClient | None = Depends(get_auth_github_client),
     github_client: GitHubClient = Depends(get_auth_github_api_client),
 ) -> RedirectResponse:
-    settings = get_settings()
+    settings = _settings(request)
     if _configuration_error(settings) or not state or error or not code:
         emit_event(logger, "auth.callback.rejected", error_category="invalid_callback")
         return await _safe_failure_redirect(settings)
@@ -250,12 +260,13 @@ async def github_callback(
 
 @router.get("/me", response_model=MeResponse)
 async def me(
+    request: Request,
     response: Response,
     session_cookie: str | None = Cookie(default=None, alias=SESSION_COOKIE),
     dev_session_cookie: str | None = Cookie(default=None, alias=DEV_SESSION_COOKIE),
     session: AsyncSession = Depends(get_session),
 ) -> MeResponse:
-    settings = get_settings()
+    settings = _settings(request)
     session_cookie = session_cookie or dev_session_cookie
     if not session_cookie:
         return MeResponse(authenticated=False, user=None)
@@ -269,13 +280,14 @@ async def me(
 
 @router.post("/logout", status_code=204)
 async def logout(
+    request: Request,
     response: Response,
     origin: str | None = Header(default=None),
     session_cookie: str | None = Cookie(default=None, alias=SESSION_COOKIE),
     dev_session_cookie: str | None = Cookie(default=None, alias=DEV_SESSION_COOKIE),
     session: AsyncSession = Depends(get_session),
 ) -> None:
-    settings = get_settings()
+    settings = _settings(request)
     session_cookie = session_cookie or dev_session_cookie
     if origin != settings.auth_frontend_origin:
         raise HTTPException(status_code=403, detail="Invalid request origin.")

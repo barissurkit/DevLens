@@ -49,7 +49,7 @@ def test_github_auth_client_exchanges_code_without_returning_provider_response()
         _env_file=None,
         github_app_client_id="client-id",
         github_app_client_secret="client-secret",
-        github_app_callback_url="https://api.example/auth/callback",
+        github_app_callback_url="https://api.example/api/v1/auth/github/callback",
         auth_state_encryption_key=encryption_key(),
     )
     token = asyncio.run(
