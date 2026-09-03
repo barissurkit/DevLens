@@ -1,4 +1,6 @@
 from dataclasses import dataclass
+from types import MappingProxyType
+from typing import Mapping
 
 from app.schemas.analysis import GitHubPortfolioAnalysis, ViewerContext
 from app.schemas.guided_improvement import (
@@ -19,7 +21,7 @@ class GuidedImprovementDefinition:
     steps: tuple[str, ...]
 
 
-GUIDED_IMPROVEMENT_REGISTRY: dict[str, GuidedImprovementDefinition] = {
+GUIDED_IMPROVEMENT_REGISTRY: Mapping[str, GuidedImprovementDefinition] = MappingProxyType({
     "readme_exists": GuidedImprovementDefinition("README ekle", "README, repository'nin amacını ve nasıl kullanılacağını hızlıca anlaşılır kılar.", ("Repository köküne bir README.md dosyası ekleyin.", "Projenin amacını ve temel özelliklerini açıklayın.", "Kurulum ve kullanım adımlarını belgeleyin.")),
     "readme_title": GuidedImprovementDefinition("README başlığını netleştir", "Açık bir başlık, projenin ne olduğunu ilk bakışta anlaşılır hale getirir.", ("README'nin başına projenin adını içeren bir başlık ekleyin.", "Başlığın repository içeriğiyle uyumlu olduğundan emin olun.")),
     "readme_description": GuidedImprovementDefinition("README açıklamasını güçlendir", "Kısa ve somut bir açıklama, değerlendirene projenin amacını hızlıca aktarır.", ("Projenin hangi problemi çözdüğünü açıklayın.", "Ana kullanım senaryosunu ve önemli özellikleri birkaç cümleyle belirtin.")),
@@ -32,7 +34,7 @@ GUIDED_IMPROVEMENT_REGISTRY: dict[str, GuidedImprovementDefinition] = {
     "gitignore": GuidedImprovementDefinition(".gitignore dosyasını düzenle", ".gitignore, üretilen dosyaların ve yerel makineye özgü içeriklerin repository'ye girmesini önler.", ("Kullandığınız dil ve araçlara uygun bir .gitignore dosyası ekleyin.", "Build çıktıları, cache'ler ve yerel environment dosyalarını hariç tutun.")),
     "license": GuidedImprovementDefinition("Lisans bilgisi ekle", "Lisans, başkalarının repository'yi hangi koşullarda kullanabileceğini açıkça belirtir.", ("Projenizin kullanım koşullarına uygun bir lisans seçin.", "Lisans dosyasını repository köküne ekleyin ve README'de referans verin.")),
     "contributing": GuidedImprovementDefinition("Katkı rehberi ekle", "Katkı rehberi, başkalarının projeye nasıl güvenli ve tutarlı katkı yapacağını açıklar.", ("Katkı, issue ve pull request sürecini açıklayan bir CONTRIBUTING dosyası ekleyin.", "Geliştirme ortamı, test ve kod biçimlendirme beklentilerini belirtin.")),
-}
+})
 
 
 def canonical_guided_rule_keys() -> set[str]:

@@ -9,7 +9,7 @@ from app.auth.ownership import derive_viewer_context, is_owner
 from app.config import Settings
 from app.db.models import User
 from app.db.repositories.analysis_snapshots import AnalysisSnapshotRepository
-from app.schemas.analysis import GitHubPortfolioAnalysisResponse, ViewerContext
+from app.schemas.analysis import ViewerContext
 from app.schemas.github import GitHubUser
 def target(*, github_user_id: int, username: str = "same-login") -> GitHubUser:
     return GitHubUser.model_validate({
@@ -61,14 +61,9 @@ def test_snapshot_serialization_excludes_viewer_context() -> None:
             self.row.created_at = datetime.now(timezone.utc)
 
     analysis = create_result()
-    response = GitHubPortfolioAnalysisResponse(
-        **analysis.model_dump(),
-        viewer_context=ViewerContext(is_owner=True, mode="my_workspace"),
-        guided_improvements=[],
-    )
     session = Session()
     record = asyncio.run(
-        AnalysisSnapshotRepository(session).create(github_username="same-login", analysis=response)
+        AnalysisSnapshotRepository(session).create(github_username="same-login", analysis=analysis)
     )
     assert "viewer_context" not in session.row.analysis_payload
     assert "guided_improvements" not in session.row.analysis_payload
