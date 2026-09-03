@@ -5,6 +5,7 @@ import httpx
 import pytest
 
 import app.services.github_portfolio_analysis as application_module
+from app.config import Settings
 from app.schemas.analysis import (
     GitHubPortfolioAnalysis,
     PortfolioRepositoryAnalysis,
@@ -18,24 +19,48 @@ from app.schemas.github import (
 )
 from app.services.github.client import (
     IMPORTANT_REPOSITORY_FILE_PATHS,
+    MAX_REPOSITORY_PAGES,
+    GitHubRequestBudget,
     GitHubRepositoryPaginationLimitExceeded,
     GitHubClient,
-    _REQUEST_BUDGET,
 )
 from app.services.github_portfolio_analysis import analyze_github_portfolio
 
 
-def test_pagination_failure_resets_request_budget_context() -> None:
-    client = AsyncMock(spec=GitHubClient)
-    client.get_user.return_value = create_user()
-    client.get_repositories.side_effect = GitHubRepositoryPaginationLimitExceeded(
-        "synthetic pagination limit"
+def test_pagination_failure_resets_request_budget_context(monkeypatch) -> None:
+    request_count = 0
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        nonlocal request_count
+        if request.url.path.endswith("/users/octocat"):
+            return httpx.Response(200, json=create_user().model_dump(mode="json"))
+
+        request_count += 1
+        return httpx.Response(
+            200,
+            json=[],
+            headers={
+                "Link": (
+                    "<https://api.github.com/users/octocat/repos"
+                    f'?per_page=100&page={request_count + 1}>; rel="next"'
+                )
+            },
+        )
+
+    client = GitHubClient(
+        Settings(_env_file=None), transport=httpx.MockTransport(handler)
+    )
+    monkeypatch.setattr(
+        application_module,
+        "GitHubRequestBudget",
+        lambda: GitHubRequestBudget(limit=MAX_REPOSITORY_PAGES + 1),
     )
 
     with pytest.raises(GitHubRepositoryPaginationLimitExceeded):
         asyncio.run(analyze_github_portfolio(username="octocat", client=client))
 
-    assert _REQUEST_BUDGET.get() is None
+    asyncio.run(client.get_user("octocat"))
+    assert request_count == MAX_REPOSITORY_PAGES
 
 
 def create_user(*, public_repos: int = 0) -> GitHubUser:

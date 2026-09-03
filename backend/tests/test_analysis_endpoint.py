@@ -243,9 +243,10 @@ def test_analysis_endpoint_maps_repository_pagination_limit_with_cors() -> None:
     analysis_api.run_github_portfolio_analysis = application_mock
 
     try:
+        allowed_origin = app.state.settings.cors_origins[0]
         response = request_app(
             {"username": "synthetic-user"},
-            headers={"Origin": "http://localhost:3000"},
+            headers={"Origin": allowed_origin},
         )
     finally:
         analysis_api.run_github_portfolio_analysis = original
@@ -257,7 +258,7 @@ def test_analysis_endpoint_maps_repository_pagination_limit_with_cors() -> None:
             "message": "GitHub repository listesi analiz sınırına ulaştı.",
         }
     }
-    assert response.headers["access-control-allow-origin"] == "http://localhost:3000"
+    assert response.headers["access-control-allow-origin"] == allowed_origin
     assert "raw pagination details" not in response.text
 
 
