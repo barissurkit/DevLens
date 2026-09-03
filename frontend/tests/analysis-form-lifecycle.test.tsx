@@ -47,6 +47,20 @@ describe("AnalysisForm lifecycle protection", () => {
     await waitFor(() => expect(screen.getByTestId("result-shell")).toHaveTextContent("bob"));
   });
 
+  it("ignores a stale error after the newer request succeeds", async () => {
+    const first = deferred<GitHubPortfolioInterpretationResponse>();
+    const second = deferred<GitHubPortfolioInterpretationResponse>();
+    mockedAnalyze.mockReturnValueOnce(first.promise).mockReturnValueOnce(second.promise);
+    render(<AnalysisForm />);
+    submit("alice");
+    submit("bob");
+    second.resolve(result("bob"));
+    await waitFor(() => expect(screen.getByTestId("result-shell")).toHaveTextContent("bob"));
+    first.resolve(Promise.reject(new Error("late failure")) as never);
+    await waitFor(() => expect(screen.getByTestId("result-shell")).toHaveTextContent("bob"));
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+  });
+
   it("clears and ignores an owner response that resolves after logout", async () => {
     const request = deferred<GitHubPortfolioInterpretationResponse>();
     mockedAnalyze.mockReturnValue(request.promise);
