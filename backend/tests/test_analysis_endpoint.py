@@ -28,6 +28,7 @@ from app.schemas.analysis import (
 from app.schemas.github import GitHubUser
 from app.db.models import User
 from app.services.github.client import GitHubClient
+from app.services.github.client import GitHubMalformedResponseError
 from app.services.portfolio_history import PortfolioHistoryService
 from app.config import Settings
 from types import SimpleNamespace
@@ -203,6 +204,30 @@ def test_analysis_endpoint_calls_application_service_once() -> None:
         username="synthetic-user",
         client=mock_client,
     )
+
+
+def test_analysis_endpoint_maps_malformed_provider_data_to_sanitized_502() -> None:
+    mock_client = AsyncMock(spec=GitHubClient)
+    use_mock_client(mock_client)
+    application_mock = AsyncMock(
+        side_effect=GitHubMalformedResponseError("raw provider details")
+    )
+    original = analysis_api.run_github_portfolio_analysis
+    analysis_api.run_github_portfolio_analysis = application_mock
+
+    try:
+        response = request_app({"username": "synthetic-user"})
+    finally:
+        analysis_api.run_github_portfolio_analysis = original
+
+    assert response.status_code == 502
+    assert response.json() == {
+        "detail": {
+            "code": "github_upstream_error",
+            "message": "GitHub geçersiz bir yanıt döndürdü.",
+        }
+    }
+    assert "raw provider details" not in response.text
 
 
 def test_owner_analysis_projects_failing_guidance_from_deterministic_rule() -> None:

@@ -141,6 +141,7 @@ class RepositoryScore(BaseModel):
 class PortfolioRepositoryExclusionReason(StrEnum):
     FORK_REPOSITORY = "fork_repository"
     ARCHIVED_REPOSITORY = "archived_repository"
+    ANALYSIS_LIMIT = "analysis_limit"
 
 
 class ExcludedPortfolioRepository(BaseModel):
@@ -160,6 +161,7 @@ class PortfolioRepositoryFailureCode(StrEnum):
     GITHUB_REPOSITORY_NOT_FOUND = "github_repository_not_found"
     GITHUB_RATE_LIMIT = "github_rate_limit"
     GITHUB_UPSTREAM_ERROR = "github_upstream_error"
+    ANALYSIS_LIMIT = "analysis_limit"
 
 
 class PortfolioRepositoryResult(BaseModel):

@@ -517,4 +517,4 @@ def test_result_is_deterministic_and_versioned() -> None:
     second = score_portfolio(aggregation)
 
     assert second == first
-    assert first.version == "v1"
+    assert first.version == "v2"

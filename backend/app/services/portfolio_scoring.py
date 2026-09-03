@@ -7,7 +7,7 @@ from app.schemas.analysis import (
     PortfolioScoreRuleResult,
 )
 
-PORTFOLIO_SCORING_VERSION = "v1"
+PORTFOLIO_SCORING_VERSION = "v2"
 PORTFOLIO_SCORING_MAX_POINTS = 100
 MIN_REPOSITORIES_FOR_PORTFOLIO_SCORE = 2
 

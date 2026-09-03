@@ -25,6 +25,7 @@ from app.schemas.interpretation import (
     PortfolioInterpretationResult,
 )
 from app.services.github.client import GitHubClient
+from app.services.github.client import GitHubMalformedResponseError
 from app.services.analysis_snapshot_cache import CachedAnalysis
 from app.services.portfolio_history import PortfolioHistoryService
 from app.config import Settings
@@ -457,3 +458,22 @@ def test_deterministic_github_failure_keeps_existing_error_contract_and_skips_co
             "message": "GitHub kullanıcısı bulunamadı.",
         }
     }
+
+
+def test_interpretation_maps_malformed_provider_data_to_sanitized_502() -> None:
+    mock_github = AsyncMock(spec=GitHubClient)
+    use_mock_github(mock_github)
+    original = interpretation_api.analyze_and_interpret_github_portfolio
+    composition = AsyncMock(
+        side_effect=GitHubMalformedResponseError("raw provider details")
+    )
+    interpretation_api.analyze_and_interpret_github_portfolio = composition
+
+    try:
+        response = request_app({"username": "synthetic-user"})
+    finally:
+        interpretation_api.analyze_and_interpret_github_portfolio = original
+
+    assert response.status_code == 502
+    assert response.json()["detail"]["code"] == "github_upstream_error"
+    assert "raw provider details" not in response.text

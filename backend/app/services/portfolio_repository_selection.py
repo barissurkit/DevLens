@@ -6,6 +6,7 @@ from app.schemas.analysis import (
 from app.schemas.github import GitHubRepository
 
 PORTFOLIO_REPOSITORY_SELECTION_VERSION = "v1"
+MAX_ANALYZED_REPOSITORIES = 40
 
 
 def _repository_identity(repository: GitHubRepository) -> str:
@@ -65,6 +66,7 @@ def _exclusion_reasons(
 
 def select_portfolio_repositories(
     repositories: list[GitHubRepository],
+    max_selected: int = MAX_ANALYZED_REPOSITORIES,
 ) -> PortfolioRepositorySelection:
     """Apply the deterministic V1 portfolio eligibility policy."""
 
@@ -73,6 +75,10 @@ def select_portfolio_repositories(
     selected: list[GitHubRepository] = []
     excluded: list[ExcludedPortfolioRepository] = []
 
+    if max_selected <= 0:
+        raise ValueError("max_selected must be greater than zero.")
+
+    eligible_count = 0
     for repository in sorted(repositories, key=_repository_sort_key):
         reasons = _exclusion_reasons(repository)
 
@@ -83,8 +89,16 @@ def select_portfolio_repositories(
                     reasons=reasons,
                 )
             )
-        else:
+        elif eligible_count < max_selected:
             selected.append(repository)
+            eligible_count += 1
+        else:
+            excluded.append(
+                ExcludedPortfolioRepository(
+                    repository=repository,
+                    reasons=[PortfolioRepositoryExclusionReason.ANALYSIS_LIMIT],
+                )
+            )
 
     return PortfolioRepositorySelection(
         version=PORTFOLIO_REPOSITORY_SELECTION_VERSION,

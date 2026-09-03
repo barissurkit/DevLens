@@ -8,9 +8,14 @@ from app.schemas.analysis import (
     PortfolioRepositoryFailureCode,
     PortfolioRepositoryResult,
     PortfolioRepositorySelection,
+    PortfolioRepositoryExclusionReason,
 )
 from app.schemas.github import GitHubRepository
-from app.services.github.client import GitHubClient
+from app.services.github.client import (
+    GitHubClient,
+    GitHubMalformedResponseError,
+    GitHubRequestBudgetExceeded,
+)
 from app.services.repository_analysis import analyze_repository
 from app.services.repository_scoring import score_repository
 
@@ -24,9 +29,14 @@ def _operational_failure(
         httpx.TimeoutException
         | httpx.RequestError
         | httpx.HTTPStatusError
+        | GitHubMalformedResponseError
+        | GitHubRequestBudgetExceeded
     ),
 ) -> PortfolioRepositoryFailure:
-    if isinstance(error, httpx.TimeoutException):
+    if isinstance(error, GitHubRequestBudgetExceeded):
+        code = PortfolioRepositoryFailureCode.ANALYSIS_LIMIT
+        message = "Repository analysis stopped because the GitHub provider request budget was exhausted."
+    elif isinstance(error, httpx.TimeoutException):
         code = PortfolioRepositoryFailureCode.GITHUB_TIMEOUT
         message = "GitHub request timed out during repository analysis."
     elif isinstance(error, httpx.RequestError):
@@ -77,6 +87,8 @@ async def _analyze_selected_repository(
             httpx.TimeoutException,
             httpx.RequestError,
             httpx.HTTPStatusError,
+            GitHubMalformedResponseError,
+            GitHubRequestBudgetExceeded,
         ) as error:
             return _operational_failure(
                 repository=repository,
@@ -108,8 +120,19 @@ async def analyze_portfolio_repositories(
         return PortfolioRepositoryAnalysis(
             selection_version=selection.version,
             repositories=[],
-            failures=[],
-            has_failures=False,
+            failures=[
+                PortfolioRepositoryFailure(
+                    repository=excluded.repository,
+                    code=PortfolioRepositoryFailureCode.ANALYSIS_LIMIT,
+                    message="Repository was not analyzed because the portfolio analysis limit was reached.",
+                )
+                for excluded in selection.excluded
+                if PortfolioRepositoryExclusionReason.ANALYSIS_LIMIT in excluded.reasons
+            ],
+            has_failures=any(
+                PortfolioRepositoryExclusionReason.ANALYSIS_LIMIT in excluded.reasons
+                for excluded in selection.excluded
+            ),
         )
 
     semaphore = asyncio.Semaphore(max_concurrency)
@@ -145,9 +168,19 @@ async def analyze_portfolio_repositories(
         if isinstance(result, PortfolioRepositoryFailure)
     ]
 
+    limit_failures = [
+        PortfolioRepositoryFailure(
+            repository=excluded.repository,
+            code=PortfolioRepositoryFailureCode.ANALYSIS_LIMIT,
+            message="Repository was not analyzed because the portfolio analysis limit was reached.",
+        )
+        for excluded in selection.excluded
+        if PortfolioRepositoryExclusionReason.ANALYSIS_LIMIT in excluded.reasons
+    ]
+
     return PortfolioRepositoryAnalysis(
         selection_version=selection.version,
         repositories=repositories,
-        failures=failures,
-        has_failures=bool(failures),
+        failures=[*failures, *limit_failures],
+        has_failures=bool(failures or limit_failures),
     )
