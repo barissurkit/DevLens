@@ -11,6 +11,7 @@ import type {
   ActionPlanStatus,
   AISuggestionsResponse,
   HistoryResponse,
+  GuidedImprovement,
 } from "./types";
 
 const ANALYSIS_PATH = "/api/v1/analysis";
@@ -100,6 +101,31 @@ function isViewerContext(value: unknown): boolean {
   return typeof context.is_owner === "boolean" && (context.mode === "my_workspace" || context.mode === "explore");
 }
 
+function isGuidedImprovement(value: unknown): value is GuidedImprovement {
+  if (typeof value !== "object" || value === null) return false;
+  const item = value as Record<string, unknown>;
+  const verification = item.verification;
+  if (typeof item.rule_key !== "string" || item.rule_key.trim().length === 0 ||
+      typeof item.title !== "string" || item.title.trim().length === 0 ||
+      typeof item.why !== "string" || item.why.trim().length === 0 ||
+      !Array.isArray(item.steps) || item.steps.length === 0 ||
+      !item.steps.every((step) => typeof step === "string" && step.trim().length > 0)) return false;
+  if (typeof verification !== "object" || verification === null) return false;
+  const details = verification as Record<string, unknown>;
+  const detectedCount = details.detected_repository_count;
+  const analyzedCount = details.analyzed_repository_count;
+  return typeof detectedCount === "number" && Number.isInteger(detectedCount) && detectedCount >= 0 &&
+    typeof analyzedCount === "number" && Number.isInteger(analyzedCount) && analyzedCount >= 0 &&
+    (details.current_state === "needs_improvement" || details.current_state === "criteria_met") &&
+    typeof details.analysis_available === "boolean" && typeof details.analysis_partial === "boolean" &&
+    typeof details.reanalysis_required === "boolean";
+}
+
+function normalizeGuidedImprovements(value: unknown): GuidedImprovement[] | null {
+  if (value === undefined) return [];
+  return Array.isArray(value) && value.every(isGuidedImprovement) ? value : null;
+}
+
 function isInterpretationUnavailableReason(value: unknown): value is InterpretationUnavailableReason {
   return typeof value === "string" && [
     "not_configured",
@@ -116,6 +142,8 @@ function isGitHubPortfolioInterpretationResponse(value: unknown): value is GitHu
   if (typeof value !== "object" || value === null || !("analysis" in value) || !("interpretation" in value) || !("viewer_context" in value)) return false;
   if (!isViewerContext(value.viewer_context)) return false;
   if (!isGitHubPortfolioAnalysis(value.analysis)) return false;
+  const guidedImprovements = normalizeGuidedImprovements((value as Record<string, unknown>).guided_improvements);
+  if (guidedImprovements === null) return false;
   const interpretation = value.interpretation;
   if (typeof interpretation !== "object" || interpretation === null || !("status" in interpretation)) return false;
   if (interpretation.status === "unavailable") return "reason" in interpretation && isInterpretationUnavailableReason(interpretation.reason);
@@ -278,7 +306,10 @@ export async function analyzePortfolio(
 
   const payload = await readJson(response);
   if (response.ok) {
-    if (isGitHubPortfolioAnalysis(payload) && "viewer_context" in payload && isViewerContext(payload.viewer_context)) return payload as GitHubPortfolioAnalysisResponse;
+    if (isGitHubPortfolioAnalysis(payload) && "viewer_context" in payload && isViewerContext(payload.viewer_context)) {
+      const guidedImprovements = normalizeGuidedImprovements((payload as Record<string, unknown>).guided_improvements);
+      if (guidedImprovements !== null) return { ...payload, guided_improvements: guidedImprovements } as GitHubPortfolioAnalysisResponse;
+    }
     throw new ApiError("Analiz servisi geçersiz bir yanıt döndürdü.", response.status, "malformed_response");
   }
 
@@ -312,7 +343,9 @@ export async function analyzePortfolioWithInterpretation(
 
   const payload = await readJson(response);
   if (response.ok) {
-    if (isGitHubPortfolioInterpretationResponse(payload)) return payload;
+    if (isGitHubPortfolioInterpretationResponse(payload)) {
+      return { ...payload, guided_improvements: normalizeGuidedImprovements((payload as unknown as Record<string, unknown>).guided_improvements) || [] };
+    }
     throw new ApiError("Analiz servisi geçersiz bir yanıt döndürdü.", response.status, "malformed_response");
   }
 
