@@ -28,7 +28,10 @@ from app.schemas.analysis import (
 from app.schemas.github import GitHubUser
 from app.db.models import User
 from app.services.github.client import GitHubClient
-from app.services.github.client import GitHubMalformedResponseError
+from app.services.github.client import (
+    GitHubMalformedResponseError,
+    GitHubRepositoryPaginationLimitExceeded,
+)
 from app.services.portfolio_history import PortfolioHistoryService
 from app.config import Settings
 from types import SimpleNamespace
@@ -96,14 +99,14 @@ def create_result() -> GitHubPortfolioAnalysis:
     )
 
 
-def request_app(payload: object) -> httpx.Response:
+def request_app(payload: object, *, headers: dict[str, str] | None = None) -> httpx.Response:
     async def send_request() -> httpx.Response:
         transport = httpx.ASGITransport(app=app)
         async with httpx.AsyncClient(
             transport=transport,
             base_url="http://test",
         ) as client:
-            return await client.post("/api/v1/analysis", json=payload)
+            return await client.post("/api/v1/analysis", json=payload, headers=headers)
 
     return asyncio.run(send_request())
 
@@ -228,6 +231,35 @@ def test_analysis_endpoint_maps_malformed_provider_data_to_sanitized_502() -> No
         }
     }
     assert "raw provider details" not in response.text
+
+
+def test_analysis_endpoint_maps_repository_pagination_limit_with_cors() -> None:
+    mock_client = AsyncMock(spec=GitHubClient)
+    use_mock_client(mock_client)
+    application_mock = AsyncMock(
+        side_effect=GitHubRepositoryPaginationLimitExceeded("raw pagination details")
+    )
+    original = analysis_api.run_github_portfolio_analysis
+    analysis_api.run_github_portfolio_analysis = application_mock
+
+    try:
+        allowed_origin = app.state.settings.cors_origins[0]
+        response = request_app(
+            {"username": "synthetic-user"},
+            headers={"Origin": allowed_origin},
+        )
+    finally:
+        analysis_api.run_github_portfolio_analysis = original
+
+    assert response.status_code == 502
+    assert response.json() == {
+        "detail": {
+            "code": "github_upstream_error",
+            "message": "GitHub repository listesi analiz sınırına ulaştı.",
+        }
+    }
+    assert response.headers["access-control-allow-origin"] == allowed_origin
+    assert "raw pagination details" not in response.text
 
 
 def test_owner_analysis_projects_failing_guidance_from_deterministic_rule() -> None:

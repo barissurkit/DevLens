@@ -37,6 +37,10 @@ class GitHubRequestBudgetExceeded(RuntimeError):
     """Raised when one analysis operation reaches its provider request budget."""
 
 
+class GitHubRepositoryPaginationLimitExceeded(RuntimeError):
+    """Raised when repository discovery cannot complete within its page bound."""
+
+
 class GitHubRequestBudget:
     def __init__(self, limit: int = MAX_PROVIDER_REQUESTS) -> None:
         self.limit = limit
@@ -421,4 +425,6 @@ class GitHubClient:
                 if "next" not in response.links:
                     return repositories
 
-        raise RuntimeError("GitHub repository pagination limit exceeded.")
+        raise GitHubRepositoryPaginationLimitExceeded(
+            "GitHub repository pagination limit exceeded."
+        )

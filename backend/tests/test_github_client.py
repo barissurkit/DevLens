@@ -12,6 +12,7 @@ from app.services.github.client import (
     MAX_TREE_ENTRIES,
     REPOSITORIES_PER_PAGE,
     GitHubMalformedResponseError,
+    GitHubRepositoryPaginationLimitExceeded,
     GitHubRequestBudget,
     GitHubClient,
     decode_github_file_content,
@@ -320,23 +321,37 @@ def test_get_repositories_follows_pagination() -> None:
     assert all(request.url.params["per_page"] == "100" for request in captured_requests)
 
 
-def test_get_repositories_stops_at_maximum_page_limit() -> None:
+@pytest.mark.parametrize(
+    ("page_count", "has_next_on_last", "expected_error"),
+    [
+        (MAX_REPOSITORY_PAGES - 1, False, None),
+        (MAX_REPOSITORY_PAGES, False, None),
+        (MAX_REPOSITORY_PAGES, True, GitHubRepositoryPaginationLimitExceeded),
+    ],
+)
+def test_get_repositories_enforces_maximum_page_limit(
+    page_count: int,
+    has_next_on_last: bool,
+    expected_error: type[Exception] | None,
+) -> None:
     request_count = 0
 
     def handler(request: httpx.Request) -> httpx.Response:
         nonlocal request_count
         request_count += 1
-        next_page = request_count + 1
+        has_next = request_count < page_count or has_next_on_last
+        headers = {}
+        if has_next:
+            next_page = request_count + 1
+            headers["Link"] = (
+                "<https://api.github.com/users/octocat/repos"
+                f'?per_page=100&page={next_page}>; rel="next"'
+            )
 
         return httpx.Response(
             200,
             json=[create_github_repository_payload(request_count)],
-            headers={
-                "Link": (
-                    "<https://api.github.com/users/octocat/repos"
-                    f'?per_page=100&page={next_page}>; rel="next"'
-                )
-            },
+            headers=headers,
         )
 
     client = GitHubClient(
@@ -344,13 +359,15 @@ def test_get_repositories_stops_at_maximum_page_limit() -> None:
         transport=httpx.MockTransport(handler),
     )
 
-    with pytest.raises(
-        RuntimeError,
-        match="pagination limit exceeded",
-    ):
-        asyncio.run(client.get_repositories("octocat"))
+    if expected_error is None:
+        repositories = asyncio.run(client.get_repositories("octocat"))
+        assert len(repositories) == page_count
+    else:
+        with pytest.raises(expected_error, match="pagination limit exceeded"):
+            asyncio.run(client.get_repositories("octocat"))
 
-    assert request_count == MAX_REPOSITORY_PAGES
+    expected_requests = page_count if expected_error is None else MAX_REPOSITORY_PAGES
+    assert request_count == expected_requests
 
 
 def test_get_repositories_rejects_non_list_response() -> None:
