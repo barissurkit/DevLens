@@ -52,7 +52,7 @@ Gemini does not calculate, modify, or override DevLens scores. Its structured re
 
 ## PostgreSQL Snapshot Cache
 
-Deterministic `GitHubPortfolioAnalysis` snapshots are stored in PostgreSQL JSONB through SQLAlchemy/asyncpg and Alembic-managed schema. Freshness uses `analysis_generated_at`; the current default TTL is 900 seconds. Cache reads require schema compatibility and `ANALYSIS_ENGINE_VERSION = v2`, preventing reuse of older incompatible analysis snapshots. There is no Redis layer.
+Deterministic `GitHubPortfolioAnalysis` snapshots are stored in PostgreSQL JSONB through SQLAlchemy/asyncpg and Alembic-managed schema. Freshness uses `analysis_generated_at`; the current default TTL is 900 seconds. Cache reads require schema compatibility and `ANALYSIS_ENGINE_VERSION = v3`, preventing reuse of older incompatible analysis snapshots. There is no Redis layer.
 
 The persisted row may also contain an optional interpretation payload. This is persistence, not the deterministic cache authority: when an interpretation request reuses a deterministic snapshot, Gemini may still run again. Persistence writes are best-effort, and cache read operational failures fail open where supported by the service.
 

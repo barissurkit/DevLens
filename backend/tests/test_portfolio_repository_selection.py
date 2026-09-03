@@ -6,6 +6,7 @@ from app.schemas.analysis import (
 )
 from app.schemas.github import GitHubRepository
 from app.services.portfolio_repository_selection import (
+    MAX_ANALYZED_REPOSITORIES,
     select_portfolio_repositories,
 )
 
@@ -149,6 +150,26 @@ def test_input_order_does_not_change_normalized_output() -> None:
     )
 
     assert forward.model_dump() == reversed_input.model_dump()
+
+
+@pytest.mark.parametrize("repository_count", [39, 40, 41])
+def test_caps_eligible_repositories_at_boundary(
+    repository_count: int,
+) -> None:
+    repositories = [create_repository(f"repo-{index:02d}") for index in range(repository_count)]
+
+    result = select_portfolio_repositories(list(reversed(repositories)))
+
+    assert [repository.name for repository in result.selected] == [
+        f"repo-{index:02d}" for index in range(min(repository_count, MAX_ANALYZED_REPOSITORIES))
+    ]
+    assert [excluded.repository.name for excluded in result.excluded] == [
+        f"repo-{index:02d}" for index in range(MAX_ANALYZED_REPOSITORIES, repository_count)
+    ]
+    assert all(
+        excluded.reasons == [PortfolioRepositoryExclusionReason.ANALYSIS_LIMIT]
+        for excluded in result.excluded
+    )
 
 
 def test_rejects_duplicate_repository_identity() -> None:

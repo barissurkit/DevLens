@@ -93,7 +93,7 @@ Supported operational persistence failures do not necessarily make a completed a
 
 ### Versioned Cache
 
-Deterministic analysis snapshots are stored as PostgreSQL JSONB payloads. Freshness uses `analysis_generated_at` with a default TTL of 900 seconds. Schema compatibility and `ANALYSIS_ENGINE_VERSION = v2` are checked before reuse, so an old or incompatible snapshot does not silently become authoritative. There is no Redis layer. A persisted interpretation payload may exist, but interpretation is not treated as a reusable AI cache authority.
+Deterministic analysis snapshots are stored as PostgreSQL JSONB payloads. Freshness uses `analysis_generated_at` with a default TTL of 900 seconds. Schema compatibility and `ANALYSIS_ENGINE_VERSION = v3` are checked before reuse, so an old or incompatible snapshot does not silently become authoritative. There is no Redis layer. A persisted interpretation payload may exist, but interpretation is not treated as a reusable AI cache authority.
 
 ## Observability and Privacy
 

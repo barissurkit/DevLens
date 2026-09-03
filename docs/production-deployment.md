@@ -79,7 +79,7 @@ Normal application responses include a server-generated `X-Request-ID`. Structur
 
 ## Analysis Verification
 
-`POST /api/v1/analysis` returns deterministic repository and portfolio analysis. The PostgreSQL snapshot cache reuses only fresh snapshots with compatible schema and `ANALYSIS_ENGINE_VERSION` (`v2`). The default freshness window is 900 seconds. Supported cache read failures fail open, and persistence writes are best-effort.
+`POST /api/v1/analysis` returns deterministic repository and portfolio analysis. The PostgreSQL snapshot cache reuses only fresh snapshots with compatible schema and `ANALYSIS_ENGINE_VERSION` (`v3`). The default freshness window is 900 seconds. Supported cache read failures fail open, and persistence writes are best-effort.
 
 ## Interpretation Verification
 

@@ -9,7 +9,7 @@ from app.schemas.github import GitHubUser
 from app.services.analysis_snapshot_persistence import AnalysisSnapshotPersistenceService
 from app.services.analysis_snapshot_cache import AnalysisSnapshotCacheService
 from app.services.portfolio_history import PortfolioHistoryService
-from app.services.github.client import GitHubClient
+from app.services.github.client import GitHubClient, GitHubMalformedResponseError, GitHubRequestBudgetExceeded
 
 router = APIRouter(
     prefix="/api/v1/github",
@@ -67,5 +67,7 @@ async def get_github_user(
         httpx.RequestError,
         httpx.HTTPStatusError,
         ValidationError,
+        GitHubMalformedResponseError,
+        GitHubRequestBudgetExceeded,
     ) as exc:
         raise map_github_exception(exc) from exc

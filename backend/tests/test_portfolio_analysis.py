@@ -21,6 +21,7 @@ from app.schemas.analysis import (
 )
 from app.schemas.github import GitHubRepository
 from app.services.github.client import GitHubClient
+from app.services.github.client import GitHubMalformedResponseError
 import app.services.portfolio_analysis as portfolio_analysis_module
 from app.services.portfolio_analysis import (
     DEFAULT_MAX_CONCURRENCY,
@@ -497,6 +498,33 @@ def test_operational_timeout_is_isolated_from_successful_repositories(
     ]
     assert result.has_failures is True
     assert score_mock.call_count == 2
+
+
+def test_malformed_provider_response_is_isolated_from_successful_repositories(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    repositories = [create_repository("valid"), create_repository("malformed")]
+
+    async def fake_analyze_repository(*, owner, repository, client):
+        if repository.name == "malformed":
+            raise GitHubMalformedResponseError("invalid tree")
+        return create_analysis(repository)
+
+    monkeypatch.setattr(
+        portfolio_analysis_module, "analyze_repository", fake_analyze_repository
+    )
+
+    result = asyncio.run(
+        analyze_portfolio_repositories(
+            owner="octocat",
+            selection=create_selection(repositories),
+            client=AsyncMock(spec=GitHubClient),
+        )
+    )
+
+    assert [item.repository.name for item in result.repositories] == ["valid"]
+    assert result.failures[0].code == PortfolioRepositoryFailureCode.GITHUB_UPSTREAM_ERROR
+    assert result.has_failures is True
 
 
 @pytest.mark.parametrize(

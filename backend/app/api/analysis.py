@@ -17,6 +17,7 @@ from app.schemas.analysis import GitHubPortfolioAnalysisResponse, PortfolioAnaly
 from app.services.analysis_snapshot_persistence import AnalysisSnapshotPersistenceService
 from app.services.analysis_snapshot_cache import AnalysisSnapshotCacheService
 from app.services.github.client import GitHubClient
+from app.services.github.client import GitHubMalformedResponseError, GitHubRequestBudgetExceeded
 from app.services.github_portfolio_analysis import (
     analyze_github_portfolio as run_github_portfolio_analysis,
 )
@@ -80,6 +81,8 @@ async def analyze_portfolio(
         httpx.RequestError,
         httpx.HTTPStatusError,
         ValidationError,
+        GitHubMalformedResponseError,
+        GitHubRequestBudgetExceeded,
     ) as exc:
         raise map_github_exception(exc) from exc
     analysis_generated_at = datetime.now(timezone.utc)

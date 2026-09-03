@@ -9,9 +9,13 @@ from app.services.github.client import (
     IMPORTANT_REPOSITORY_FILE_PATHS,
     MAX_FILE_SIZE_BYTES,
     MAX_REPOSITORY_PAGES,
+    MAX_TREE_ENTRIES,
     REPOSITORIES_PER_PAGE,
+    GitHubMalformedResponseError,
+    GitHubRequestBudget,
     GitHubClient,
     decode_github_file_content,
+    use_github_request_budget,
 )
 
 
@@ -519,6 +523,68 @@ def test_get_repository_tree_preserves_truncated_response() -> None:
         "backend/tests/test_api.py",
     ]
     assert result.truncated is True
+
+
+@pytest.mark.parametrize(
+    ("entry_count", "expected_truncated"),
+    [(MAX_TREE_ENTRIES - 1, False), (MAX_TREE_ENTRIES, False), (MAX_TREE_ENTRIES + 1, True)],
+)
+def test_get_repository_tree_caps_path_processing_at_boundary(
+    entry_count: int,
+    expected_truncated: bool,
+) -> None:
+    payload = create_github_tree_payload()
+    payload["tree"] = [
+        {"path": f"src/{index}.py", "type": "blob"}
+        for index in range(entry_count)
+    ]
+
+    client = GitHubClient(
+        create_settings(),
+        transport=httpx.MockTransport(lambda request: httpx.Response(200, json=payload)),
+    )
+
+    result = asyncio.run(
+        client.get_repository_tree(
+            owner="octocat", repository="devlens", ref="main"
+        )
+    )
+
+    assert len(result.paths) == min(entry_count, MAX_TREE_ENTRIES)
+    assert result.truncated is expected_truncated
+
+
+def test_provider_request_budget_stops_calls_after_exhaustion() -> None:
+    calls = 0
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        nonlocal calls
+        calls += 1
+        return httpx.Response(200, json=create_github_user_payload())
+
+    client = GitHubClient(
+        create_settings(), transport=httpx.MockTransport(handler)
+    )
+    budget = GitHubRequestBudget(limit=1)
+
+    with use_github_request_budget(budget):
+        asyncio.run(client.get_user("octocat"))
+        with pytest.raises(RuntimeError, match="budget exhausted"):
+            asyncio.run(client.get_user("octocat"))
+
+    assert calls == 1
+
+
+def test_malformed_user_response_has_typed_provider_error() -> None:
+    client = GitHubClient(
+        create_settings(),
+        transport=httpx.MockTransport(
+            lambda request: httpx.Response(200, json={"id": "wrong"})
+        ),
+    )
+
+    with pytest.raises(GitHubMalformedResponseError):
+        asyncio.run(client.get_user("octocat"))
 
 
 """

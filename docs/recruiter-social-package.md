@@ -90,7 +90,7 @@ For each repository, the pipeline examines the README, recursive tree, and selec
 
 Gemini is intentionally downstream of that process. The backend builds a reduced structured interpretation context and sends it to Gemini only when the optional provider is configured. Gemini can explain deterministic strengths and improvement areas and produce a grounded recommendation, but schema and signal-reference validation prevents it from inventing evidence or modifying scores. If Gemini is unavailable, the API returns a stable unavailable state while preserving deterministic analysis.
 
-Snapshots are persisted in PostgreSQL JSONB with a 900-second default TTL, `analysis_generated_at`, schema compatibility, and `ANALYSIS_ENGINE_VERSION = v2`. The production topology is separate Render frontend/backend services, Neon PostgreSQL, GitHub API, optional Gemini, and a one-shot Alembic migration. The key engineering decision was treating AI as an interpretation capability rather than the authority for measurable analysis.
+Snapshots are persisted in PostgreSQL JSONB with a 900-second default TTL, `analysis_generated_at`, schema compatibility, and `ANALYSIS_ENGINE_VERSION = v3`. The production topology is separate Render frontend/backend services, Neon PostgreSQL, GitHub API, optional Gemini, and a one-shot Alembic migration. The key engineering decision was treating AI as an interpretation capability rather than the authority for measurable analysis.
 
 ### Turkish Equivalent — Yaklaşık İki Dakika
 
@@ -102,7 +102,7 @@ Her repository için README, recursive tree ve seçili dependency manifest’ler
 
 Gemini bu sürecin sonrasında, ayrı bir interpretation katmanı olarak çalışıyor. Backend reduced structured context oluşturup yalnızca optional provider configured ise Gemini’ye gönderiyor. Gemini deterministic strength ve improvement alanlarını açıklayabilir ve grounded recommendation üretebilir; ancak evidence uyduramaz veya score değiştiremez. Schema ve signal-reference validation bu sınırı kontrol ediyor. Gemini kullanılamadığında stable unavailable sonucu dönüyor ve deterministic analysis korunuyor.
 
-Snapshot’lar PostgreSQL JSONB içinde 900 saniyelik default TTL, `analysis_generated_at`, schema compatibility ve `ANALYSIS_ENGINE_VERSION = v2` ile tutuluyor. Production topology Render frontend/backend servisleri, Neon PostgreSQL, GitHub API, optional Gemini ve one-shot Alembic migration’dan oluşuyor. Temel teknik kararım, AI’ı ölçülebilir analysis’in otoritesi değil, interpretation capability olarak konumlandırmaktı.
+Snapshot’lar PostgreSQL JSONB içinde 900 saniyelik default TTL, `analysis_generated_at`, schema compatibility ve `ANALYSIS_ENGINE_VERSION = v3` ile tutuluyor. Production topology Render frontend/backend servisleri, Neon PostgreSQL, GitHub API, optional Gemini ve one-shot Alembic migration’dan oluşuyor. Temel teknik kararım, AI’ı ölçülebilir analysis’in otoritesi değil, interpretation capability olarak konumlandırmaktı.
 
 ## Likely Interview Questions
 
@@ -120,7 +120,7 @@ The same public portfolio can require many GitHub requests. A fresh compatible s
 
 ### 4. Why use an analysis engine version?
 
-Changing analysis logic can change the meaning of a snapshot even if its JSON schema remains valid. `ANALYSIS_ENGINE_VERSION` makes cache compatibility explicit; the current engine version is `v2`.
+Changing analysis logic can change the meaning of a snapshot even if its JSON schema remains valid. `ANALYSIS_ENGINE_VERSION` makes cache compatibility explicit; the current engine version is `v3`.
 
 ### 5. What happens if Gemini fails?
 

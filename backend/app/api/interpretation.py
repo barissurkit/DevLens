@@ -25,6 +25,7 @@ from app.schemas.interpretation import (
     PublicPortfolioInterpretationResult,
 )
 from app.services.github.client import GitHubClient
+from app.services.github.client import GitHubMalformedResponseError, GitHubRequestBudgetExceeded
 from app.services.analysis_snapshot_persistence import AnalysisSnapshotPersistenceService
 from app.services.analysis_snapshot_cache import AnalysisSnapshotCacheService
 from app.services.portfolio_interpretation import interpret_github_portfolio
@@ -112,6 +113,8 @@ async def interpret_portfolio(
         httpx.RequestError,
         httpx.HTTPStatusError,
         ValidationError,
+        GitHubMalformedResponseError,
+        GitHubRequestBudgetExceeded,
     ) as exc:
         raise map_github_exception(exc) from exc
 

@@ -2,6 +2,9 @@ import base64
 import binascii
 import logging
 import time
+from contextlib import contextmanager
+from contextvars import ContextVar
+from collections.abc import Iterator
 from typing import Any
 
 import httpx
@@ -22,6 +25,53 @@ GITHUB_API_VERSION = "2026-03-10"
 REPOSITORIES_PER_PAGE = 100
 MAX_REPOSITORY_PAGES = 10
 MAX_FILE_SIZE_BYTES = 1_048_576
+MAX_PROVIDER_REQUESTS = 250
+MAX_TREE_ENTRIES = 10_000
+
+
+class GitHubMalformedResponseError(ValueError, TypeError):
+    """Raised when GitHub returns a structurally invalid response."""
+
+
+class GitHubRequestBudgetExceeded(RuntimeError):
+    """Raised when one analysis operation reaches its provider request budget."""
+
+
+class GitHubRequestBudget:
+    def __init__(self, limit: int = MAX_PROVIDER_REQUESTS) -> None:
+        self.limit = limit
+        self.used = 0
+
+    def consume(self) -> None:
+        if self.used >= self.limit:
+            emit_event(
+                logger,
+                "github.request_budget.exhausted",
+                level=logging.WARNING,
+                provider="github",
+                operation="analysis",
+                error_category="request_budget_exhausted",
+            )
+            raise GitHubRequestBudgetExceeded(
+                "GitHub provider request budget exhausted."
+            )
+        self.used += 1
+
+
+_REQUEST_BUDGET: ContextVar[GitHubRequestBudget | None] = ContextVar(
+    "devlens_github_request_budget", default=None
+)
+
+
+@contextmanager
+def use_github_request_budget(
+    budget: GitHubRequestBudget,
+) -> Iterator[GitHubRequestBudget]:
+    token = _REQUEST_BUDGET.set(budget)
+    try:
+        yield budget
+    finally:
+        _REQUEST_BUDGET.reset(token)
 
 IMPORTANT_REPOSITORY_FILE_PATHS: tuple[str, ...] = (
     "README.md",
@@ -78,6 +128,9 @@ class GitHubClient:
         url: str,
         **kwargs: Any,
     ) -> httpx.Response:
+        budget = _REQUEST_BUDGET.get()
+        if budget is not None:
+            budget.consume()
         started_at = time.monotonic()
         try:
             response = await client.request(method, url, **kwargs)
@@ -166,26 +219,32 @@ class GitHubClient:
             )
         response.raise_for_status()
 
-        payload = response.json()
+        try:
+            payload = response.json()
+        except ValueError as error:
+            raise GitHubMalformedResponseError(
+                "GitHub tree response is not valid JSON."
+            ) from error
 
         if not isinstance(payload, dict):
-            raise TypeError("GitHub tree response must be a JSON object.")
+            raise GitHubMalformedResponseError("GitHub tree response must be a JSON object.")
 
         truncated = payload.get("truncated")
 
         if not isinstance(truncated, bool):
-            raise TypeError("GitHub tree response must include a boolean truncated field.")
+            raise GitHubMalformedResponseError("GitHub tree response must include a boolean truncated field.")
 
         tree_entries = payload.get("tree")
 
         if not isinstance(tree_entries, list):
-            raise TypeError("GitHub tree response must include a tree array.")
+            raise GitHubMalformedResponseError("GitHub tree response must include a tree array.")
 
         paths: list[str] = []
 
-        for entry in tree_entries:
+        tree_was_capped = len(tree_entries) > MAX_TREE_ENTRIES
+        for entry in tree_entries[:MAX_TREE_ENTRIES]:
             if not isinstance(entry, dict):
-                raise TypeError("GitHub tree entries must be JSON objects.")
+                raise GitHubMalformedResponseError("GitHub tree entries must be JSON objects.")
 
             if entry.get("type") != "blob":
                 continue
@@ -193,13 +252,13 @@ class GitHubClient:
             path = entry.get("path")
 
             if not isinstance(path, str):
-                raise TypeError("GitHub file tree entry must include a string path.")
+                raise GitHubMalformedResponseError("GitHub file tree entry must include a string path.")
 
             paths.append(path)
 
         return GitHubRepositoryTree(
             paths=paths,
-            truncated=truncated,
+            truncated=truncated or tree_was_capped,
         )
 
     async def get_user(self, username: str) -> GitHubUser:
@@ -209,7 +268,12 @@ class GitHubClient:
             )
             response.raise_for_status()
 
-        return GitHubUser.model_validate(response.json())
+        try:
+            return GitHubUser.model_validate(response.json())
+        except (TypeError, ValueError) as error:
+            raise GitHubMalformedResponseError(
+                "GitHub user response has an invalid shape."
+            ) from error
 
     async def get_authenticated_user(self, access_token: str) -> GitHubUser:
         headers = {
@@ -251,10 +315,15 @@ class GitHubClient:
 
             response.raise_for_status()
 
-        payload = response.json()
+        try:
+            payload = response.json()
+        except ValueError as error:
+            raise GitHubMalformedResponseError(
+                "GitHub file response is not valid JSON."
+            ) from error
 
         if not isinstance(payload, dict) or payload.get("type") != "file":
-            raise TypeError("GitHub content response must describe a file.")
+            raise GitHubMalformedResponseError("GitHub content response must describe a file.")
 
         encoded_content = payload.get("content")
         encoding = payload.get("encoding")
@@ -262,28 +331,33 @@ class GitHubClient:
         size = payload.get("size")
 
         if not isinstance(size, int) or isinstance(size, bool):
-            raise TypeError("GitHub file response must include an integer size")
+            raise GitHubMalformedResponseError("GitHub file response must include an integer size")
 
         if size > MAX_FILE_SIZE_BYTES:
-            raise ValueError(
+            raise GitHubMalformedResponseError(
                 f"Github file exceeds the maximum size of {MAX_FILE_SIZE_BYTES} bytes."
             )
 
         if not isinstance(encoded_content, str) or not isinstance(encoding, str):
-            raise TypeError("GitHub file response must include string content and encoding.")
+            raise GitHubMalformedResponseError("GitHub file response must include string content and encoding.")
 
-        return GitHubFileContent.model_validate(
-            {
-                "path": payload.get("path"),
-                "name": payload.get("name"),
-                "content": decode_github_file_content(
-                    content=encoded_content,
-                    encoding=encoding,
-                ),
-                "size": size,
-                "sha": payload.get("sha"),
-            }
-        )
+        try:
+            return GitHubFileContent.model_validate(
+                {
+                    "path": payload.get("path"),
+                    "name": payload.get("name"),
+                    "content": decode_github_file_content(
+                        content=encoded_content,
+                        encoding=encoding,
+                    ),
+                    "size": size,
+                    "sha": payload.get("sha"),
+                }
+            )
+        except (TypeError, ValueError) as error:
+            raise GitHubMalformedResponseError(
+                "GitHub file response has an invalid shape or content."
+            ) from error
 
     async def get_important_files(
         self,
@@ -323,12 +397,26 @@ class GitHubClient:
                 )
                 response.raise_for_status()
 
-                payload = response.json()
+                try:
+                    payload = response.json()
+                except ValueError as error:
+                    raise GitHubMalformedResponseError(
+                        "GitHub repositories response is not valid JSON."
+                    ) from error
 
                 if not isinstance(payload, list):
-                    raise TypeError("GitHub repositories response must be a JSON array.")
+                    raise GitHubMalformedResponseError(
+                        "GitHub repositories response must be a JSON array."
+                    )
 
-                repositories.extend(GitHubRepository.model_validate(item) for item in payload)
+                try:
+                    repositories.extend(
+                        GitHubRepository.model_validate(item) for item in payload
+                    )
+                except (TypeError, ValueError) as error:
+                    raise GitHubMalformedResponseError(
+                        "GitHub repositories response has an invalid shape."
+                    ) from error
 
                 if "next" not in response.links:
                     return repositories
