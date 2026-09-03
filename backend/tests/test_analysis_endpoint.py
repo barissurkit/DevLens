@@ -21,6 +21,8 @@ from app.schemas.analysis import (
     PortfolioRepositoryAnalysis,
     PortfolioRepositorySelection,
     PortfolioScore,
+    PortfolioScoreDimensionResult,
+    PortfolioScoreRuleResult,
     GitHubPortfolioAnalysisResponse,
 )
 from app.schemas.github import GitHubUser
@@ -193,12 +195,62 @@ def test_analysis_endpoint_calls_application_service_once() -> None:
         "intelligence",
         "score",
         "viewer_context",
+        "guided_improvements",
     }
     assert response.json()["score"]["overall_score"] is None
+    assert response.json()["guided_improvements"] == []
     application_mock.assert_awaited_once_with(
         username="synthetic-user",
         client=mock_client,
     )
+
+
+def test_owner_analysis_projects_failing_guidance_from_deterministic_rule() -> None:
+    result = create_result()
+    result.score = PortfolioScore(
+        version="v1",
+        is_available=True,
+        overall_score=0,
+        scored_repository_count=3,
+        dimensions=[PortfolioScoreDimensionResult(
+            key="documentation_consistency",
+            label="Dokümantasyon Tutarlılığı",
+            points_earned=0,
+            points_possible=50,
+            score=0,
+            rules=[PortfolioScoreRuleResult(
+                key="readme_usage",
+                label="README kullanımı",
+                weight=9,
+                detected_repository_count=0,
+                analyzed_repository_count=3,
+            )],
+        )],
+        is_partial=False,
+        limitations=[],
+    )
+    use_authenticated_user(User(github_user_id=1, github_login="synthetic-user"))
+    use_mock_client(AsyncMock(spec=GitHubClient))
+    application_mock = AsyncMock(return_value=result)
+    original = analysis_api.run_github_portfolio_analysis
+    analysis_api.run_github_portfolio_analysis = application_mock
+    try:
+        response = request_app({"username": "synthetic-user"})
+    finally:
+        analysis_api.run_github_portfolio_analysis = original
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["viewer_context"] == {"is_owner": True, "mode": "my_workspace"}
+    assert body["guided_improvements"][0]["rule_key"] == "readme_usage"
+    assert body["guided_improvements"][0]["verification"] == {
+        "detected_repository_count": 0,
+        "analyzed_repository_count": 3,
+        "current_state": "needs_improvement",
+        "analysis_available": True,
+        "analysis_partial": False,
+        "reanalysis_required": True,
+    }
 
 
 def test_owner_analysis_survives_history_projection_failure(monkeypatch) -> None:

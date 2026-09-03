@@ -18,6 +18,7 @@ from app.api.github import (
 )
 from app.api.auth import get_optional_authenticated_user
 from app.main import app
+from app.schemas.analysis import PortfolioScore, PortfolioScoreDimensionResult, PortfolioScoreRuleResult
 from app.schemas.interpretation import (
     InterpretationUnavailableReason,
     PortfolioInterpretation,
@@ -136,7 +137,8 @@ def test_available_response_is_composite_and_emits_one_safe_outcome_event(
 
     assert response.status_code == 200
     body = response.json()
-    assert set(body) == {"analysis", "interpretation", "viewer_context"}
+    assert set(body) == {"analysis", "interpretation", "viewer_context", "guided_improvements"}
+    assert body["guided_improvements"] == []
     assert body["viewer_context"] == {"is_owner": False, "mode": "explore"}
     assert body["interpretation"] == {
         "status": "available",
@@ -165,6 +167,53 @@ def test_available_response_is_composite_and_emits_one_safe_outcome_event(
     assert not hasattr(events[0], "error_category")
     assert "synthetic-user" not in caplog.text
     assert "Grounded." not in caplog.text
+
+
+def test_owner_interpretation_projects_guidance_when_gemini_is_unavailable() -> None:
+    analysis = create_result()
+    analysis.score = PortfolioScore(
+        version="v1",
+        is_available=True,
+        overall_score=0,
+        scored_repository_count=3,
+        dimensions=[PortfolioScoreDimensionResult(
+            key="documentation_consistency",
+            label="Dokümantasyon Tutarlılığı",
+            points_earned=0,
+            points_possible=50,
+            score=0,
+            rules=[PortfolioScoreRuleResult(
+                key="readme_usage",
+                label="README kullanımı",
+                weight=9,
+                detected_repository_count=0,
+                analyzed_repository_count=3,
+            )],
+        )],
+        is_partial=False,
+        limitations=[],
+    )
+    use_authenticated_user(SimpleNamespace(id=uuid4(), github_user_id=1))
+    use_mock_cache(AsyncMock(get_fresh_analysis=AsyncMock(return_value=None)))
+    use_mock_persistence(AsyncMock())
+    use_mock_gemini(SimpleNamespace(interpret=AsyncMock(side_effect=AssertionError("Gemini should not be required by guidance"))))
+    original = interpretation_api.analyze_and_interpret_github_portfolio
+    interpretation_api.analyze_and_interpret_github_portfolio = AsyncMock(
+        return_value=SimpleNamespace(
+            analysis=analysis,
+            interpretation=PortfolioInterpretationResult(
+                available=False,
+                reason=InterpretationUnavailableReason.NOT_CONFIGURED,
+            ),
+        )
+    )
+    try:
+        response = request_app({"username": "synthetic-user"})
+    finally:
+        interpretation_api.analyze_and_interpret_github_portfolio = original
+
+    assert response.status_code == 200
+    assert response.json()["guided_improvements"][0]["rule_key"] == "readme_usage"
 
 
 def test_interpretation_reuses_only_fresh_analysis_and_runs_current_policy() -> None:

@@ -61,7 +61,9 @@ class AnalysisSnapshotRepository:
                 INTERPRETATION_SNAPSHOT_SCHEMA_VERSION if interpretation is not None else None
             ),
             # Viewer context is request-scoped authorization metadata, never snapshot data.
-            analysis_payload=analysis.model_dump(mode="json", exclude={"viewer_context"}),
+            analysis_payload=analysis.model_dump(
+                mode="json", exclude={"viewer_context", "guided_improvements"}
+            ),
             interpretation_payload=(
                 _interpretation_adapter.dump_python(interpretation, mode="json")
                 if interpretation is not None

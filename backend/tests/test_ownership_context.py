@@ -62,13 +62,16 @@ def test_snapshot_serialization_excludes_viewer_context() -> None:
 
     analysis = create_result()
     response = GitHubPortfolioAnalysisResponse(
-        **analysis.model_dump(), viewer_context=ViewerContext(is_owner=True, mode="my_workspace")
+        **analysis.model_dump(),
+        viewer_context=ViewerContext(is_owner=True, mode="my_workspace"),
+        guided_improvements=[],
     )
     session = Session()
     record = asyncio.run(
         AnalysisSnapshotRepository(session).create(github_username="same-login", analysis=response)
     )
     assert "viewer_context" not in session.row.analysis_payload
+    assert "guided_improvements" not in session.row.analysis_payload
     assert record.analysis.user.github_user_id == 1
 
 
