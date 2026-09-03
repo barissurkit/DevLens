@@ -18,9 +18,24 @@ from app.schemas.github import (
 )
 from app.services.github.client import (
     IMPORTANT_REPOSITORY_FILE_PATHS,
+    GitHubRepositoryPaginationLimitExceeded,
     GitHubClient,
+    _REQUEST_BUDGET,
 )
 from app.services.github_portfolio_analysis import analyze_github_portfolio
+
+
+def test_pagination_failure_resets_request_budget_context() -> None:
+    client = AsyncMock(spec=GitHubClient)
+    client.get_user.return_value = create_user()
+    client.get_repositories.side_effect = GitHubRepositoryPaginationLimitExceeded(
+        "synthetic pagination limit"
+    )
+
+    with pytest.raises(GitHubRepositoryPaginationLimitExceeded):
+        asyncio.run(analyze_github_portfolio(username="octocat", client=client))
+
+    assert _REQUEST_BUDGET.get() is None
 
 
 def create_user(*, public_repos: int = 0) -> GitHubUser:

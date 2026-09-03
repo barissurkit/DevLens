@@ -1,7 +1,11 @@
 import httpx
 from fastapi import HTTPException, status
 from pydantic import BaseModel, ValidationError
-from app.services.github.client import GitHubMalformedResponseError, GitHubRequestBudgetExceeded
+from app.services.github.client import (
+    GitHubMalformedResponseError,
+    GitHubRepositoryPaginationLimitExceeded,
+    GitHubRequestBudgetExceeded,
+)
 
 
 class APIErrorDetail(BaseModel):
@@ -82,6 +86,13 @@ def map_github_exception(error: Exception) -> HTTPException:
             status.HTTP_502_BAD_GATEWAY,
             "github_upstream_error",
             "GitHub analiz bütçesi aşıldı.",
+        )
+
+    if isinstance(error, GitHubRepositoryPaginationLimitExceeded):
+        return _error(
+            status.HTTP_502_BAD_GATEWAY,
+            "github_upstream_error",
+            "GitHub repository listesi analiz sınırına ulaştı.",
         )
 
     raise error

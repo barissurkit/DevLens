@@ -25,7 +25,10 @@ from app.schemas.interpretation import (
     PortfolioInterpretationResult,
 )
 from app.services.github.client import GitHubClient
-from app.services.github.client import GitHubMalformedResponseError
+from app.services.github.client import (
+    GitHubMalformedResponseError,
+    GitHubRepositoryPaginationLimitExceeded,
+)
 from app.services.analysis_snapshot_cache import CachedAnalysis
 from app.services.portfolio_history import PortfolioHistoryService
 from app.config import Settings
@@ -477,3 +480,30 @@ def test_interpretation_maps_malformed_provider_data_to_sanitized_502() -> None:
     assert response.status_code == 502
     assert response.json()["detail"]["code"] == "github_upstream_error"
     assert "raw provider details" not in response.text
+
+
+def test_interpretation_maps_repository_pagination_limit_without_gemini() -> None:
+    mock_github = AsyncMock(spec=GitHubClient)
+    use_mock_github(mock_github)
+    gemini = SimpleNamespace(interpret=AsyncMock(side_effect=AssertionError("Gemini must not be called")))
+    use_mock_gemini(gemini)
+    original = interpretation_api.analyze_and_interpret_github_portfolio
+    composition = AsyncMock(
+        side_effect=GitHubRepositoryPaginationLimitExceeded("raw pagination details")
+    )
+    interpretation_api.analyze_and_interpret_github_portfolio = composition
+
+    try:
+        response = request_app({"username": "synthetic-user"})
+    finally:
+        interpretation_api.analyze_and_interpret_github_portfolio = original
+
+    assert response.status_code == 502
+    assert response.json() == {
+        "detail": {
+            "code": "github_upstream_error",
+            "message": "GitHub repository listesi analiz sınırına ulaştı.",
+        }
+    }
+    assert gemini.interpret.await_count == 0
+    assert "raw pagination details" not in response.text
