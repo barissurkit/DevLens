@@ -9,10 +9,12 @@ import { ActionPlan } from "./action-plan";
 import { AISuggestedActions } from "./ai-suggested-actions";
 import { AnalysisHistory } from "./analysis-history";
 import { RepositoryAnalysisSection } from "./repository-analysis-section";
+import { GuidedImprovementSection } from "./guided-improvement-section";
 import { categoryLabel, portfolioModeLabel } from "../lib/presentation";
 
 interface AnalysisResultShellProps {
   result: GitHubPortfolioInterpretationResponse;
+  onReanalyze: () => void;
 }
 
 const DIMENSION_ORDER = ["documentation_consistency", "testing_automation_adoption", "repository_hygiene_consistency"];
@@ -27,7 +29,7 @@ const DIMENSION_DESCRIPTIONS: Record<string, string> = {
   repository_hygiene_consistency: ".gitignore, LICENSE ve CONTRIBUTING gibi repository pratiği sinyallerinin görünümü.",
 };
 
-export function AnalysisResultShell({ result }: AnalysisResultShellProps) {
+export function AnalysisResultShell({ result, onReanalyze }: AnalysisResultShellProps) {
   const dashboardHeadingRef = useRef<HTMLHeadingElement>(null);
   const { analysis, interpretation, viewer_context } = result;
   const { aggregation, intelligence, score, selection, user } = analysis;
@@ -101,6 +103,7 @@ export function AnalysisResultShell({ result }: AnalysisResultShellProps) {
       {limitations.length > 0 && <section aria-labelledby="limitations-heading" className="rounded-2xl border border-slate-200 bg-slate-50 p-6 sm:p-8"><SectionHeading id="limitations-heading" title="Analiz notları" /><ul className="mt-4 list-disc space-y-2 pl-5 text-sm leading-6 text-slate-600">{limitations.map((limitation) => <li key={limitation}>{limitation}</li>)}</ul></section>}
 
       <PortfolioInterpretationSection analysis={analysis} interpretation={interpretation} />
+      {viewer_context.is_owner && <GuidedImprovementSection improvements={result.guided_improvements} onReanalyze={onReanalyze} />}
       {viewer_context.mode === "my_workspace" && <>
         <AnalysisHistory key={user.username} visible={viewer_context.is_owner} />
         <AISuggestedActions key={user.username} username={user.username} />

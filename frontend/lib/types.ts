@@ -7,6 +7,25 @@ export interface ViewerContext {
   mode: "my_workspace" | "explore";
 }
 
+export type GuidedImprovementState = "needs_improvement" | "criteria_met";
+
+export interface GuidedImprovementVerification {
+  detected_repository_count: number;
+  analyzed_repository_count: number;
+  current_state: GuidedImprovementState;
+  analysis_available: boolean;
+  analysis_partial: boolean;
+  reanalysis_required: boolean;
+}
+
+export interface GuidedImprovement {
+  rule_key: string;
+  title: string;
+  why: string;
+  steps: string[];
+  verification: GuidedImprovementVerification;
+}
+
 export interface AuthenticatedUser {
   github_login: string;
   display_name: string | null;
@@ -314,6 +333,7 @@ export interface GitHubPortfolioAnalysis {
 
 export interface GitHubPortfolioAnalysisResponse extends GitHubPortfolioAnalysis {
   viewer_context: ViewerContext;
+  guided_improvements: GuidedImprovement[];
 }
 
 export interface OperationalErrorDetail {
@@ -375,4 +395,5 @@ export interface GitHubPortfolioInterpretationResponse {
   analysis: GitHubPortfolioAnalysis;
   interpretation: PublicPortfolioInterpretationResult;
   viewer_context: ViewerContext;
+  guided_improvements: GuidedImprovement[];
 }
