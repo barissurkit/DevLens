@@ -525,11 +525,18 @@ def test_get_repository_tree_preserves_truncated_response() -> None:
     assert result.truncated is True
 
 
-def test_get_repository_tree_caps_path_processing_and_marks_partial() -> None:
+@pytest.mark.parametrize(
+    ("entry_count", "expected_truncated"),
+    [(MAX_TREE_ENTRIES - 1, False), (MAX_TREE_ENTRIES, False), (MAX_TREE_ENTRIES + 1, True)],
+)
+def test_get_repository_tree_caps_path_processing_at_boundary(
+    entry_count: int,
+    expected_truncated: bool,
+) -> None:
     payload = create_github_tree_payload()
     payload["tree"] = [
         {"path": f"src/{index}.py", "type": "blob"}
-        for index in range(MAX_TREE_ENTRIES + 1)
+        for index in range(entry_count)
     ]
 
     client = GitHubClient(
@@ -543,8 +550,8 @@ def test_get_repository_tree_caps_path_processing_and_marks_partial() -> None:
         )
     )
 
-    assert len(result.paths) == MAX_TREE_ENTRIES
-    assert result.truncated is True
+    assert len(result.paths) == min(entry_count, MAX_TREE_ENTRIES)
+    assert result.truncated is expected_truncated
 
 
 def test_provider_request_budget_stops_calls_after_exhaustion() -> None:
