@@ -81,12 +81,12 @@ def test_optional_analysis_session_clears_invalid_cookie(monkeypatch) -> None:
     settings = Settings(
         _env_file=None,
         database_url="postgresql+asyncpg://local/test",
-        auth_cookie_secure=False,
+        environment="test",
     )
-    monkeypatch.setattr(auth_api, "get_settings", lambda: settings)
     monkeypatch.setattr(auth_api, "get_session_factory", lambda _: lambda: Session())
     monkeypatch.setattr(auth_api, "get_user_by_session_token", AsyncMock(return_value=None))
     request = Request({"type": "http", "headers": [(b"cookie", b"devlens_session=expired")]})
+    request.scope["app"] = type("App", (), {"state": type("State", (), {"settings": settings})()})()
     response = Response()
 
     assert asyncio.run(auth_api.get_optional_authenticated_user(request, response)) is None

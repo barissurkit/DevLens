@@ -166,11 +166,13 @@ Without `DATABASE_URL`, the API can run without persistence and cache. Without `
 
 See [`.env.example`](.env.example) for the local configuration template.
 
-- **Backend runtime:** `GITHUB_TOKEN`, `GITHUB_API_BASE_URL`, `GEMINI_API_KEY`, `GEMINI_MODEL`, `DATABASE_URL`, `CORS_ALLOWED_ORIGINS`, and `ANALYSIS_CACHE_TTL_SECONDS`
+- **Backend runtime:** `ENVIRONMENT`, `AUTH_ENABLED`, `GITHUB_TOKEN`, `GITHUB_API_BASE_URL`, `GEMINI_API_KEY`, `GEMINI_MODEL`, `DATABASE_URL`, `CORS_ALLOWED_ORIGINS`, `FRONTEND_ORIGIN`, and `ANALYSIS_CACHE_TTL_SECONDS`. Production authentication additionally requires the complete GitHub OAuth tuple and a valid state-encryption key.
 - **Frontend build-time:** `NEXT_PUBLIC_API_BASE_URL`
 - **Local Compose:** `POSTGRES_DB`, `POSTGRES_USER`, and `POSTGRES_PASSWORD`
 
 `NEXT_PUBLIC_API_BASE_URL` is browser-visible configuration embedded at frontend build time. Backend secrets must never be placed in frontend code or `NEXT_PUBLIC_*` variables. The default Gemini model is `gemini-3.6-flash`; the deterministic cache freshness default is 900 seconds.
+
+Local examples use `ENVIRONMENT=development` and disabled authentication with localhost HTTP origins. Production must explicitly set `ENVIRONMENT=production` and `AUTH_ENABLED`; enabling authentication requires complete OAuth configuration, `DATABASE_URL`, HTTPS callback/frontend/CORS origins, and produces a Secure `__Host-devlens_session` cookie.
 
 ## API Surface
 
