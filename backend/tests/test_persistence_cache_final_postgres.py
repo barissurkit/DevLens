@@ -160,6 +160,7 @@ def test_cold_warm_analysis_and_process_restart_reuse(
         assert cold.json() == {
             **result.model_dump(mode="json"),
             "viewer_context": {"is_owner": False, "mode": "explore"},
+            "guided_improvements": [],
         }
         assert len(calls) == 1
         assert len(await _rows(database_url, "synthetic-user")) == 1

@@ -5,6 +5,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from app.db.normalization import normalize_github_username
 from app.schemas.github import GitHubRepository, GitHubUser
+from app.schemas.guided_improvement import GuidedImprovement
 
 
 class PortfolioAnalysisRequest(BaseModel):
@@ -280,3 +281,4 @@ class GitHubPortfolioAnalysis(BaseModel):
 
 class GitHubPortfolioAnalysisResponse(GitHubPortfolioAnalysis):
     viewer_context: ViewerContext
+    guided_improvements: list[GuidedImprovement] = Field(default_factory=list)

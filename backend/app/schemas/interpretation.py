@@ -4,6 +4,7 @@ from typing import Annotated, Literal
 from pydantic import BaseModel, Field, model_validator
 
 from app.schemas.analysis import GitHubPortfolioAnalysis, RepositoryCategory, ViewerContext
+from app.schemas.guided_improvement import GuidedImprovement
 
 
 class InterpretationSignal(BaseModel):
@@ -133,3 +134,4 @@ class GitHubPortfolioInterpretationResponse(BaseModel):
     analysis: GitHubPortfolioAnalysis
     interpretation: PublicPortfolioInterpretationResult
     viewer_context: ViewerContext
+    guided_improvements: list[GuidedImprovement] = Field(default_factory=list)

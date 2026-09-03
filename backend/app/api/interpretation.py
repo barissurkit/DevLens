@@ -35,6 +35,7 @@ from app.services.portfolio_interpretation_composition import (
 )
 from app.observability import emit_event
 from app.services.portfolio_history import PortfolioHistoryService
+from app.services.guided_improvement import build_guided_improvements
 
 router = APIRouter(
     prefix="/api/v1",
@@ -122,12 +123,14 @@ async def interpret_portfolio(
     if isinstance(public_interpretation, PublicInterpretationUnavailable):
         outcome_fields["error_category"] = public_interpretation.reason.value
     emit_event(logger, "interpretation.completed", **outcome_fields)
+    viewer_context = derive_viewer_context(
+        authenticated_user=authenticated_user, target_github_user=result.analysis.user
+    )
     response = GitHubPortfolioInterpretationResponse(
         analysis=result.analysis,
         interpretation=public_interpretation,
-        viewer_context=derive_viewer_context(
-            authenticated_user=authenticated_user, target_github_user=result.analysis.user
-        ),
+        viewer_context=viewer_context,
+        guided_improvements=build_guided_improvements(result.analysis, viewer_context),
     )
     await persistence.persist(
         analysis=response.analysis,

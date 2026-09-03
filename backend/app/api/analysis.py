@@ -21,6 +21,7 @@ from app.services.github_portfolio_analysis import (
     analyze_github_portfolio as run_github_portfolio_analysis,
 )
 from app.services.portfolio_history import PortfolioHistoryService
+from app.services.guided_improvement import build_guided_improvements
 
 router = APIRouter(
     prefix="/api/v1",
@@ -57,11 +58,13 @@ async def analyze_portfolio(
         request_kind="analysis",
     )
     if cached is not None:
+        viewer_context = derive_viewer_context(
+            authenticated_user=authenticated_user, target_github_user=cached.analysis.user
+        )
         response = GitHubPortfolioAnalysisResponse(
             **cached.analysis.model_dump(),
-            viewer_context=derive_viewer_context(
-                authenticated_user=authenticated_user, target_github_user=cached.analysis.user
-            ),
+            viewer_context=viewer_context,
+            guided_improvements=build_guided_improvements(cached.analysis, viewer_context),
         )
         if authenticated_user is not None and response.viewer_context.is_owner:
             await history.capture(user=authenticated_user, analysis=response)
@@ -86,11 +89,13 @@ async def analyze_portfolio(
         analysis_generated_at=analysis_generated_at,
         request_kind="analysis",
     )
+    viewer_context = derive_viewer_context(
+        authenticated_user=authenticated_user, target_github_user=analysis.user
+    )
     response = GitHubPortfolioAnalysisResponse(
         **analysis.model_dump(),
-        viewer_context=derive_viewer_context(
-            authenticated_user=authenticated_user, target_github_user=analysis.user
-        ),
+        viewer_context=viewer_context,
+        guided_improvements=build_guided_improvements(analysis, viewer_context),
     )
     if authenticated_user is not None and response.viewer_context.is_owner:
         await history.capture(user=authenticated_user, analysis=response)
