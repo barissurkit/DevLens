@@ -91,3 +91,16 @@ def test_complete_oauth_configuration_does_not_enable_auth_when_flag_is_false() 
     settings = _production_settings(auth_enabled=False)
     assert auth_api._configuration_error(settings) == "Authentication is not configured."
 
+
+def test_auth_disabled_does_not_create_github_auth_client(monkeypatch) -> None:
+    application = create_app(
+        _production_settings(auth_enabled=False)
+    )
+
+    def fail_if_called(settings: Settings):
+        raise AssertionError("GitHub auth client must not be created when auth is disabled")
+
+    monkeypatch.setattr(auth_api, "GitHubAuthClient", fail_if_called)
+    client = asyncio.run(auth_api.get_auth_github_client(_request_for(application)))
+
+    assert client is None

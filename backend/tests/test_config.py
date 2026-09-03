@@ -97,9 +97,39 @@ def test_environment_defaults_to_development_and_auth_is_opt_in() -> None:
     assert settings.auth_enabled is None
 
 
+@pytest.mark.parametrize("value, expected", [("true", True), ("false", False), ("1", True), ("0", False)])
+def test_auth_enabled_environment_values_parse_deterministically(
+    monkeypatch, value: str, expected: bool
+) -> None:
+    monkeypatch.setenv("AUTH_ENABLED", value)
+    assert Settings(_env_file=None).auth_enabled is expected
+
+
+def test_empty_and_whitespace_oauth_values_are_absent() -> None:
+    settings = Settings(
+        _env_file=None,
+        github_app_client_id=" ",
+        github_app_client_secret="",
+        github_app_callback_url="\t",
+        auth_state_encryption_key="  ",
+    )
+    assert settings.github_app_client_id is None
+    assert settings.github_app_client_secret is None
+    assert settings.github_app_callback_url is None
+    assert settings.auth_state_encryption_key is None
+
+
 def test_partial_oauth_configuration_is_rejected() -> None:
     with pytest.raises(ValueError, match="OAuth configuration is incomplete"):
         Settings(_env_file=None, github_app_client_id="client-id")
+
+
+@pytest.mark.parametrize("missing", range(4))
+def test_every_partial_oauth_combination_is_rejected(missing: int) -> None:
+    values = _auth_values()
+    values.pop(tuple(values)[missing])
+    with pytest.raises(ValueError, match="OAuth configuration is incomplete"):
+        Settings(_env_file=None, **values)
 
 
 def test_supplied_encryption_key_must_decode_to_32_bytes() -> None:
@@ -111,6 +141,18 @@ def test_supplied_encryption_key_must_decode_to_32_bytes() -> None:
             github_app_callback_url="https://api.example.com/api/v1/auth/github/callback",
             auth_state_encryption_key="aW52YWxpZA",
         )
+
+
+def test_invalid_encryption_key_characters_are_rejected_without_echoing_input() -> None:
+    with pytest.raises(ValueError, match="base64url encoded") as error:
+        Settings(
+            _env_file=None,
+            github_app_client_id="client-id",
+            github_app_client_secret="client-secret",
+            github_app_callback_url="https://api.example.com/api/v1/auth/github/callback",
+            auth_state_encryption_key="!" * 43,
+        )
+    assert "!!!!!!!!" not in str(error.value)
 
 
 def test_production_requires_explicit_auth_flag_and_https_origins() -> None:
@@ -144,6 +186,48 @@ def test_production_auth_requires_database_and_https_callback() -> None:
     )
     with pytest.raises(ValueError, match="callback must use HTTPS"):
         settings.validate_runtime_configuration()
+
+
+@pytest.mark.parametrize(
+    "callback",
+    [
+        "ftp://api.example.com/api/v1/auth/github/callback",
+        "//api.example.com/api/v1/auth/github/callback",
+        "https:///api/v1/auth/github/callback",
+        "https://user:password@api.example.com/api/v1/auth/github/callback",
+        "https://api.example.com/api/v1/auth/github/callback?x=1",
+        "https://api.example.com/api/v1/auth/github/callback#fragment",
+        "https://api.example.com/wrong",
+        "https://api.example.com/api/v1/auth/github/callback/",
+    ],
+)
+def test_callback_url_rejects_unsafe_or_wrong_shapes(callback: str) -> None:
+    with pytest.raises(ValueError, match="GITHUB_APP_CALLBACK_URL is invalid"):
+        Settings(
+            _env_file=None,
+            github_app_client_id="client-id",
+            github_app_client_secret="client-secret",
+            github_app_callback_url=callback,
+            auth_state_encryption_key=base64.urlsafe_b64encode(b"k" * 32).decode(),
+        )
+
+
+@pytest.mark.parametrize(
+    "callback",
+    [
+        "http://localhost:8000/api/v1/auth/github/callback",
+        "https://example.invalid/api/v1/auth/github/callback",
+        "https://example.invalid:8443/api/v1/auth/github/callback",
+    ],
+)
+def test_callback_url_accepts_valid_shapes(callback: str) -> None:
+    Settings(
+        _env_file=None,
+        github_app_client_id="client-id",
+        github_app_client_secret="client-secret",
+        github_app_callback_url=callback,
+        auth_state_encryption_key=base64.urlsafe_b64encode(b"k" * 32).decode(),
+    )
 
 
 def test_valid_production_configuration_passes_runtime_validation() -> None:

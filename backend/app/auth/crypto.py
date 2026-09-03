@@ -1,5 +1,6 @@
 import base64
 import hashlib
+import re
 import secrets
 
 from cryptography.exceptions import InvalidTag
@@ -15,8 +16,11 @@ class AuthStateCryptoError(ValueError):
 
 
 def decode_encryption_key(value: str) -> bytes:
+    if not re.fullmatch(r"[A-Za-z0-9_-]*={0,2}", value) or len(value.rstrip("=")) % 4 == 1:
+        raise AuthStateCryptoError("AUTH_STATE_ENCRYPTION_KEY must be base64url encoded.")
     try:
-        key = base64.urlsafe_b64decode(value.encode("ascii") + b"=" * (-len(value) % 4))
+        padded = value + "=" * (-len(value) % 4)
+        key = base64.b64decode(padded.encode("ascii"), altchars=b"-_", validate=True)
     except (ValueError, UnicodeEncodeError) as exc:
         raise AuthStateCryptoError("AUTH_STATE_ENCRYPTION_KEY must be base64url encoded.") from exc
     if len(key) != KEY_SIZE:
