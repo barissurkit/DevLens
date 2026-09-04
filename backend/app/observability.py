@@ -36,6 +36,7 @@ _SAFE_FIELDS = {
     "rate_limit_resource",
     "rate_limit_used",
     "retry_after_seconds",
+    "principal_kind",
 }
 
 

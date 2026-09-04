@@ -10,6 +10,7 @@ from app.services.analysis_snapshot_persistence import AnalysisSnapshotPersisten
 from app.services.analysis_snapshot_cache import AnalysisSnapshotCacheService
 from app.services.portfolio_history import PortfolioHistoryService
 from app.services.github.client import GitHubClient, GitHubMalformedResponseError, GitHubRequestBudgetExceeded
+from app.rate_limit import rate_limit_dependency
 
 router = APIRouter(
     prefix="/api/v1/github",
@@ -58,6 +59,7 @@ async def get_portfolio_history_service() -> PortfolioHistoryService:
 )
 async def get_github_user(
     username: str,
+    _rate_limit: None = Depends(rate_limit_dependency("github_lookup")),
     client: GitHubClient = Depends(get_github_client),
 ) -> GitHubUser:
     try:

@@ -36,6 +36,7 @@ from app.db.models import OAuthLoginState, User
 from app.schemas.auth import AuthErrorResponse, MeResponse
 from app.services.github.client import GitHubClient
 from app.observability import emit_event
+from app.rate_limit import rate_limit_dependency
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/v1/auth", tags=["Authentication"])
@@ -164,6 +165,7 @@ async def get_required_authenticated_user(
 async def begin_github_login(
     request: Request,
     next_path: str | None = Query(default=None, alias="next"),
+    _rate_limit: None = Depends(rate_limit_dependency("auth_login")),
     session: AsyncSession = Depends(get_session),
 ) -> RedirectResponse:
     settings = _settings(request)

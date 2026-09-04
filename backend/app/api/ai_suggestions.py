@@ -25,6 +25,7 @@ from app.clients.gemini import (
     GeminiInvalidResponseError, GeminiNotConfiguredError, GeminiRateLimitError,
     GeminiTimeoutError, GeminiUnavailableError, GeminiUpstreamError,
 )
+from app.rate_limit import enforce_rate_limit
 
 router = APIRouter(prefix="/api/v1/workspace", tags=["AI Suggestions"])
 
@@ -35,6 +36,13 @@ async def require_ai_user(
     session: AsyncSession = Depends(get_session),
 ) -> User:
     return await get_required_authenticated_user(request, response, session)
+
+
+async def _limit_ai_suggestions(
+    request: Request,
+    user: User = Depends(require_ai_user),
+) -> None:
+    await enforce_rate_limit(request, "ai_suggestions", user)
 
 
 def _reason(error: Exception) -> AISuggestionsUnavailableReason:
@@ -53,6 +61,7 @@ async def generate_ai_suggestions(
     response: Response,
     origin: str | None = Header(default=None),
     content_type: str | None = Header(default=None),
+    _rate_limit: None = Depends(_limit_ai_suggestions),
     user: User = Depends(require_ai_user),
     github_client: GitHubClient = Depends(get_github_client),
     gemini_client: GeminiClient | None = Depends(get_gemini_client),

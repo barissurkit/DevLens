@@ -1,6 +1,6 @@
 import httpx
 from datetime import datetime, timezone
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 from pydantic import ValidationError
 
 from app.api.errors import APIErrorResponse, map_github_exception
@@ -27,11 +27,16 @@ from app.services.github_portfolio_analysis import (
 )
 from app.services.portfolio_history import PortfolioHistoryService
 from app.services.guided_improvement import build_guided_improvements
+from app.rate_limit import enforce_rate_limit
 
 router = APIRouter(
     prefix="/api/v1",
     tags=["Analysis"],
 )
+
+
+async def _limit_analysis(request: Request, authenticated_user: User | None = Depends(get_optional_authenticated_user)) -> None:
+    await enforce_rate_limit(request, "portfolio_analysis", authenticated_user)
 
 
 @router.post(
@@ -50,6 +55,7 @@ router = APIRouter(
 )
 async def analyze_portfolio(
     request: PortfolioAnalysisRequest,
+    _rate_limit: None = Depends(_limit_analysis),
     client: GitHubClient = Depends(get_github_client),
     persistence: AnalysisSnapshotPersistenceService = Depends(
         get_snapshot_persistence_service
