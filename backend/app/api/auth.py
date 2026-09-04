@@ -36,6 +36,7 @@ from app.db.models import OAuthLoginState, User
 from app.schemas.auth import AuthErrorResponse, MeResponse
 from app.services.github.client import GitHubClient
 from app.observability import emit_event
+from app.rate_limit import enforce_rate_limit
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/v1/auth", tags=["Authentication"])
@@ -160,10 +161,17 @@ async def get_required_authenticated_user(
     return user
 
 
+async def _limit_auth_login(request: Request) -> None:
+    # Preserve the existing disabled-auth contract without consuming quota.
+    if _configuration_error(_settings(request)) is None:
+        await enforce_rate_limit(request, "auth_login")
+
+
 @router.get("/github")
 async def begin_github_login(
     request: Request,
     next_path: str | None = Query(default=None, alias="next"),
+    _rate_limit: None = Depends(_limit_auth_login),
     session: AsyncSession = Depends(get_session),
 ) -> RedirectResponse:
     settings = _settings(request)

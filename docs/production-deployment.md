@@ -20,6 +20,14 @@ backend image/environment → Alembic one-shot migration → Neon schema
 
 The frontend contains no GitHub, Gemini, or database secrets. Provider credentials belong to the backend runtime. `CORS_ALLOWED_ORIGINS` restricts browser access to explicit frontend origins.
 
+## Application Rate Limiting
+
+The analysis, interpretation, AI Suggestions, OAuth login initiation, and direct GitHub-user lookup endpoints use bounded process-local token buckets. Analysis and interpretation share a quota; AI Suggestions has an independent quota. A rejected request returns HTTP 429 with a structured `rate_limited` error and an integer `Retry-After` header. The OAuth callback is intentionally not limited in this slice because persisted one-time state and PKCE remain authoritative.
+
+The limiter stores at most 4096 active `(bucket, principal)` states per backend process. Fully refilled states are removed safely; when the table is full, unseen principals fail closed rather than evicting active throttled states. Limits reset on restart or deploy and are per process/instance, so the current deployment assumption is one Uvicorn process. Multiple workers or backend instances require a shared limiter store before enabling that topology.
+
+The backend is deployed as a Render Docker runtime with Uvicorn's trusted-proxy handling. Before merging rate-limiting enforcement, confirm that `FORWARDED_ALLOW_IPS=*` is configured in the production runtime and that public traffic remains behind Render's trusted ingress proxy. Application code reads only Uvicorn's resolved `request.client.host`; it does not parse `X-Forwarded-For` or other forwarded headers. Local development and Compose do not enable this setting and use the direct socket peer.
+
 ## Production Services
 
 | Service | Current deployment | Runtime contract |

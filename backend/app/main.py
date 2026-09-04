@@ -14,6 +14,7 @@ from app.api.ai_suggestions import router as ai_suggestions_router
 from app.api.history import router as history_router
 from app.config import Settings, get_settings
 from app.observability import REQUEST_ID, configure_logging, emit_event, new_request_id
+from app.rate_limit import RateLimiter
 
 logger = logging.getLogger(__name__)
 
@@ -32,6 +33,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     application_settings.validate_runtime_configuration()
     application = FastAPI(title="DevLens API", version="0.1.0")
     application.state.settings = application_settings
+    application.state.rate_limiter = RateLimiter()
 
     @application.middleware("http")
     async def request_observability(request: Request, call_next):

@@ -241,12 +241,14 @@ def test_concurrent_warm_analysis_isolated_and_does_not_write_duplicates(
         _set_analysis_service(monkeypatch, result, calls)
         assert (await _request("/api/v1/analysis", {"username": "synthetic-user"})).status_code == 200
 
-        async def send() -> httpx.Response:
-            transport = httpx.ASGITransport(app=app)
+        async def send(client_ip: str) -> httpx.Response:
+            transport = httpx.ASGITransport(app=app, client=(client_ip, 1234))
             async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
                 return await client.post("/api/v1/analysis", json={"username": "synthetic-user"})
 
-        responses = await asyncio.gather(*(send() for _ in range(5)))
+        responses = await asyncio.gather(
+            *(send(f"192.0.2.{index}") for index in range(10, 15))
+        )
         assert all(response.status_code == 200 for response in responses)
         assert len(calls) == 1
         assert len(await _rows(database_url, "synthetic-user")) == 1
