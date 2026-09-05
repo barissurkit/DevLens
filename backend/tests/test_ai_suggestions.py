@@ -112,6 +112,79 @@ def test_suggest_actions_passes_full_provider_schema_without_network() -> None:
     assert set(item["required"]) <= set(item["properties"])
 
 
+def test_suggest_actions_uses_exact_output_limit_and_prompt_guidance() -> None:
+    class Models:
+        def __init__(self) -> None:
+            self.calls: list[dict[str, object]] = []
+
+        async def generate_content(self, **kwargs: object) -> object:
+            self.calls.append(kwargs)
+            return SimpleNamespace(parsed=AISuggestions(suggestions=[]))
+
+    models = Models()
+    client = GeminiClient(
+        Settings(_env_file=None, gemini_api_key="sentinel-not-a-real-key"),
+        sdk_client=SimpleNamespace(aio=SimpleNamespace(models=models)),
+    )
+
+    asyncio.run(client.suggest_actions(context(), {"signal:readme": "kanıt"}))
+
+    config = models.calls[0]["config"]
+    assert config.max_output_tokens == 2048
+    prompt = config.system_instruction
+    assert "at most 5 concise suggestions" in prompt
+    assert "title to no more than 80 characters" in prompt
+    assert "description to no more than 240 characters" in prompt
+    assert "reason to no more than 240 characters" in prompt
+    assert "1 to 3 exact evidence IDs" in prompt
+
+
+def test_suggest_actions_accepts_five_practical_suggestions_without_retry(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    result = AISuggestions.model_validate({
+        "suggestions": [
+            {
+                "title": f"Aksiyon {index}",
+                "description": "Kısa açıklama.",
+                "reason": "Kısa ve kanıtlı gerekçe.",
+                "evidence_refs": [f"signal:{index}"],
+            }
+            for index in range(5)
+        ]
+    })
+
+    class Models:
+        calls = 0
+
+        async def generate_content(self, **kwargs: object) -> object:
+            self.calls += 1
+            return SimpleNamespace(parsed=result)
+
+    models = Models()
+    client = GeminiClient(
+        Settings(_env_file=None, gemini_api_key="sentinel-not-a-real-key"),
+        sdk_client=SimpleNamespace(aio=SimpleNamespace(models=models)),
+    )
+
+    received = asyncio.run(client.suggest_actions(
+        context(), {f"signal:{index}": "kanıt" for index in range(5)}
+    ))
+    validated = validate_suggestions(
+        received, {f"signal:{index}": "kanıt" for index in range(5)}
+    )
+
+    assert len(validated.suggestions) == 5
+    assert models.calls == 1
+    assert not any(
+        getattr(record, "event", None) == "ai_suggestions.invalid_response"
+        for record in caplog.records
+    )
+    assert all(len(item.title) <= 80 for item in validated.suggestions)
+    assert all(len(item.description) <= 240 for item in validated.suggestions)
+    assert all(len(item.reason) <= 240 for item in validated.suggestions)
+
+
 def test_suggest_actions_retries_transient_failure_once_and_uses_bounded_config() -> None:
     class Models:
         def __init__(self) -> None:
@@ -174,7 +247,7 @@ def test_suggest_actions_timeout_is_20_seconds_and_stops_after_two_attempts() ->
         with pytest.raises(GeminiTimeoutError):
             asyncio.run(client.suggest_actions(context(), {"signal:readme": "kanıt"}))
     assert _SUGGESTIONS_TIMEOUT_SECONDS == 20.0
-    assert _SUGGESTIONS_MAX_OUTPUT_TOKENS == 1200
+    assert _SUGGESTIONS_MAX_OUTPUT_TOKENS == 2048
     assert models.calls == 2
     sleep.assert_awaited_once_with(0.5)
 

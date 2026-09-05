@@ -11,6 +11,10 @@ ownership, or unsupported claims. Suggestions are recommendations only and do no
 Return only JSON with exactly one top-level key: suggestions.
 Return zero suggestions when the evidence does not justify a useful action.
 Every suggestion must cite one to three evidence_refs copied exactly from the supplied evidence catalog.
+Return at most 5 concise suggestions.
+For each suggestion, keep the title to no more than 80 characters, the description to no more than 240 characters and at most two short sentences,
+and the reason to no more than 240 characters and at most two short sentences.
+Include 1 to 3 exact evidence IDs from the supplied evidence catalog in evidence_refs.
 All natural-language fields must be concise and written in Turkish. Never return reasoning or hidden analysis.
 """
 
