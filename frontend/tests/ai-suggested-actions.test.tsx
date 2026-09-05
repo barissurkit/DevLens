@@ -60,4 +60,30 @@ describe("AI suggested actions", () => {
     await new Promise((resolve) => setTimeout(resolve, 0));
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
+
+  it("preserves previous suggestions when a later generation fails", async () => {
+    mockedGenerate
+      .mockResolvedValueOnce({ status: "available", suggestions: [{ title: "İlk öneri", description: "Açıklama", reason: "Kanıt", evidence_refs: ["signal:readme"] }] })
+      .mockRejectedValueOnce(new Error("temporary failure"));
+    const user = userEvent.setup();
+    render(<AISuggestedActions username="alice" />);
+    await user.click(screen.getByRole("button", { name: "Generate suggestions" }));
+    expect(await screen.findByText("İlk öneri")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Yeniden oluştur" }));
+    await waitFor(() => expect(screen.getByRole("alert")).toBeInTheDocument());
+    expect(screen.getByText("İlk öneri")).toBeInTheDocument();
+  });
+
+  it("clears previous suggestions for a valid empty result", async () => {
+    mockedGenerate
+      .mockResolvedValueOnce({ status: "available", suggestions: [{ title: "İlk öneri", description: "Açıklama", reason: "Kanıt", evidence_refs: ["signal:readme"] }] })
+      .mockResolvedValueOnce({ status: "available", suggestions: [] });
+    const user = userEvent.setup();
+    render(<AISuggestedActions username="alice" />);
+    await user.click(screen.getByRole("button", { name: "Generate suggestions" }));
+    expect(await screen.findByText("İlk öneri")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Yeniden oluştur" }));
+    await waitFor(() => expect(screen.queryByText("İlk öneri")).not.toBeInTheDocument());
+    expect(screen.getByText("Bu analiz için temellendirilebilir öneri bulunamadı.")).toBeInTheDocument();
+  });
 });

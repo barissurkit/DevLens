@@ -104,6 +104,8 @@ Normal application responses include a server-generated `X-Request-ID`. Structur
 
 `POST /api/v1/interpretation` reuses deterministic analysis where available, then may invoke Gemini again. A persisted interpretation payload is not described as a reusable AI cache authority. Gemini output is schema- and signal-reference-validated, and unavailable AI leaves deterministic analysis usable.
 
+`POST /api/v1/workspace/ai-suggestions` keeps suggestions ephemeral. Grounding is bounded to complete evidence items (maximum 40 items, 600 Unicode characters per value, and 24,000 serialized characters), output is bounded to 1,200 tokens, and each provider attempt has a 20-second timeout. At most two provider attempts are made, with one fixed 500ms retry for transient failures. Provider quota errors (`ai_provider_rate_limited`) are distinct from the application limiter's `rate_limited` response and do not include `Retry-After`. Structured output and evidence references are validated server-side as a whole response. The frontend preserves existing suggestions on failure and offers manual retry; a valid empty result clears them.
+
 The configured default model is `gemini-3.6-flash`. Natural-language output is Turkish while repository names, technology names, package names, URLs, and technical identifiers are preserved.
 
 ## Rollback / Safety Notes

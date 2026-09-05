@@ -1,6 +1,14 @@
 import httpx
 from fastapi import HTTPException, status
 from pydantic import BaseModel, ValidationError
+from app.clients.gemini import (
+    GeminiInvalidResponseError,
+    GeminiNotConfiguredError,
+    GeminiRateLimitError,
+    GeminiTimeoutError,
+    GeminiUnavailableError,
+    GeminiUpstreamError,
+)
 from app.services.github.client import (
     GitHubMalformedResponseError,
     GitHubRepositoryPaginationLimitExceeded,
@@ -95,4 +103,16 @@ def map_github_exception(error: Exception) -> HTTPException:
             "GitHub repository listesi analiz sınırına ulaştı.",
         )
 
+    raise error
+
+
+def map_ai_suggestions_exception(error: Exception) -> HTTPException:
+    if isinstance(error, GeminiRateLimitError):
+        return _error(status.HTTP_429_TOO_MANY_REQUESTS, "ai_provider_rate_limited", "AI sağlayıcısı şu anda yoğun veya kota sınırında; lütfen daha sonra tekrar deneyin.")
+    if isinstance(error, GeminiTimeoutError):
+        return _error(status.HTTP_504_GATEWAY_TIMEOUT, "ai_timeout", "AI önerileri zaman aşımına uğradı; lütfen tekrar deneyin.")
+    if isinstance(error, GeminiInvalidResponseError):
+        return _error(status.HTTP_502_BAD_GATEWAY, "ai_invalid_response", "AI öneri servisi geçersiz bir yanıt döndürdü.")
+    if isinstance(error, (GeminiNotConfiguredError, GeminiUnavailableError, GeminiUpstreamError)):
+        return _error(status.HTTP_503_SERVICE_UNAVAILABLE, "ai_unavailable", "AI öneri servisi şu anda kullanılamıyor.")
     raise error

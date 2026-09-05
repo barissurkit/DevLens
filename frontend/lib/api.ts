@@ -281,7 +281,10 @@ export async function generateAISuggestions(username: string): Promise<AISuggest
     throw new ApiError("AI öneri servisine ulaşılamadı.", 0, "network_error");
   }
   const payload = await readJson(response);
-  if (!response.ok) throw new ApiError("AI önerileri oluşturulamadı.", response.status, "ai_suggestions_error");
+  if (!response.ok) {
+    if (isOperationalErrorResponse(payload)) throw new ApiError(payload.detail.message, response.status, payload.detail.code);
+    throw new ApiError("AI önerileri oluşturulamadı.", response.status, "ai_suggestions_error");
+  }
   if (typeof payload === "object" && payload !== null && (payload as { status?: unknown }).status === "available" && Array.isArray((payload as { suggestions?: unknown }).suggestions)) return payload as AISuggestionsResponse;
   if (typeof payload === "object" && payload !== null && (payload as { status?: unknown }).status === "unavailable" && typeof (payload as { reason?: unknown }).reason === "string") return payload as AISuggestionsResponse;
   throw new ApiError("AI öneri servisi geçersiz bir yanıt döndürdü.", response.status, "malformed_response");
