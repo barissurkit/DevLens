@@ -40,6 +40,12 @@ _SAFE_FIELDS = {
     "rate_limit_used",
     "retry_after_seconds",
     "principal_kind",
+    "max_output_tokens",
+    "prompt_token_count",
+    "candidates_token_count",
+    "thoughts_token_count",
+    "total_token_count",
+    "finish_reason",
 }
 
 

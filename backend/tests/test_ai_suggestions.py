@@ -1,4 +1,5 @@
 import asyncio
+import json
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, patch
 
@@ -17,6 +18,7 @@ from app.prompts.ai_suggestions import build_suggestions_content, build_suggesti
 from app.schemas.ai_suggestions import AISuggestions
 from app.services.ai_suggestions import build_evidence_catalog, validate_suggestions
 from google.genai import errors as genai_errors
+from google.genai import types
 from test_gemini_foundation import context
 
 
@@ -312,6 +314,171 @@ def test_max_tokens_finish_reason_takes_precedence_without_logging_content(caplo
         asyncio.run(client.suggest_actions(context(), {"signal:readme": "kanıt"}))
     assert getattr(caplog.records[-1], "failure_category") == "output_truncated"
     assert "truncated-provider-content" not in caplog.text
+
+
+def test_truncated_response_logs_numeric_usage_without_retry(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    class Models:
+        calls = 0
+
+        async def generate_content(self, **kwargs: object) -> object:
+            self.calls += 1
+            return SimpleNamespace(
+                text="{provider response text",
+                candidates=[SimpleNamespace(finish_reason=types.FinishReason.MAX_TOKENS)],
+                usage_metadata=SimpleNamespace(
+                    prompt_token_count=123,
+                    candidates_token_count=456,
+                    thoughts_token_count=789,
+                    total_token_count=1368,
+                ),
+            )
+
+    models = Models()
+    client = GeminiClient(
+        Settings(_env_file=None, gemini_api_key="sentinel-not-a-real-key"),
+        sdk_client=SimpleNamespace(aio=SimpleNamespace(models=models)),
+    )
+    with patch("app.clients.gemini._suggestions_sleep", new_callable=AsyncMock) as sleep:
+        with pytest.raises(GeminiInvalidResponseError):
+            asyncio.run(client.suggest_actions(context(), {"signal:readme": "kanıt"}))
+
+    record = caplog.records[-1]
+    assert record.event == "ai_suggestions.invalid_response"
+    assert record.failure_category == "output_truncated"
+    assert record.max_output_tokens == 2048
+    assert record.prompt_token_count == 123
+    assert record.candidates_token_count == 456
+    assert record.thoughts_token_count == 789
+    assert record.total_token_count == 1368
+    assert record.finish_reason == "MAX_TOKENS"
+    assert models.calls == 1
+    sleep.assert_not_awaited()
+
+
+def test_invalid_response_without_usage_metadata_keeps_existing_path(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    class Models:
+        async def generate_content(self, **kwargs: object) -> object:
+            return SimpleNamespace(
+                text="{provider response text",
+                candidates=[SimpleNamespace(finish_reason="MAX_TOKENS")],
+                usage_metadata=None,
+            )
+
+    client = GeminiClient(
+        Settings(_env_file=None, gemini_api_key="sentinel-not-a-real-key"),
+        sdk_client=SimpleNamespace(aio=SimpleNamespace(models=Models())),
+    )
+    with pytest.raises(GeminiInvalidResponseError):
+        asyncio.run(client.suggest_actions(context(), {"signal:readme": "kanıt"}))
+
+    record = caplog.records[-1]
+    assert record.failure_category == "output_truncated"
+    assert record.max_output_tokens == 2048
+    for field in (
+        "prompt_token_count",
+        "candidates_token_count",
+        "thoughts_token_count",
+        "total_token_count",
+    ):
+        assert not hasattr(record, field)
+
+
+def test_partial_and_invalid_usage_metadata_is_omitted_safely(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    class Models:
+        def __init__(self) -> None:
+            self.responses = [
+                SimpleNamespace(
+                    text="{partial",
+                    candidates=[SimpleNamespace(finish_reason="MAX_TOKENS")],
+                    usage_metadata=SimpleNamespace(
+                        prompt_token_count=123,
+                        total_token_count=1368,
+                    ),
+                ),
+                SimpleNamespace(
+                    text="{invalid",
+                    candidates=[SimpleNamespace(finish_reason="MAX_TOKENS")],
+                    usage_metadata=SimpleNamespace(
+                        prompt_token_count=True,
+                        candidates_token_count="456",
+                        thoughts_token_count=12.5,
+                        total_token_count=-1,
+                    ),
+                ),
+            ]
+            self.index = 0
+
+        async def generate_content(self, **kwargs: object) -> object:
+            response = self.responses[self.index]
+            self.index += 1
+            return response
+
+    models = Models()
+    client = GeminiClient(
+        Settings(_env_file=None, gemini_api_key="sentinel-not-a-real-key"),
+        sdk_client=SimpleNamespace(aio=SimpleNamespace(models=models)),
+    )
+    with pytest.raises(GeminiInvalidResponseError):
+        asyncio.run(client.suggest_actions(context(), {"signal:readme": "kanıt"}))
+    first = caplog.records[-1]
+    assert first.prompt_token_count == 123
+    assert first.total_token_count == 1368
+    assert not hasattr(first, "candidates_token_count")
+    assert not hasattr(first, "thoughts_token_count")
+
+    with pytest.raises(GeminiInvalidResponseError):
+        asyncio.run(client.suggest_actions(context(), {"signal:readme": "kanıt"}))
+    second = caplog.records[-1]
+    for field in (
+        "prompt_token_count",
+        "candidates_token_count",
+        "thoughts_token_count",
+        "total_token_count",
+    ):
+        assert not hasattr(second, field)
+
+
+def test_usage_diagnostics_never_log_provider_or_sensitive_content(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    sentinels = (
+        "PROVIDER_RESPONSE_SENTINEL",
+        "PROMPT_SENTINEL",
+        "EVIDENCE_SENTINEL",
+        "EXCEPTION_SENTINEL",
+    )
+
+    class Models:
+        async def generate_content(self, **kwargs: object) -> object:
+            return SimpleNamespace(
+                text=json.dumps({"content": " ".join(sentinels)}),
+                candidates=[SimpleNamespace(finish_reason="MAX_TOKENS")],
+                usage_metadata=SimpleNamespace(
+                    prompt_token_count=123,
+                    candidates_token_count=456,
+                    thoughts_token_count=789,
+                    total_token_count=1368,
+                ),
+            )
+
+    client = GeminiClient(
+        Settings(_env_file=None, gemini_api_key="sentinel-not-a-real-key"),
+        sdk_client=SimpleNamespace(aio=SimpleNamespace(models=Models())),
+    )
+    with pytest.raises(GeminiInvalidResponseError):
+        asyncio.run(client.suggest_actions(context(), {"signal:readme": "EVIDENCE_SENTINEL"}))
+
+    record = caplog.records[-1]
+    assert record.event == "ai_suggestions.invalid_response"
+    serialized_record = repr(record.__dict__)
+    assert all(sentinel not in serialized_record for sentinel in sentinels)
+    assert all(sentinel not in caplog.text for sentinel in sentinels)
 
 
 def test_evidence_validation_has_distinct_safe_category(caplog: pytest.LogCaptureFixture) -> None:
