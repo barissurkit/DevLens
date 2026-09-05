@@ -17,12 +17,15 @@ export function AISuggestedActions({ username }: Props) {
   const requestVersion = useRef(0);
 
   useEffect(() => () => { requestVersion.current += 1; }, []);
+  useEffect(() => {
+    requestVersion.current += 1;
+  }, [username]);
 
   async function generate() {
     if (state === "loading") return;
     const version = requestVersion.current + 1;
     requestVersion.current = version;
-    setSuggestions([]); setEditing(null); setState("loading"); setError(null);
+    setEditing(null); setState("loading"); setError(null);
     try {
       const result = await generateAISuggestions(username);
       if (requestVersion.current !== version) return;
@@ -30,7 +33,15 @@ export function AISuggestedActions({ username }: Props) {
       else { setSuggestions([]); setState(result.reason === "insufficient_evidence" ? "success" : "error"); setError(result.reason === "insufficient_evidence" ? null : "AI önerileri şu anda kullanılamıyor."); }
     } catch (cause) {
       if (requestVersion.current !== version) return;
-      setState("error"); setError(cause instanceof ApiError ? cause.message : "AI önerileri oluşturulamadı.");
+      const messages: Record<string, string> = {
+        rate_limited: "Çok sık istek gönderildi; lütfen daha sonra tekrar deneyin.",
+        ai_provider_rate_limited: "AI sağlayıcısı şu anda yoğun veya kota sınırında; lütfen daha sonra tekrar deneyin.",
+        ai_timeout: "AI önerileri zaman aşımına uğradı; lütfen tekrar deneyin.",
+        ai_unavailable: "AI öneri servisi şu anda kullanılamıyor.",
+        ai_invalid_response: "AI öneri servisi geçersiz bir yanıt döndürdü.",
+        network_error: "AI öneri servisine ulaşılamadı.",
+      };
+      setState("error"); setError(cause instanceof ApiError ? (messages[cause.code ?? ""] ?? cause.message) : "AI önerileri oluşturulamadı.");
     }
   }
 

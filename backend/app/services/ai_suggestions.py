@@ -1,7 +1,13 @@
+import json
+
 from app.clients.gemini import GeminiInvalidResponseError
 from app.schemas.ai_suggestions import AISuggestion, AISuggestions
 from app.schemas.analysis import GitHubPortfolioAnalysis
 from app.schemas.interpretation import PortfolioInterpretationContext
+
+MAX_EVIDENCE_ITEMS = 40
+MAX_EVIDENCE_VALUE_CHARS = 600
+MAX_GROUNDING_CHARS = 24_000
 
 
 def build_evidence_catalog(
@@ -17,7 +23,15 @@ def build_evidence_catalog(
             for rule in dimension.rules:
                 if not rule.passed:
                     catalog[f"repository:{result.repository.name}:{rule.key}"] = rule.evidence
-    return dict(list(catalog.items())[:40])
+    bounded: dict[str, str] = {}
+    for evidence_id, value in catalog.items():
+        if len(bounded) >= MAX_EVIDENCE_ITEMS or len(value) > MAX_EVIDENCE_VALUE_CHARS:
+            continue
+        candidate = {**bounded, evidence_id: value}
+        if len(json.dumps(candidate, ensure_ascii=False, separators=(",", ":"))) > MAX_GROUNDING_CHARS:
+            break
+        bounded = candidate
+    return bounded
 
 
 def validate_suggestions(
@@ -26,10 +40,7 @@ def validate_suggestions(
 ) -> AISuggestions:
     if len(suggestions.suggestions) > 5:
         raise GeminiInvalidResponseError("Too many AI suggestions.")
-    valid: list[AISuggestion] = []
     for item in suggestions.suggestions:
-        if not item.evidence_refs or any(ref not in evidence_catalog for ref in item.evidence_refs):
+        if not item.evidence_refs or len(set(item.evidence_refs)) != len(item.evidence_refs) or any(ref not in evidence_catalog for ref in item.evidence_refs):
             raise GeminiInvalidResponseError("Unknown AI suggestion evidence reference.")
-        valid.append(item)
-    return AISuggestions(suggestions=valid)
-
+    return suggestions

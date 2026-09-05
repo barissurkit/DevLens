@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from pydantic import ValidationError
 
 from app.api.action_plan import require_workspace_origin
-from app.api.errors import map_github_exception
+from app.api.errors import map_ai_suggestions_exception, map_github_exception
 from app.api.auth import get_required_authenticated_user
 from app.api.github import get_analysis_snapshot_cache_service, get_gemini_client, get_github_client
 from app.auth.ownership import is_owner
@@ -19,13 +19,13 @@ from app.schemas.analysis import PortfolioAnalysisRequest
 from app.services.ai_suggestions import build_evidence_catalog, validate_suggestions
 from app.services.github.client import GitHubClient
 from app.services.github_portfolio_analysis import analyze_github_portfolio
-from app.services.portfolio_interpretation_context import build_portfolio_interpretation_context
 from app.clients.gemini import (
     GeminiClient,
     GeminiInvalidResponseError, GeminiNotConfiguredError, GeminiRateLimitError,
     GeminiTimeoutError, GeminiUnavailableError, GeminiUpstreamError,
 )
 from app.rate_limit import enforce_rate_limit
+from app.services.portfolio_interpretation_context import build_portfolio_interpretation_context
 
 router = APIRouter(prefix="/api/v1/workspace", tags=["AI Suggestions"])
 
@@ -43,15 +43,6 @@ async def _limit_ai_suggestions(
     user: User = Depends(require_ai_user),
 ) -> None:
     await enforce_rate_limit(request, "ai_suggestions", user)
-
-
-def _reason(error: Exception) -> AISuggestionsUnavailableReason:
-    if isinstance(error, GeminiNotConfiguredError): return AISuggestionsUnavailableReason.NOT_CONFIGURED
-    if isinstance(error, GeminiTimeoutError): return AISuggestionsUnavailableReason.TIMEOUT
-    if isinstance(error, GeminiRateLimitError): return AISuggestionsUnavailableReason.RATE_LIMIT
-    if isinstance(error, GeminiUnavailableError): return AISuggestionsUnavailableReason.UNAVAILABLE
-    if isinstance(error, GeminiUpstreamError): return AISuggestionsUnavailableReason.UPSTREAM_ERROR
-    return AISuggestionsUnavailableReason.INVALID_RESPONSE
 
 
 @router.post("/ai-suggestions", response_model=AISuggestionsAvailable | AISuggestionsUnavailable)
@@ -74,7 +65,7 @@ async def generate_ai_suggestions(
         if not is_owner(authenticated_user=user, target_github_user=analysis.user):
             raise HTTPException(status_code=403, detail="Workspace ownership required.")
         if gemini_client is None:
-            return AISuggestionsUnavailable(reason=AISuggestionsUnavailableReason.NOT_CONFIGURED)
+            raise map_ai_suggestions_exception(GeminiNotConfiguredError())
         context = build_portfolio_interpretation_context(analysis)
         catalog = build_evidence_catalog(analysis, context)
         if not catalog:
@@ -84,6 +75,6 @@ async def generate_ai_suggestions(
     except HTTPException:
         raise
     except (GeminiNotConfiguredError, GeminiTimeoutError, GeminiRateLimitError, GeminiUnavailableError, GeminiUpstreamError, GeminiInvalidResponseError) as exc:
-        return AISuggestionsUnavailable(reason=_reason(exc))
+        raise map_ai_suggestions_exception(exc) from exc
     except (httpx.TimeoutException, httpx.RequestError, httpx.HTTPStatusError, ValidationError) as exc:
         raise map_github_exception(exc) from exc

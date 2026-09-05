@@ -33,6 +33,9 @@ logger = logging.getLogger(__name__)
 _GEMINI_MAX_ATTEMPTS = 2
 _GEMINI_RETRY_INITIAL_DELAY_SECONDS = 0.5
 _GEMINI_TIMEOUT_MS = 30_000
+_SUGGESTIONS_TIMEOUT_SECONDS = 20.0
+_SUGGESTIONS_MAX_OUTPUT_TOKENS = 1200
+_suggestions_sleep = asyncio.sleep
 
 
 class GeminiError(Exception):
@@ -358,6 +361,7 @@ def _log_invalid_response_failure(
     model: str,
     elapsed_ms: int,
     attempt: int = 1,
+    operation: str = "interpret",
 ) -> None:
     text = _safe_response_text(response)
     parsed_json = False
@@ -393,13 +397,27 @@ def _log_invalid_response_failure(
         fields["validation_error_locations"] = ",".join(
             _safe_validation_locations(error)
         ) or "none"
+    if operation == "suggest_actions":
+        emit_event(
+            logger,
+            "ai_suggestions.invalid_response",
+            level=logging.WARNING,
+            operation=operation,
+            provider="gemini",
+            model=model,
+            attempt=attempt,
+            final=True,
+            failure_category="validation",
+            elapsed_ms=elapsed_ms,
+        )
+        return
     logger.warning(
         "Gemini response rejected: %s",
         " ".join(f"{key}={value}" for key, value in fields.items()),
         extra={
-            "event": "gemini.request.completed",
+            "event": "gemini.request.completed" if operation == "interpret" else "ai_suggestions.invalid_response",
             "provider": "gemini",
-            "operation": "interpret",
+            "operation": operation,
             "model": model,
             "attempt": attempt,
             "duration_ms": elapsed_ms,
@@ -523,25 +541,45 @@ class GeminiClient:
             response_mime_type="application/json",
             response_schema=build_suggestions_response_schema(),
             candidate_count=1,
+            max_output_tokens=_SUGGESTIONS_MAX_OUTPUT_TOKENS,
         )
-        started_at = time.monotonic()
-        try:
-            response = await self._client.aio.models.generate_content(
-                model=self._model,
-                contents=build_suggestions_content(context, evidence_catalog),
-                config=config,
-            )
-        except Exception as error:
-            _log_gemini_failure(
-                error=error,
-                model=self._model,
-                operation="suggest_actions",
-                elapsed_ms=round((time.monotonic() - started_at) * 1000),
-            )
-            normalized = _normalize_sdk_error(error)
-            if normalized is None:
-                raise
-            raise normalized from error
+        for attempt in range(_GEMINI_MAX_ATTEMPTS):
+            started_at = time.monotonic()
+            try:
+                response = await asyncio.wait_for(
+                    self._client.aio.models.generate_content(
+                        model=self._model,
+                        contents=build_suggestions_content(context, evidence_catalog),
+                        config=config,
+                    ),
+                    timeout=_SUGGESTIONS_TIMEOUT_SECONDS,
+                )
+                break
+            except (asyncio.TimeoutError, TimeoutError, httpx.TimeoutException, httpx.RequestError, genai_errors.APIError) as error:
+                normalized = _normalize_sdk_error(error)
+                if normalized is None:
+                    raise
+                final = attempt == _GEMINI_MAX_ATTEMPTS - 1
+                retryable = isinstance(error, (asyncio.TimeoutError, TimeoutError, httpx.TimeoutException, httpx.RequestError)) or (
+                    isinstance(error, genai_errors.APIError) and error.code in {429, 500, 502, 503, 504}
+                )
+                emit_event(
+                    logger,
+                    "ai_suggestions.provider_failed",
+                    level=logging.WARNING,
+                    operation="suggest_actions",
+                    provider="gemini",
+                    model=self._model,
+                    attempt=attempt + 1,
+                    final=final,
+                    failure_category=type(normalized).__name__.removeprefix("Gemini").lower(),
+                    status_code=error.code if isinstance(error, genai_errors.APIError) else None,
+                    elapsed_ms=round((time.monotonic() - started_at) * 1000),
+                )
+                if retryable and not final:
+                    await _suggestions_sleep(0.5)
+                    continue
+                raise normalized from error
         try:
             parsed = getattr(response, "parsed", None)
             return parsed if isinstance(parsed, AISuggestions) else AISuggestions.model_validate_json(response.text)
@@ -551,5 +589,6 @@ class GeminiClient:
                 error=error,
                 model=self._model,
                 elapsed_ms=round((time.monotonic() - started_at) * 1000),
+                operation="suggest_actions",
             )
             raise GeminiInvalidResponseError("Gemini returned invalid AI suggestions.") from error

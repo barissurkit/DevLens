@@ -1,14 +1,23 @@
 import asyncio
 from types import SimpleNamespace
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from pydantic import ValidationError
 
-from app.clients.gemini import GeminiClient, GeminiInvalidResponseError
+from app.clients.gemini import (
+    GeminiClient,
+    GeminiInvalidResponseError,
+    GeminiTimeoutError,
+    _SUGGESTIONS_MAX_OUTPUT_TOKENS,
+    _SUGGESTIONS_TIMEOUT_SECONDS,
+)
 from app.config import Settings
 from app.prompts.ai_suggestions import build_suggestions_content, build_suggestions_response_schema
 from app.schemas.ai_suggestions import AISuggestions
-from app.services.ai_suggestions import validate_suggestions
+from app.services.ai_suggestions import build_evidence_catalog, validate_suggestions
+from google.genai import errors as genai_errors
+from test_gemini_foundation import context
 
 
 def test_zero_suggestions_are_valid_and_extra_fields_are_rejected() -> None:
@@ -101,3 +110,79 @@ def test_suggest_actions_passes_full_provider_schema_without_network() -> None:
     item = schema["properties"]["suggestions"]["items"]
     assert set(item["properties"]) == {"title", "description", "reason", "evidence_refs"}
     assert set(item["required"]) <= set(item["properties"])
+
+
+def test_suggest_actions_retries_transient_failure_once_and_uses_bounded_config() -> None:
+    class Models:
+        def __init__(self) -> None:
+            self.calls = 0
+
+        async def generate_content(self, **kwargs: object) -> object:
+            self.calls += 1
+            if self.calls == 1:
+                raise genai_errors.APIError(503, {"error": {"status": "UNAVAILABLE"}})
+            return SimpleNamespace(parsed=AISuggestions(suggestions=[]))
+
+    models = Models()
+    client = GeminiClient(
+        Settings(_env_file=None, gemini_api_key="sentinel-not-a-real-key"),
+        sdk_client=SimpleNamespace(aio=SimpleNamespace(models=models)),
+    )
+
+    with patch("app.clients.gemini._suggestions_sleep", new_callable=AsyncMock) as sleep:
+        result = asyncio.run(client.suggest_actions(context(), {"signal:readme": "kanıt"}))
+
+    assert result.suggestions == []
+    assert models.calls == 2
+    sleep.assert_awaited_once_with(0.5)
+
+
+def test_suggest_actions_does_not_retry_invalid_provider_content_or_cancelled_calls() -> None:
+    class Models:
+        calls = 0
+
+        async def generate_content(self, **kwargs: object) -> object:
+            self.calls += 1
+            return SimpleNamespace(text='{"suggestions":[{"title":"x"}]}' )
+
+    models = Models()
+    client = GeminiClient(
+        Settings(_env_file=None, gemini_api_key="sentinel-not-a-real-key"),
+        sdk_client=SimpleNamespace(aio=SimpleNamespace(models=models)),
+    )
+    with patch("app.clients.gemini._suggestions_sleep", new_callable=AsyncMock) as sleep:
+        with pytest.raises(GeminiInvalidResponseError):
+            asyncio.run(client.suggest_actions(context(), {"signal:readme": "kanıt"}))
+    assert models.calls == 1
+    sleep.assert_not_awaited()
+
+
+def test_suggest_actions_timeout_is_20_seconds_and_stops_after_two_attempts() -> None:
+    class Models:
+        calls = 0
+
+        async def generate_content(self, **kwargs: object) -> object:
+            self.calls += 1
+            raise asyncio.TimeoutError()
+
+    models = Models()
+    client = GeminiClient(
+        Settings(_env_file=None, gemini_api_key="sentinel-not-a-real-key"),
+        sdk_client=SimpleNamespace(aio=SimpleNamespace(models=models)),
+    )
+    with patch("app.clients.gemini._suggestions_sleep", new_callable=AsyncMock) as sleep:
+        with pytest.raises(GeminiTimeoutError):
+            asyncio.run(client.suggest_actions(context(), {"signal:readme": "kanıt"}))
+    assert _SUGGESTIONS_TIMEOUT_SECONDS == 20.0
+    assert _SUGGESTIONS_MAX_OUTPUT_TOKENS == 1200
+    assert models.calls == 2
+    sleep.assert_awaited_once_with(0.5)
+
+
+def test_grounding_omits_oversized_items_without_slicing() -> None:
+    signal = SimpleNamespace(key="large", message="x" * 601)
+    analysis = SimpleNamespace(
+        repository_analysis=SimpleNamespace(repositories=[]),
+    )
+    grounded = build_evidence_catalog(analysis, SimpleNamespace(improvement_signals=[signal]))
+    assert grounded == {}
