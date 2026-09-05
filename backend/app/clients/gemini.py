@@ -320,6 +320,48 @@ def _safe_finish_reasons(response: object) -> list[str]:
     return reasons
 
 
+def _safe_diagnostic_finish_reasons(response: object) -> list[str]:
+    candidates = getattr(response, "candidates", None)
+    if not isinstance(candidates, list):
+        return []
+    reasons: list[str] = []
+    for candidate in candidates[:3]:
+        reason = getattr(candidate, "finish_reason", None)
+        name = getattr(reason, "name", None)
+        value = getattr(reason, "value", None)
+        normalized = name if isinstance(name, str) else value
+        if not isinstance(normalized, str):
+            normalized = reason if isinstance(reason, str) else None
+        if isinstance(normalized, str) and re.fullmatch(
+            r"[A-Z][A-Z0-9_]{0,63}", normalized
+        ):
+            reasons.append(normalized)
+    return reasons
+
+
+def _safe_numeric_usage_fields(response: object) -> dict[str, int]:
+    try:
+        usage = getattr(response, "usage_metadata", None)
+    except Exception:
+        return {}
+    if usage is None:
+        return {}
+    fields: dict[str, int] = {}
+    for name in (
+        "prompt_token_count",
+        "candidates_token_count",
+        "thoughts_token_count",
+        "total_token_count",
+    ):
+        try:
+            value = getattr(usage, name, None)
+        except Exception:
+            continue
+        if isinstance(value, int) and not isinstance(value, bool) and value >= 0:
+            fields[name] = value
+    return fields
+
+
 def _has_output_truncation(response: object) -> bool:
     candidates = getattr(response, "candidates", None)
     if not isinstance(candidates, list):
@@ -415,6 +457,11 @@ def _log_invalid_response_failure(
             _safe_validation_locations(error)
         ) or "none"
     if operation == "suggest_actions":
+        diagnostic_fields: dict[str, object] = {
+            "max_output_tokens": _SUGGESTIONS_MAX_OUTPUT_TOKENS,
+            "finish_reason": ",".join(_safe_diagnostic_finish_reasons(response)) or "none",
+        }
+        diagnostic_fields.update(_safe_numeric_usage_fields(response))
         emit_event(
             logger,
             "ai_suggestions.invalid_response",
@@ -426,6 +473,7 @@ def _log_invalid_response_failure(
             final=True,
             failure_category=failure_category,
             elapsed_ms=elapsed_ms,
+            **diagnostic_fields,
         )
         return
     logger.warning(
