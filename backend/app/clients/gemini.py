@@ -320,6 +320,22 @@ def _safe_finish_reasons(response: object) -> list[str]:
     return reasons
 
 
+def _has_output_truncation(response: object) -> bool:
+    candidates = getattr(response, "candidates", None)
+    if not isinstance(candidates, list):
+        return False
+    for candidate in candidates[:3]:
+        reason = getattr(candidate, "finish_reason", None)
+        if (
+            reason == types.FinishReason.MAX_TOKENS
+            or getattr(reason, "name", None) == "MAX_TOKENS"
+            or getattr(reason, "value", None) == "MAX_TOKENS"
+            or str(reason).rsplit(".", 1)[-1] == "MAX_TOKENS"
+        ):
+            return True
+    return False
+
+
 def _safe_validation_locations(error: ValidationError) -> list[str]:
     locations: list[str] = []
     for item in error.errors()[:20]:
@@ -362,6 +378,7 @@ def _log_invalid_response_failure(
     elapsed_ms: int,
     attempt: int = 1,
     operation: str = "interpret",
+    failure_category: str = "validation",
 ) -> None:
     text = _safe_response_text(response)
     parsed_json = False
@@ -407,7 +424,7 @@ def _log_invalid_response_failure(
             model=model,
             attempt=attempt,
             final=True,
-            failure_category="validation",
+            failure_category=failure_category,
             elapsed_ms=elapsed_ms,
         )
         return
@@ -581,8 +598,24 @@ class GeminiClient:
                     continue
                 raise normalized from error
         try:
+            category = "pydantic_schema"
             parsed = getattr(response, "parsed", None)
-            return parsed if isinstance(parsed, AISuggestions) else AISuggestions.model_validate_json(response.text)
+            if isinstance(parsed, AISuggestions):
+                return parsed
+            text = getattr(response, "text", None)
+            if not isinstance(text, str) or not text.strip():
+                category = "output_truncated" if _has_output_truncation(response) else "empty_provider_text"
+                raise ValueError("Provider response text is empty.")
+            try:
+                decoded = json.loads(text)
+            except (TypeError, ValueError) as error:
+                category = "output_truncated" if _has_output_truncation(response) else "json_parse"
+                raise error
+            try:
+                return AISuggestions.model_validate(decoded)
+            except ValidationError as error:
+                category = "output_truncated" if _has_output_truncation(response) else "pydantic_schema"
+                raise error
         except (AttributeError, TypeError, ValidationError, ValueError) as error:
             _log_invalid_response_failure(
                 response=response,
@@ -590,5 +623,6 @@ class GeminiClient:
                 model=self._model,
                 elapsed_ms=round((time.monotonic() - started_at) * 1000),
                 operation="suggest_actions",
+                failure_category=category,
             )
             raise GeminiInvalidResponseError("Gemini returned invalid AI suggestions.") from error

@@ -179,6 +179,79 @@ def test_suggest_actions_timeout_is_20_seconds_and_stops_after_two_attempts() ->
     sleep.assert_awaited_once_with(0.5)
 
 
+@pytest.mark.parametrize("text", [None, "", "  \n"])
+def test_empty_suggestion_text_has_safe_diagnostic_category(text: str | None, caplog: pytest.LogCaptureFixture) -> None:
+    class Models:
+        async def generate_content(self, **kwargs: object) -> object:
+            return SimpleNamespace(text=text)
+
+    client = GeminiClient(
+        Settings(_env_file=None, gemini_api_key="sentinel-not-a-real-key"),
+        sdk_client=SimpleNamespace(aio=SimpleNamespace(models=Models())),
+    )
+    with pytest.raises(GeminiInvalidResponseError):
+        asyncio.run(client.suggest_actions(context(), {"signal:readme": "kanıt"}))
+    assert getattr(caplog.records[-1], "failure_category") == "empty_provider_text"
+    assert "None" not in caplog.text
+
+
+def test_invalid_json_and_schema_failures_have_distinct_safe_categories(caplog: pytest.LogCaptureFixture) -> None:
+    responses = [
+        SimpleNamespace(text="{not-json"),
+        SimpleNamespace(text='{"suggestions":[],"extra":true}'),
+    ]
+
+    class Models:
+        def __init__(self) -> None:
+            self.index = 0
+
+        async def generate_content(self, **kwargs: object) -> object:
+            response = responses[self.index]
+            self.index += 1
+            return response
+
+    models = Models()
+    client = GeminiClient(
+        Settings(_env_file=None, gemini_api_key="sentinel-not-a-real-key"),
+        sdk_client=SimpleNamespace(aio=SimpleNamespace(models=models)),
+    )
+    for expected in ("json_parse", "pydantic_schema"):
+        with pytest.raises(GeminiInvalidResponseError):
+            asyncio.run(client.suggest_actions(context(), {"signal:readme": "kanıt"}))
+        assert getattr(caplog.records[-1], "failure_category") == expected
+    assert "not-json" not in caplog.text
+    assert "extra" not in caplog.text
+
+
+def test_max_tokens_finish_reason_takes_precedence_without_logging_content(caplog: pytest.LogCaptureFixture) -> None:
+    class Models:
+        async def generate_content(self, **kwargs: object) -> object:
+            return SimpleNamespace(
+                text="{truncated-provider-content",
+                candidates=[SimpleNamespace(finish_reason="MAX_TOKENS")],
+            )
+
+    client = GeminiClient(
+        Settings(_env_file=None, gemini_api_key="sentinel-not-a-real-key"),
+        sdk_client=SimpleNamespace(aio=SimpleNamespace(models=Models())),
+    )
+    with pytest.raises(GeminiInvalidResponseError):
+        asyncio.run(client.suggest_actions(context(), {"signal:readme": "kanıt"}))
+    assert getattr(caplog.records[-1], "failure_category") == "output_truncated"
+    assert "truncated-provider-content" not in caplog.text
+
+
+def test_evidence_validation_has_distinct_safe_category(caplog: pytest.LogCaptureFixture) -> None:
+    result = AISuggestions.model_validate({"suggestions": [{
+        "title": "Öneri", "description": "Açıklama", "reason": "Kanıt", "evidence_refs": ["unknown"]
+    }]})
+    with pytest.raises(GeminiInvalidResponseError):
+        validate_suggestions(result, {"signal:readme": "sensitive evidence"})
+    assert getattr(caplog.records[-1], "failure_category") == "evidence_reference"
+    assert "unknown" not in caplog.text
+    assert "sensitive evidence" not in caplog.text
+
+
 def test_grounding_omits_oversized_items_without_slicing() -> None:
     signal = SimpleNamespace(key="large", message="x" * 601)
     analysis = SimpleNamespace(
