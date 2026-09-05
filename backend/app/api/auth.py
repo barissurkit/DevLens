@@ -33,6 +33,7 @@ from app.auth.repositories import (
 from app.config import Settings
 from app.db.database import DatabaseNotConfiguredError, get_session, get_session_factory
 from app.db.models import OAuthLoginState, User
+from app.auth.session_cleanup import SessionCleanupCoordinator
 from app.schemas.auth import AuthErrorResponse, MeResponse
 from app.services.github.client import GitHubClient
 from app.observability import emit_event
@@ -141,6 +142,8 @@ async def get_optional_authenticated_user(request: Request, response: Response) 
             user = await get_user_by_session_token(session, sha256_digest(cookie))
             if user is None:
                 _clear_session_cookie(response, settings)
+            else:
+                await _maybe_cleanup_expired_sessions(request)
             return user
     except (DatabaseNotConfiguredError, SQLAlchemyError, OSError):
         return None
@@ -158,7 +161,24 @@ async def get_required_authenticated_user(
     if user is None:
         _clear_session_cookie(response, settings)
         raise HTTPException(status_code=401, detail="Authentication required.")
+    await _maybe_cleanup_expired_sessions(request)
     return user
+
+
+async def _maybe_cleanup_expired_sessions(request: Request) -> None:
+    settings = _settings(request)
+    if not settings.auth_enabled or not settings.database_url:
+        return
+    coordinator = getattr(request.app.state, "session_cleanup_coordinator", None)
+    if not isinstance(coordinator, SessionCleanupCoordinator):
+        return
+
+    async def cleanup() -> int:
+        async with get_session_factory(settings)() as cleanup_session:
+            async with cleanup_session.begin():
+                return await delete_expired_sessions(cleanup_session)
+
+    await coordinator.maybe_cleanup(cleanup)
 
 
 async def _limit_auth_login(request: Request) -> None:
@@ -243,8 +263,8 @@ async def github_callback(
             code_verifier=verifier,
         )
         github_user = await github_client.get_authenticated_user(access_token)
+        await _maybe_cleanup_expired_sessions(request)
         async with session.begin():
-            await delete_expired_sessions(session)
             old_cookie = request.cookies.get(_cookie_name(settings))
             if old_cookie:
                 await delete_session_by_token(session, sha256_digest(old_cookie))
@@ -283,6 +303,7 @@ async def me(
         _clear_session_cookie(response, settings)
         emit_event(logger, "auth.session.rejected", error_category="invalid_or_expired")
         return MeResponse(authenticated=False, user=None)
+    await _maybe_cleanup_expired_sessions(request)
     return MeResponse(authenticated=True, user=user)
 
 

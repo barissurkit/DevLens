@@ -67,8 +67,22 @@ async def delete_session_by_token(session: AsyncSession, token_hash: bytes) -> N
     await session.execute(delete(Session).where(Session.token_hash == token_hash))
 
 
-async def delete_expired_sessions(session: AsyncSession) -> None:
-    await session.execute(delete(Session).where(Session.expires_at <= utc_now()))
+async def delete_expired_sessions(session: AsyncSession) -> int:
+    now = utc_now()
+    expired = (
+        select(Session.id)
+        .where(Session.expires_at <= now)
+        .order_by(Session.expires_at, Session.id)
+        .limit(100)
+        .with_for_update(skip_locked=True)
+        .cte("expired_sessions")
+    )
+    result = await session.execute(
+        delete(Session)
+        .where(Session.id.in_(select(expired.c.id)))
+        .returning(Session.id)
+    )
+    return len(result.all())
 
 
 async def consume_login_state(session: AsyncSession, state_hash: bytes) -> OAuthLoginState | None:

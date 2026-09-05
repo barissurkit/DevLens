@@ -11,6 +11,7 @@ from app.api.interpretation import router as interpretation_router
 from app.api.auth import router as auth_router
 from app.api.action_plan import router as action_plan_router
 from app.api.ai_suggestions import router as ai_suggestions_router
+from app.auth.session_cleanup import SessionCleanupCoordinator
 from app.api.history import router as history_router
 from app.config import Settings, get_settings
 from app.observability import REQUEST_ID, configure_logging, emit_event, new_request_id
@@ -34,6 +35,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     application = FastAPI(title="DevLens API", version="0.1.0")
     application.state.settings = application_settings
     application.state.rate_limiter = RateLimiter()
+    application.state.session_cleanup_coordinator = SessionCleanupCoordinator()
 
     @application.middleware("http")
     async def request_observability(request: Request, call_next):
