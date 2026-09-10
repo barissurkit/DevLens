@@ -126,6 +126,7 @@ def test_postgresql_cleanup_enforces_boundary_and_batch() -> None:
             async with sessions() as session:
                 async with session.begin():
                     session.add(User(id=user_id, github_user_id=uuid4().int % (2**63), github_login=f"cleanup-{user_id.hex[:20]}"))
+                    await session.flush()
                     for index in range(SESSION_CLEANUP_BATCH_SIZE + 1):
                         record = Session(
                             user_id=user_id,
@@ -184,6 +185,7 @@ def test_postgresql_cleanup_skip_locked_uses_disjoint_batches() -> None:
             async with sessions() as session:
                 async with session.begin():
                     session.add(User(id=user_id, github_user_id=uuid4().int % (2**63), github_login=f"lock-{user_id.hex[:20]}"))
+                    await session.flush()
                     for index in range(SESSION_CLEANUP_BATCH_SIZE * 2):
                         session.add(
                             Session(
