@@ -232,7 +232,12 @@ async function actionPlanRequest(path: string, init: RequestInit = {}): Promise<
     throw new ApiError("Action Plan servisine ulaşılamadı.", 0, "network_error");
   }
   const payload = await readJson(response);
-  if (!response.ok) throw new ApiError("Action Plan işlemi tamamlanamadı.", response.status, "action_plan_error");
+  if (!response.ok) {
+    if (isOperationalErrorResponse(payload)) {
+      throw new ApiError(payload.detail.message, response.status, payload.detail.code);
+    }
+    throw new ApiError("Action Plan işlemi tamamlanamadı.", response.status, "action_plan_error");
+  }
   return payload;
 }
 

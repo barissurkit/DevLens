@@ -7,6 +7,7 @@ from starlette.requests import Request
 from app.api.action_plan import apply_task_update, require_workspace_origin
 from app.config import Settings
 from app.db.models import ActionPlanTask
+from app.db.repositories.action_plan import ACTION_PLAN_MAX_TASKS, ActionPlanLimitReachedError
 from app.schemas.action_plan import ActionPlanStatus, ActionPlanTaskCreate, ActionPlanTaskUpdate
 
 
@@ -22,6 +23,11 @@ def test_action_plan_input_trims_text_and_forbids_client_ownership() -> None:
     assert task.description == "Add usage"
     with pytest.raises(ValueError):
         ActionPlanTaskCreate(title="Task", user_id=uuid4())
+
+
+def test_action_plan_cap_is_server_owned() -> None:
+    assert ACTION_PLAN_MAX_TASKS == 100
+    assert issubclass(ActionPlanLimitReachedError, Exception)
 
 
 def test_action_plan_update_has_strict_status_vocabulary() -> None:

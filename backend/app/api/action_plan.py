@@ -6,7 +6,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.auth import get_required_authenticated_user
 from app.db.database import get_session
 from app.db.models import ActionPlanTask, User
-from app.db.repositories.action_plan import delete_task, get_task, list_tasks, utc_now
+from app.db.repositories.action_plan import (
+    ActionPlanLimitReachedError,
+    create_task,
+    delete_task,
+    get_task,
+    list_tasks,
+    utc_now,
+)
 from app.schemas.action_plan import ActionPlanResponse, ActionPlanTaskCreate, ActionPlanTaskResponse, ActionPlanTaskUpdate, ActionPlanStatus
 
 router = APIRouter(prefix="/api/v1/workspace/action-plan", tags=["Action Plan"])
@@ -52,8 +59,17 @@ async def create_action_plan_task(
     session: AsyncSession = Depends(get_session),
 ) -> ActionPlanTask:
     require_workspace_origin(request, origin, content_type)
-    task = ActionPlanTask(user_id=user.id, title=payload.title, description=payload.description)
-    session.add(task)
+    try:
+        task = await create_task(session, user.id, payload.title, payload.description)
+    except ActionPlanLimitReachedError:
+        await session.rollback()
+        raise HTTPException(
+            status_code=409,
+            detail={
+                "code": "action_plan_limit_reached",
+                "message": "Action Plan görev sınırına ulaşıldı. Yeni görev eklemek için mevcut bir görevi silin.",
+            },
+        ) from None
     await session.commit()
     await session.refresh(task)
     return task

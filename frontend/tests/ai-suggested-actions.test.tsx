@@ -2,10 +2,10 @@ import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/re
 import { userEvent } from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { AISuggestedActions } from "../components/ai-suggested-actions";
-import { createActionPlanTask, generateAISuggestions } from "../lib/api";
+import { ApiError, createActionPlanTask, generateAISuggestions } from "../lib/api";
 
 vi.mock("../lib/api", () => ({
-  ApiError: class ApiError extends Error {},
+  ApiError: class ApiError extends Error { status: number; code?: string; constructor(message: string, status: number, code?: string) { super(message); this.status = status; this.code = code; } },
   createActionPlanTask: vi.fn(),
   generateAISuggestions: vi.fn(),
 }));
@@ -47,6 +47,17 @@ describe("AI suggested actions", () => {
     resolve({ status: "available", suggestions: [] });
     await waitFor(() => expect(screen.getByRole("button", { name: "Generate suggestions" })).toBeInTheDocument());
     expect(screen.queryByText("AI önerileri şu anda kullanılamıyor.")).not.toBeInTheDocument();
+  });
+
+  it("surfaces the cap error and keeps the suggestion available", async () => {
+    mockedGenerate.mockResolvedValue({ status: "available", suggestions: [{ title: "README düzenle", description: "Açıklama", reason: "Kanıt", evidence_refs: ["signal:readme"] }] });
+    mockedCreate.mockRejectedValue(new ApiError("Action Plan görev sınırına ulaşıldı.", 409, "action_plan_limit_reached"));
+    const user = userEvent.setup();
+    render(<AISuggestedActions username="alice" />);
+    await user.click(screen.getByRole("button", { name: "Generate suggestions" }));
+    await user.click(await screen.findByRole("button", { name: "Add" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent("Action Plan görev sınırına ulaşıldı.");
+    expect(screen.getByText("README düzenle")).toBeInTheDocument();
   });
 
   it("ignores a late error after the suggestion component unmounts", async () => {
