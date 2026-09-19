@@ -53,7 +53,9 @@ export function AISuggestedActions({ username }: Props) {
       const task = await createActionPlanTask({ title: suggestion.title, description: suggestion.description });
       window.dispatchEvent(new CustomEvent<ActionPlanTask>("devlens:suggested-task-added", { detail: task }));
       setSuggestions((items) => items.filter((_, itemIndex) => itemIndex !== index));
-    } catch { setError("Öneri Action Plan'a eklenemedi."); }
+    } catch (cause) {
+      setError(cause instanceof ApiError ? cause.message : "Öneri Action Plan'a eklenemedi.");
+    }
     finally { setAdding(null); }
   }
 

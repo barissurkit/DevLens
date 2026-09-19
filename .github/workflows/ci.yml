@@ -101,6 +101,7 @@ jobs:
             tests/test_persistence_cache_final_postgres.py \
             tests/test_snapshot_public_postgres.py \
             tests/test_session_cleanup.py \
+            tests/test_action_plan_postgres.py \
             -q -rs 2>&1 | tee /tmp/devlens-postgres-pytest.txt
           if grep -Eq '[0-9]+ skipped' /tmp/devlens-postgres-pytest.txt; then
             echo 'Mandatory PostgreSQL tests must not be skipped.' >&2

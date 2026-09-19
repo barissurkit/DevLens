@@ -3,12 +3,12 @@ import { userEvent } from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ActionPlan } from "../components/action-plan";
 import { useAuth } from "../components/auth-provider";
-import { createActionPlanTask, deleteActionPlanTask, getActionPlan, updateActionPlanTask } from "../lib/api";
+import { ApiError, createActionPlanTask, deleteActionPlanTask, getActionPlan, updateActionPlanTask } from "../lib/api";
 import type { ActionPlanTask, AuthenticatedUser } from "../lib/types";
 
 vi.mock("../components/auth-provider", () => ({ useAuth: vi.fn() }));
 vi.mock("../lib/api", () => ({
-  ApiError: class ApiError extends Error {},
+  ApiError: class ApiError extends Error { status: number; code?: string; constructor(message: string, status: number, code?: string) { super(message); this.status = status; this.code = code; } },
   createActionPlanTask: vi.fn(),
   deleteActionPlanTask: vi.fn(),
   getActionPlan: vi.fn(),
@@ -86,6 +86,19 @@ describe("Action Plan workspace UI", () => {
     resolveLoad({ tasks: [] });
     expect(await screen.findByDisplayValue(createdTask.title)).toBeInTheDocument();
     expect(screen.getAllByDisplayValue(createdTask.title)).toHaveLength(1);
+  });
+
+  it("surfaces the server cap error without changing the existing list", async () => {
+    mockedGet.mockResolvedValue({ tasks: [task] });
+    mockedCreate.mockRejectedValue(new ApiError("Action Plan görev sınırına ulaşıldı.", 409, "action_plan_limit_reached"));
+    const userActions = userEvent.setup();
+    render(<ActionPlan />);
+    expect(await screen.findByDisplayValue("README geliştir")).toBeInTheDocument();
+    await userActions.type(screen.getByLabelText("Yeni görev"), "Yeni görev");
+    await userActions.click(screen.getByRole("button", { name: "Görev ekle" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent("Action Plan görev sınırına ulaşıldı.");
+    expect(screen.getByDisplayValue("README geliştir")).toBeInTheDocument();
+    expect(screen.getAllByDisplayValue("Yeni görev")).toHaveLength(1);
   });
 
   it("keeps a suggested task when the initial load resolves with a stale snapshot", async () => {
