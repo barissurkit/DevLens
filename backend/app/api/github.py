@@ -1,10 +1,9 @@
 import httpx
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 from pydantic import ValidationError
 
 from app.api.errors import APIErrorResponse, map_github_exception
 from app.clients.gemini import GeminiClient, GeminiNotConfiguredError
-from app.config import get_settings
 from app.schemas.github import GitHubUser
 from app.services.analysis_snapshot_persistence import AnalysisSnapshotPersistenceService
 from app.services.analysis_snapshot_cache import AnalysisSnapshotCacheService
@@ -18,12 +17,12 @@ router = APIRouter(
 )
 
 
-async def get_github_client() -> GitHubClient:
-    return GitHubClient(get_settings())
+async def get_github_client(request: Request) -> GitHubClient:
+    return GitHubClient(request.app.state.settings)
 
 
-async def get_gemini_client() -> GeminiClient | None:
-    settings = get_settings()
+async def get_gemini_client(request: Request) -> GeminiClient | None:
+    settings = request.app.state.settings
     if not settings.gemini_api_key:
         return None
     try:
@@ -32,16 +31,20 @@ async def get_gemini_client() -> GeminiClient | None:
         return None
 
 
-async def get_snapshot_persistence_service() -> AnalysisSnapshotPersistenceService:
-    return AnalysisSnapshotPersistenceService(get_settings())
+async def get_snapshot_persistence_service(
+    request: Request,
+) -> AnalysisSnapshotPersistenceService:
+    return AnalysisSnapshotPersistenceService(request.app.state.settings)
 
 
-async def get_analysis_snapshot_cache_service() -> AnalysisSnapshotCacheService:
-    return AnalysisSnapshotCacheService(get_settings())
+async def get_analysis_snapshot_cache_service(
+    request: Request,
+) -> AnalysisSnapshotCacheService:
+    return AnalysisSnapshotCacheService(request.app.state.settings)
 
 
-async def get_portfolio_history_service() -> PortfolioHistoryService:
-    return PortfolioHistoryService(get_settings())
+async def get_portfolio_history_service(request: Request) -> PortfolioHistoryService:
+    return PortfolioHistoryService(request.app.state.settings)
 
 
 @router.get(
