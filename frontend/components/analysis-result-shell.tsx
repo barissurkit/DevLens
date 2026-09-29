@@ -10,7 +10,7 @@ import { AISuggestedActions } from "./ai-suggested-actions";
 import { AnalysisHistory } from "./analysis-history";
 import { RepositoryAnalysisSection } from "./repository-analysis-section";
 import { GuidedImprovementSection } from "./guided-improvement-section";
-import { categoryLabel, portfolioModeLabel } from "../lib/presentation";
+import { categoryLabel, portfolioModeLabel, scoreTone } from "../lib/presentation";
 
 interface AnalysisResultShellProps {
   result: GitHubPortfolioInterpretationResponse;
@@ -63,9 +63,10 @@ export function AnalysisResultShell({ result, onReanalyze }: AnalysisResultShell
 
       <section aria-labelledby="score-heading" className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
         <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
-          <div>
+          {score.is_available && score.overall_score !== null && <ScoreGauge score={score.overall_score} />}
+          <div className="min-w-0 flex-1">
             <p className="text-sm font-medium uppercase tracking-[0.16em] text-slate-500">Portföy Kanıt Skoru</p>
-            <h3 id="score-heading" className="mt-3 text-5xl font-semibold tracking-tight text-slate-950">
+            <h3 id="score-heading" className={`mt-3 text-5xl font-semibold tracking-tight ${score.is_available && score.overall_score !== null ? scoreTone(score.overall_score).text : "text-slate-950"}`}>
               {score.is_available && score.overall_score !== null ? `${score.overall_score} / 100` : "Kullanılamıyor"}
             </h3>
             <p className="mt-3 max-w-xl text-sm leading-6 text-slate-600">Herkese açık repository&apos;lerde gözlemlenebilen dokümantasyon ve mühendislik pratiği sinyallerine dayalı deterministik portföy skoru.</p>
@@ -79,7 +80,7 @@ export function AnalysisResultShell({ result, onReanalyze }: AnalysisResultShell
       </section>
 
       <section aria-labelledby="stats-heading" className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
-        <SectionHeading id="stats-heading" title="Portfolio istatistikleri" />
+        <SectionHeading id="stats-heading" title="Portföy istatistikleri" />
         <div className="mt-5 grid grid-cols-1 gap-3 min-[420px]:grid-cols-2 sm:grid-cols-3 lg:grid-cols-6">
           <StatItem label="Herkese açık repository" value={user.public_repos} />
           <StatItem label="Seçilen" value={aggregation.selected_repository_count} />
@@ -126,6 +127,22 @@ function ScoreDimension({ dimension }: { dimension: PortfolioScoreDimensionResul
   const progress = Number.isFinite(dimension.score) ? Math.min(100, Math.max(0, dimension.score)) : 0;
   const label = DIMENSION_LABELS[dimension.key] || dimension.label;
   return <article className="min-w-0 rounded-xl bg-slate-50 p-4"><div className="flex flex-wrap items-baseline justify-between gap-2"><h4 className="min-w-0 font-medium text-slate-950">{label}</h4><span className="shrink-0 text-sm font-semibold text-slate-700">{dimension.points_earned} / {dimension.points_possible}</span></div><p className="mt-2 text-xs leading-5 text-slate-500">{DIMENSION_DESCRIPTIONS[dimension.key] || dimension.label}</p><div role="progressbar" aria-label={`${label} skoru`} aria-valuenow={progress} aria-valuemin={0} aria-valuemax={100} className="mt-4 h-2 overflow-hidden rounded-full bg-slate-200"><div className="h-full rounded-full bg-slate-700" style={{ width: `${progress}%` }} /></div></article>;
+}
+
+function ScoreGauge({ score }: { score: number }) {
+  const tone = scoreTone(score);
+  const radius = 42;
+  const circumference = 2 * Math.PI * radius;
+  const progress = Math.min(100, Math.max(0, score));
+  return (
+    <div className="flex shrink-0 flex-col items-center gap-2">
+      <svg aria-hidden="true" viewBox="0 0 100 100" className="h-28 w-28 -rotate-90">
+        <circle cx="50" cy="50" r={radius} fill="none" strokeWidth="9" className="stroke-slate-100" />
+        <circle cx="50" cy="50" r={radius} fill="none" strokeWidth="9" strokeLinecap="round" strokeDasharray={circumference} strokeDashoffset={circumference * (1 - progress / 100)} className={tone.stroke} />
+      </svg>
+      <span className={`rounded-full px-3 py-1 text-xs font-medium ${tone.badge}`}>{tone.label}</span>
+    </div>
+  );
 }
 
 function StatItem({ label, value }: { label: string; value: number }) {
