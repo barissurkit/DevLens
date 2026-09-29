@@ -1,65 +1,18 @@
 "use client";
 
-import { startTransition, type FormEvent, useEffect, useRef, useState } from "react";
-import { analyzePortfolioWithInterpretation, ApiError } from "../lib/api";
-import type { GitHubPortfolioInterpretationResponse } from "../lib/types";
+import { type FormEvent, useRef, useState } from "react";
 import { AnalysisErrorState } from "./analysis-error-state";
 import { AnalysisLoadingState } from "./analysis-loading-state";
 import { AnalysisResultShell } from "./analysis-result-shell";
-import { useAuth } from "./auth-provider";
+import { useAnalysis } from "./use-analysis";
 
 const MAX_USERNAME_LENGTH = 39;
 
 export function AnalysisForm() {
-  const { status, user } = useAuth();
   const [username, setUsername] = useState("");
-  const [state, setState] = useState<AnalysisState>({ status: "idle" });
   const [validationMessage, setValidationMessage] = useState<string | null>(null);
   const usernameInputRef = useRef<HTMLInputElement>(null);
-  const requestGeneration = useRef(0);
-  const targetRef = useRef<string | null>(null);
-  const authContextRef = useRef("");
-  const authContextKey = `${status}:${user?.github_login ?? "anonymous"}`;
-  authContextRef.current = authContextKey;
-
-  useEffect(() => {
-    requestGeneration.current += 1;
-    if (status !== "authenticated") {
-      targetRef.current = null;
-      startTransition(() => { setState({ status: "idle" }); setValidationMessage(null); });
-    } else {
-      startTransition(() => setState({ status: "idle" }));
-    }
-  }, [authContextKey, status]);
-
-  useEffect(() => {
-    if (status !== "authenticated" || !user || typeof window === "undefined") return;
-    const params = new URLSearchParams(window.location.search);
-    if (params.get("workspace") !== "1" || params.get("username") !== user.github_login) return;
-    const target = user.github_login;
-    window.history.replaceState({}, "", "/");
-    void submitUsername(target);
-  }, [status, user]);
-
-  async function submitUsername(normalizedUsername: string) {
-    const generation = requestGeneration.current + 1;
-    const requestAuthContext = authContextRef.current;
-    requestGeneration.current = generation;
-    targetRef.current = normalizedUsername;
-    setValidationMessage(null);
-    setState({ status: "loading", username: normalizedUsername });
-    try {
-      const result = await analyzePortfolioWithInterpretation(normalizedUsername);
-      if (generation !== requestGeneration.current || requestAuthContext !== authContextRef.current || targetRef.current !== normalizedUsername) return;
-      setState({ status: "success", result });
-    } catch (error) {
-      if (generation !== requestGeneration.current || requestAuthContext !== authContextRef.current || targetRef.current !== normalizedUsername) return;
-      const apiError = error instanceof ApiError
-        ? error
-        : new ApiError("Analiz tamamlanamadı.", 0, "unexpected_client_error");
-      setState({ status: "error", error: apiError, username: normalizedUsername });
-    }
-  }
+  const { state, submit, retry, reanalyze, resetToIdle } = useAnalysis(() => setValidationMessage(null));
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -71,15 +24,11 @@ export function AnalysisForm() {
         : null;
     setValidationMessage(message);
     if (message) {
-      setState({ status: "idle" });
+      resetToIdle();
       usernameInputRef.current?.focus();
     } else {
-      void submitUsername(normalizedUsername);
+      void submit(normalizedUsername);
     }
-  }
-
-  function handleRetry() {
-    if (state.status === "error") void submitUsername(state.username);
   }
 
   const isLoading = state.status === "loading";
@@ -122,15 +71,9 @@ export function AnalysisForm() {
           </p>
         )}
         {isLoading && <AnalysisLoadingState />}
-        {state.status === "error" && <AnalysisErrorState error={state.error} onRetry={handleRetry} />}
+        {state.status === "error" && <AnalysisErrorState error={state.error} onRetry={retry} />}
       </form>
-      {state.status === "success" && <AnalysisResultShell result={state.result} onReanalyze={() => void submitUsername(targetRef.current || state.result.analysis.user.username)} />}
+      {state.status === "success" && <AnalysisResultShell result={state.result} onReanalyze={reanalyze} />}
     </div>
   );
 }
-
-type AnalysisState =
-  | { status: "idle" }
-  | { status: "loading"; username: string }
-  | { status: "success"; result: GitHubPortfolioInterpretationResponse }
-  | { status: "error"; error: ApiError; username: string };

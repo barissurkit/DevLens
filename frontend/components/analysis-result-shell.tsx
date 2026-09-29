@@ -9,6 +9,7 @@ import { ActionPlan } from "./action-plan";
 import { AISuggestedActions } from "./ai-suggested-actions";
 import { AnalysisHistory } from "./analysis-history";
 import { RepositoryAnalysisSection } from "./repository-analysis-section";
+import { ScoreDimension } from "./score-dimension";
 import { GuidedImprovementSection } from "./guided-improvement-section";
 import { categoryLabel, portfolioModeLabel, scoreTone } from "../lib/presentation";
 
@@ -43,6 +44,7 @@ export function AnalysisResultShell({ result, onReanalyze }: AnalysisResultShell
 
   return (
     <section aria-labelledby="portfolio-dashboard" className="space-y-6">
+      <SectionNav />
       <header className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
@@ -66,7 +68,7 @@ export function AnalysisResultShell({ result, onReanalyze }: AnalysisResultShell
           {score.is_available && score.overall_score !== null && <ScoreGauge score={score.overall_score} />}
           <div className="min-w-0 flex-1">
             <p className="text-sm font-medium uppercase tracking-[0.16em] text-slate-500">Portföy Kanıt Skoru</p>
-            <h3 id="score-heading" className={`mt-3 text-5xl font-semibold tracking-tight ${score.is_available && score.overall_score !== null ? scoreTone(score.overall_score).text : "text-slate-950"}`}>
+            <h3 id="score-heading" className={`mt-3 scroll-mt-20 text-5xl font-semibold tracking-tight ${score.is_available && score.overall_score !== null ? scoreTone(score.overall_score).text : "text-slate-950"}`}>
               {score.is_available && score.overall_score !== null ? `${score.overall_score} / 100` : "Kullanılamıyor"}
             </h3>
             <p className="mt-3 max-w-xl text-sm leading-6 text-slate-600">Herkese açık repository&apos;lerde gözlemlenebilen dokümantasyon ve mühendislik pratiği sinyallerine dayalı deterministik portföy skoru.</p>
@@ -76,7 +78,7 @@ export function AnalysisResultShell({ result, onReanalyze }: AnalysisResultShell
           </div>
           {score.is_partial && <span className="rounded-full bg-amber-50 px-3 py-1.5 text-xs font-medium text-amber-800">Kısmi kanıt</span>}
         </div>
-        {dimensions.length > 0 ? <div className="mt-8 grid gap-4 md:grid-cols-3">{dimensions.map((dimension) => <ScoreDimension key={dimension.key} dimension={dimension} />)}</div> : <p className="mt-8 rounded-xl bg-slate-50 px-4 py-3 text-sm text-slate-600">Skor kullanılabilir olduğunda boyut dağılımı burada görünecek.</p>}
+        {dimensions.length > 0 ? <div className="mt-8 grid gap-4 md:grid-cols-3">{dimensions.map((dimension) => <ScoreDimension key={dimension.key} label={DIMENSION_LABELS[dimension.key] || dimension.label} score={dimension.score} pointsEarned={dimension.points_earned} pointsPossible={dimension.points_possible} description={DIMENSION_DESCRIPTIONS[dimension.key] || dimension.label} />)}</div> : <p className="mt-8 rounded-xl bg-slate-50 px-4 py-3 text-sm text-slate-600">Skor kullanılabilir olduğunda boyut dağılımı burada görünecek.</p>}
       </section>
 
       <section aria-labelledby="stats-heading" className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
@@ -115,6 +117,27 @@ export function AnalysisResultShell({ result, onReanalyze }: AnalysisResultShell
   );
 }
 
+const SECTION_LINKS: Array<[string, string]> = [
+  ["#score-heading", "Skor"],
+  ["#stats-heading", "İstatistikler"],
+  ["#ai-interpretation-heading", "AI Yorumu"],
+  ["#repository-analysis-heading", "Repository'ler"],
+];
+
+function SectionNav() {
+  return (
+    <nav aria-label="Sonuç bölümleri" className="sticky top-0 z-10 -mx-2 overflow-x-auto bg-slate-50/90 px-2 py-2 backdrop-blur">
+      <ul className="flex min-w-max gap-2">
+        {SECTION_LINKS.map(([href, label]) => (
+          <li key={href}>
+            <a href={href} className="inline-flex min-h-10 items-center rounded-full border border-slate-200 bg-white px-4 text-sm font-medium text-slate-700 transition hover:border-slate-300 hover:text-slate-950 focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-950 focus-visible:ring-offset-2">{label}</a>
+          </li>
+        ))}
+      </ul>
+    </nav>
+  );
+}
+
 function orderDimensions(dimensions: PortfolioScoreDimensionResult[]) {
   return [...dimensions].sort((left, right) => {
     const leftIndex = DIMENSION_ORDER.indexOf(left.key);
@@ -123,20 +146,14 @@ function orderDimensions(dimensions: PortfolioScoreDimensionResult[]) {
   });
 }
 
-function ScoreDimension({ dimension }: { dimension: PortfolioScoreDimensionResult }) {
-  const progress = Number.isFinite(dimension.score) ? Math.min(100, Math.max(0, dimension.score)) : 0;
-  const label = DIMENSION_LABELS[dimension.key] || dimension.label;
-  return <article className="min-w-0 rounded-xl bg-slate-50 p-4"><div className="flex flex-wrap items-baseline justify-between gap-2"><h4 className="min-w-0 font-medium text-slate-950">{label}</h4><span className="shrink-0 text-sm font-semibold text-slate-700">{dimension.points_earned} / {dimension.points_possible}</span></div><p className="mt-2 text-xs leading-5 text-slate-500">{DIMENSION_DESCRIPTIONS[dimension.key] || dimension.label}</p><div role="progressbar" aria-label={`${label} skoru`} aria-valuenow={progress} aria-valuemin={0} aria-valuemax={100} className="mt-4 h-2 overflow-hidden rounded-full bg-slate-200"><div className="h-full rounded-full bg-slate-700" style={{ width: `${progress}%` }} /></div></article>;
-}
-
 function ScoreGauge({ score }: { score: number }) {
   const tone = scoreTone(score);
   const radius = 42;
   const circumference = 2 * Math.PI * radius;
   const progress = Math.min(100, Math.max(0, score));
   return (
-    <div className="flex shrink-0 flex-col items-center gap-2">
-      <svg aria-hidden="true" viewBox="0 0 100 100" className="h-28 w-28 -rotate-90">
+    <div className="flex shrink-0 flex-row items-center gap-3 lg:flex-col">
+      <svg aria-hidden="true" viewBox="0 0 100 100" className="h-20 w-20 -rotate-90 lg:h-28 lg:w-28">
         <circle cx="50" cy="50" r={radius} fill="none" strokeWidth="9" className="stroke-slate-100" />
         <circle cx="50" cy="50" r={radius} fill="none" strokeWidth="9" strokeLinecap="round" strokeDasharray={circumference} strokeDashoffset={circumference * (1 - progress / 100)} className={tone.stroke} />
       </svg>
