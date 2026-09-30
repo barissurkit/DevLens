@@ -47,3 +47,39 @@ def test_untrusted_origin_does_not_receive_allow_origin() -> None:
 
 def test_cors_app_factory_returns_fastapi_application() -> None:
     assert isinstance(create_app(Settings(_env_file=None)), FastAPI)
+
+
+def test_retry_after_is_exposed_to_the_allowed_origin() -> None:
+    application = create_app(
+        Settings(_env_file=None, cors_allowed_origins="https://frontend.example")
+    )
+
+    async def request() -> httpx.Response:
+        async with httpx.AsyncClient(
+            transport=ASGITransport(app=application), base_url="http://test"
+        ) as client:
+            return await client.get("/health", headers={"Origin": "https://frontend.example"})
+
+    response = asyncio.run(request())
+
+    assert response.status_code == 200
+    exposed = {name.strip().lower() for name in response.headers["access-control-expose-headers"].split(",")}
+    assert "retry-after" in exposed
+
+
+def test_untrusted_origin_still_gets_no_allow_origin_with_exposed_headers_configured() -> None:
+    # Exposed headers are meaningless to a browser without Access-Control-Allow-Origin,
+    # so exposing Retry-After must not widen which origins may read responses.
+    application = create_app(
+        Settings(_env_file=None, cors_allowed_origins="https://frontend.example")
+    )
+
+    async def request() -> httpx.Response:
+        async with httpx.AsyncClient(
+            transport=ASGITransport(app=application), base_url="http://test"
+        ) as client:
+            return await client.get("/health", headers={"Origin": "https://untrusted.example"})
+
+    response = asyncio.run(request())
+
+    assert "access-control-allow-origin" not in response.headers

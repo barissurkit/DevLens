@@ -70,6 +70,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         allow_credentials=True,
         allow_methods=["GET", "POST", "PATCH", "DELETE"],
         allow_headers=["*"],
+        # Cross-origin browsers hide non-safelisted response headers unless they are exposed;
+        # the frontend reads Retry-After to tell users how long to wait after a 429.
+        expose_headers=["Retry-After"],
     )
     application.include_router(github_router)
     application.include_router(analysis_router)
