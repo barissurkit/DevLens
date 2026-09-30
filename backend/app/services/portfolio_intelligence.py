@@ -50,162 +50,29 @@ def _signal_message(key: str, kind: str, detected_count: int = 0) -> str:
 
 @dataclass(frozen=True, slots=True)
 class PortfolioInsightRule:
+    """Which insight kinds a portfolio signal can produce. Message text comes from ``_signal_message``."""
+
     key: str
-    strength_message: str | None
-    improvement_zero_message: str | None = None
-    improvement_limited_message: str | None = None
+    strength: bool = True
+    improvement: bool = True
     suppress_improvement_with_partial_evidence: bool = False
 
 
+# Order matters: insights are reported in this order.
 PORTFOLIO_INSIGHT_RULES: tuple[PortfolioInsightRule, ...] = (
-    PortfolioInsightRule(
-        key="readme_exists",
-        strength_message=(
-            "Root README content was available across multiple successfully "
-            "analyzed public repositories."
-        ),
-        improvement_zero_message=(
-            "No root README content was available across the successfully "
-            "analyzed public repositories."
-        ),
-        improvement_limited_message=(
-            "Root README content was available in only a limited portion of "
-            "the successfully analyzed public repositories."
-        ),
-    ),
-    PortfolioInsightRule(
-        key="readme_title",
-        strength_message=(
-            "README title signals were detected across multiple successfully "
-            "analyzed public repositories."
-        ),
-    ),
-    PortfolioInsightRule(
-        key="readme_description",
-        strength_message=(
-            "README description signals were detected across multiple "
-            "successfully analyzed public repositories."
-        ),
-        improvement_zero_message=(
-            "No meaningful README description signal was detected across the "
-            "successfully analyzed public repositories."
-        ),
-        improvement_limited_message=(
-            "Meaningful README description signals were detected in only a "
-            "limited portion of the successfully analyzed public repositories."
-        ),
-    ),
-    PortfolioInsightRule(
-        key="readme_installation",
-        strength_message=(
-            "README installation-section signals were detected across multiple "
-            "successfully analyzed public repositories."
-        ),
-        improvement_zero_message=(
-            "No README installation-section signal was detected across the "
-            "successfully analyzed public repositories."
-        ),
-        improvement_limited_message=(
-            "README installation-section signals were detected in only a "
-            "limited portion of the successfully analyzed public repositories."
-        ),
-    ),
-    PortfolioInsightRule(
-        key="readme_usage",
-        strength_message=(
-            "README usage-section signals were detected across multiple "
-            "successfully analyzed public repositories."
-        ),
-        improvement_zero_message=(
-            "No README usage-section signal was detected across the "
-            "successfully analyzed public repositories."
-        ),
-        improvement_limited_message=(
-            "README usage-section signals were detected in only a limited "
-            "portion of the successfully analyzed public repositories."
-        ),
-    ),
-    PortfolioInsightRule(
-        key="readme_technologies",
-        strength_message=(
-            "README technology-section signals were detected across multiple "
-            "successfully analyzed public repositories."
-        ),
-    ),
-    PortfolioInsightRule(
-        key="readme_requirements",
-        strength_message=(
-            "README requirements-section signals were detected across multiple "
-            "successfully analyzed public repositories."
-        ),
-        improvement_zero_message=(
-            "No README requirements-section signal was detected across the "
-            "successfully analyzed public repositories."
-        ),
-        improvement_limited_message=(
-            "README requirements-section signals were detected in only a "
-            "limited portion of the successfully analyzed public repositories."
-        ),
-    ),
-    PortfolioInsightRule(
-        key="tests_structure",
-        strength_message=(
-            "Test-directory structure signals were detected across multiple "
-            "successfully analyzed public repositories."
-        ),
-        improvement_zero_message=(
-            "No test-directory structure signal was detected across the "
-            "successfully analyzed public repositories."
-        ),
-        improvement_limited_message=(
-            "Test-directory structure signals were detected in only a limited "
-            "portion of the successfully analyzed public repositories."
-        ),
-        suppress_improvement_with_partial_evidence=True,
-    ),
-    PortfolioInsightRule(
-        key="ci_workflow",
-        strength_message=(
-            "GitHub Actions workflow signals were detected across multiple "
-            "successfully analyzed public repositories."
-        ),
-        improvement_zero_message=(
-            "No GitHub Actions workflow signal was detected across the "
-            "successfully analyzed public repositories."
-        ),
-        improvement_limited_message=(
-            "GitHub Actions workflow signals were detected in only a limited "
-            "portion of the successfully analyzed public repositories."
-        ),
-        suppress_improvement_with_partial_evidence=True,
-    ),
-    PortfolioInsightRule(
-        key="gitignore",
-        strength_message=(
-            ".gitignore file signals were detected across multiple successfully "
-            "analyzed public repositories."
-        ),
-    ),
-    PortfolioInsightRule(
-        key="license",
-        strength_message=(
-            "Supported license filename signals were detected across multiple "
-            "successfully analyzed public repositories."
-        ),
-        improvement_zero_message=(
-            "No supported license filename signal was detected across the "
-            "successfully analyzed public repositories."
-        ),
-        improvement_limited_message=(
-            "Supported license filename signals were detected in only a limited "
-            "portion of the successfully analyzed public repositories."
-        ),
-        suppress_improvement_with_partial_evidence=True,
-    ),
-    PortfolioInsightRule(
-        key="contributing",
-        strength_message=None,
-    ),
+    PortfolioInsightRule("readme_exists"),
+    PortfolioInsightRule("readme_title", improvement=False),
+    PortfolioInsightRule("readme_description"),
+    PortfolioInsightRule("readme_installation"),
+    PortfolioInsightRule("readme_usage"),
+    PortfolioInsightRule("readme_technologies", improvement=False),
+    PortfolioInsightRule("readme_requirements"),
+    PortfolioInsightRule("tests_structure", suppress_improvement_with_partial_evidence=True),
+    PortfolioInsightRule("ci_workflow", suppress_improvement_with_partial_evidence=True),
+    PortfolioInsightRule("gitignore", improvement=False),
+    PortfolioInsightRule("license", suppress_improvement_with_partial_evidence=True),
+    # Only part of the score; it never produces an insight of its own.
+    PortfolioInsightRule("contributing", strength=False, improvement=False),
 )
 
 
@@ -251,7 +118,7 @@ def _strength_signals(
         detected_count = signal_counts[rule.key]
 
         if (
-            rule.strength_message is not None
+            rule.strength
             and detected_count >= MIN_DETECTIONS_FOR_STRENGTH
             and is_portfolio_rule_passing(
                 detected_repository_count=detected_count,
@@ -286,8 +153,7 @@ def _improvement_signals(
         detected_count = signal_counts[rule.key]
 
         if (
-            rule.improvement_zero_message is None
-            or rule.improvement_limited_message is None
+            not rule.improvement
             or is_portfolio_rule_passing(
                 detected_repository_count=detected_count,
                 analyzed_repository_count=analyzed_count,
@@ -299,15 +165,10 @@ def _improvement_signals(
         ):
             continue
 
-        message = (
-            rule.improvement_zero_message
-            if detected_count == 0
-            else rule.improvement_limited_message
-        )
         improvements.append(
             PortfolioInsight(
                 key=rule.key,
-            message=_signal_message(rule.key, "improvement", detected_count),
+                message=_signal_message(rule.key, "improvement", detected_count),
                 detected_repository_count=detected_count,
                 analyzed_repository_count=analyzed_count,
             )
