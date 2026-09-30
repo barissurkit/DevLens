@@ -32,16 +32,20 @@ _SIGNAL_LABELS = {
 }
 
 
+def _capitalize_first(text: str) -> str:
+    if not text:
+        return text
+    first = "İ" if text[0] == "i" else text[0].upper()
+    return first + text[1:]
+
+
 def _signal_message(key: str, kind: str, detected_count: int = 0) -> str:
     label = _SIGNAL_LABELS[key]
     if kind == "strength":
-        display_label = "README" if key.startswith("readme_") else label
-        return f"{display_label} sinyalleri, başarıyla analiz edilen birden fazla herkese açık repository'de tespit edildi."
+        return f"{_capitalize_first(label)} sinyalleri, başarıyla analiz edilen birden fazla herkese açık repository'de tespit edildi."
     if detected_count == 0:
-        display_label = "README " + label.removeprefix("README ") if key.startswith("readme_") else label
-        return f"Başarıyla analiz edilen herkese açık repository'lerin hiçbirinde {display_label} sinyali tespit edilmedi."
-    display_label = "README " + label.removeprefix("README ") if key.startswith("readme_") else label
-    return f"{display_label} sinyalleri, başarıyla analiz edilen herkese açık repository'lerin yalnızca sınırlı bir bölümünde tespit edildi."
+        return f"Başarıyla analiz edilen herkese açık repository'lerin hiçbirinde {label} sinyali tespit edilmedi."
+    return f"{_capitalize_first(label)} sinyalleri, başarıyla analiz edilen herkese açık repository'lerin yalnızca sınırlı bir bölümünde tespit edildi."
 
 
 @dataclass(frozen=True, slots=True)
