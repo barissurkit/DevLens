@@ -48,7 +48,7 @@ export function AnalysisForm({ hero, preview, features }: AnalysisFormProps) {
       <div className={showResult ? "" : "grid items-center gap-10 lg:grid-cols-2 lg:gap-16"}>
         <div className="min-w-0">
           {!showResult && hero}
-          <form onSubmit={handleSubmit} noValidate aria-busy={isLoading} className={`rounded-xl border border-slate-200 bg-white p-5 sm:p-6 ${showResult ? "shadow-card" : "shadow-raised"}`}>
+          <form onSubmit={handleSubmit} noValidate aria-busy={isLoading} className={`rounded-xl border border-slate-200 bg-card p-5 sm:p-6 ${showResult ? "shadow-card" : "shadow-raised"}`}>
         <label htmlFor="github-username" className="block text-sm font-medium text-slate-900">GitHub kullanıcı adı</label>
         <div className="mt-2 flex flex-col gap-3 sm:flex-row">
           <input
@@ -71,7 +71,7 @@ export function AnalysisForm({ hero, preview, features }: AnalysisFormProps) {
           <button
             type="submit"
             disabled={isLoading}
-            className="min-h-12 shrink-0 rounded-xl bg-indigo-600 px-5 font-medium text-white transition hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2 disabled:cursor-not-allowed disabled:bg-slate-400 disabled:text-slate-100"
+            className="min-h-12 shrink-0 rounded-xl bg-indigo-600 px-5 font-medium text-white transition hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2 disabled:cursor-not-allowed disabled:bg-slate-400 disabled:text-slate-100"
           >
             {isLoading ? "Analiz ediliyor..." : "Analiz et"}
           </button>
