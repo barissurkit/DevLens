@@ -4,6 +4,7 @@ import { type FormEvent, type ReactNode, useEffect, useRef, useState } from "rea
 import { AnalysisErrorState } from "./analysis-error-state";
 import { AnalysisLoadingState } from "./analysis-loading-state";
 import { AnalysisResultShell } from "./analysis-result-shell";
+import { ResultSkeleton } from "./result-skeleton";
 import { useAuth } from "./auth-provider";
 import { useAnalysis } from "./use-analysis";
 import { userPath } from "../lib/share";
@@ -67,15 +68,17 @@ export function AnalysisForm({ hero, preview, features, initialUsername }: Analy
   const liveHint = hasValidationError ? null : liveUsernameHint(username);
 
   const showResult = state.status === "success";
+  // A linked result page shows the compact search bar and a skeleton while it loads, instead of the marketing hero.
+  const compact = showResult || (initialUsername !== undefined && state.status === "loading");
 
   return (
-    <div className="space-y-10">
-      <div className={showResult ? "" : "grid items-center gap-10 lg:grid-cols-2 lg:gap-16"}>
+    <div className={compact ? "space-y-6" : "space-y-24"}>
+      <div className={compact ? "" : "hero-backdrop grid items-center gap-10 py-4 lg:grid-cols-[1.2fr_1fr] lg:gap-14 lg:py-10"}>
         <div className="min-w-0">
-          {!showResult && hero}
-          <form onSubmit={handleSubmit} noValidate aria-busy={isLoading} className={`rounded-xl border border-slate-200 bg-card p-5 sm:p-6 ${showResult ? "shadow-card" : "shadow-raised"}`}>
-        <label htmlFor="github-username" className="block text-sm font-medium text-slate-900">GitHub kullanıcı adı</label>
-        <div className="mt-2 flex flex-col gap-3 sm:flex-row">
+          {!compact && hero}
+          <form onSubmit={handleSubmit} noValidate aria-busy={isLoading} className={`rounded-2xl border border-slate-200 bg-card ${compact ? "p-3 shadow-card sm:p-4" : "p-5 shadow-raised sm:p-6"}`}>
+        <label htmlFor="github-username" className={compact ? "sr-only" : "block text-sm font-medium text-slate-900"}>GitHub kullanıcı adı</label>
+        <div className={`flex flex-col gap-3 sm:flex-row ${compact ? "" : "mt-2"}`}>
           <input
             ref={usernameInputRef}
             id="github-username"
@@ -101,7 +104,7 @@ export function AnalysisForm({ hero, preview, features, initialUsername }: Analy
             {isLoading ? "Analiz ediliyor..." : "Analiz et"}
           </button>
         </div>
-        <p id="username-hint" aria-live="polite" className={`mt-3 text-sm ${liveHint ? "text-amber-700" : "text-slate-500"}`}>
+        <p id="username-hint" aria-live="polite" className={liveHint ? "mt-3 text-sm text-amber-700" : compact ? "sr-only" : "mt-3 text-sm text-slate-500"}>
           {liveHint ?? "Kullanıcı adını, @kullanici veya bir github.com/kullanici bağlantısını girebilirsiniz."}
         </p>
         {validationMessage && (
@@ -128,9 +131,10 @@ export function AnalysisForm({ hero, preview, features, initialUsername }: Analy
         {state.status === "error" && <AnalysisErrorState error={state.error} onRetry={retry} />}
           </form>
         </div>
-        {!showResult && preview}
+        {!compact && preview}
       </div>
-      {!showResult && features}
+      {compact && state.status === "loading" && <ResultSkeleton />}
+      {!compact && features}
       {state.status === "success" && <AnalysisResultShell result={state.result} onReanalyze={reanalyze} onRetryInterpretation={retryInterpretation} />}
     </div>
   );

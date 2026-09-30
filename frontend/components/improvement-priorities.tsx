@@ -17,7 +17,7 @@ export function ImprovementPriorities({ dimensions, overallScore }: ImprovementP
   const totalGain = Math.round(overallScore === null ? rawGain : Math.min(rawGain, 100 - overallScore));
 
   return (
-    <section aria-labelledby="priorities-heading" className="rounded-xl border border-indigo-200 bg-indigo-50/60 p-5 shadow-card sm:p-6">
+    <section aria-labelledby="priorities-heading" className="rounded-2xl border border-indigo-200 bg-indigo-50/60 p-5 shadow-card sm:p-6">
       <h3 id="priorities-heading" className="text-base font-semibold tracking-tight text-slate-950">Önce şunu yap</h3>
       <p className="mt-1 text-sm text-slate-600">Skoru en çok artıracak adımlar. Puan, kuralın ağırlığı × eksik repository oranıdır.</p>
       <ol className="mt-4 space-y-2">

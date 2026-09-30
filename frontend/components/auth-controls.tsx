@@ -51,9 +51,11 @@ export function AuthControls() {
     <div className="flex flex-wrap items-center justify-end gap-2">
       <a
         href={getAuthStartUrl()}
-        className={`${controlClassName} bg-indigo-600 text-white hover:bg-primary-hover`}
+        aria-label="GitHub ile giriş yap"
+        className={`${controlClassName} whitespace-nowrap bg-indigo-600 text-white hover:bg-primary-hover`}
       >
-        GitHub ile giriş yap
+        <span className="sm:hidden" aria-hidden="true">Giriş yap</span>
+        <span className="hidden sm:inline" aria-hidden="true">GitHub ile giriş yap</span>
       </a>
       {status === "error" && (
         <button

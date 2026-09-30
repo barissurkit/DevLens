@@ -44,7 +44,7 @@ export function ResultTabs({ tabs, activeId, onChange, idPrefix }: ResultTabsPro
   }
 
   return (
-    <div className="sticky top-0 z-10 -mx-4 border-b border-slate-200 bg-slate-50/90 px-4 backdrop-blur sm:-mx-0 sm:rounded-t-xl sm:px-0">
+    <div className="sticky top-[53px] z-20 -mx-4 border-b border-slate-200 bg-slate-50/90 px-4 backdrop-blur-md sm:mx-0 sm:px-0">
       <div role="tablist" aria-label="Analiz sonucu bölümleri" className="flex gap-1 overflow-x-auto overflow-y-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {tabs.map((tab, index) => {
           const selected = tab.id === activeId;

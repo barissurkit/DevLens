@@ -103,7 +103,7 @@ export function RepositoryAnalysisSection({ repositories, failures, excluded }: 
 
       {failures.length > 0 && <FailureSection failures={failures} />}
       {excluded.length > 0 && <ExcludedSection repositories={excluded} />}
-      {!hasAnyRepositoryState && <p className="rounded-xl border border-slate-200 bg-card p-5 text-sm text-slate-600">Bu analizde repository sonucu bulunmuyor.</p>}
+      {!hasAnyRepositoryState && <p className="rounded-2xl border border-slate-200 bg-card p-5 text-sm text-slate-600">Bu analizde repository sonucu bulunmuyor.</p>}
     </section>
   );
 }
@@ -122,7 +122,7 @@ interface RepositoryControlsProps {
 function RepositoryControls({ sort, onSortChange, onlyPartial, onOnlyPartialChange, onlyLowScore, onOnlyLowScoreChange, visibleCount, totalCount }: RepositoryControlsProps) {
   const checkboxClass = "h-4 w-4 rounded border-slate-300 text-slate-950 focus:ring-2 focus:ring-indigo-600";
   return (
-    <div role="group" aria-label="Repository listesi sıralama ve filtreleme" className="flex flex-col gap-4 rounded-xl border border-slate-200 bg-card p-4 shadow-card sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:p-5">
+    <div role="group" aria-label="Repository listesi sıralama ve filtreleme" className="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-card p-4 shadow-card sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:p-5">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-5">
         <label className="flex items-center gap-2 text-sm text-slate-700">
           <span className="font-medium text-slate-900">Sırala</span>
@@ -150,7 +150,7 @@ function RepositoryCard({ result }: { result: PortfolioRepositoryResult }) {
   const categories = analysis.classification.categories;
 
   return (
-    <details className="group rounded-xl border border-slate-200 bg-card shadow-card">
+    <details className="group rounded-2xl border border-slate-200 bg-card shadow-card">
       <summary className="grid cursor-pointer list-none grid-cols-[auto_minmax(0,1fr)] items-start gap-x-3 gap-y-3 rounded-xl p-5 outline-none transition focus-visible:ring-2 focus-visible:ring-indigo-600 focus-visible:ring-offset-2 sm:grid-cols-[auto_minmax(0,1fr)_auto] sm:items-center sm:p-6">
         <span aria-hidden="true" className="mt-1 shrink-0 text-xl leading-none text-slate-500 transition-transform group-open:rotate-90">›</span>
         <div className="min-w-0">
@@ -206,5 +206,5 @@ function ExcludedSection({ repositories }: { repositories: ExcludedPortfolioRepo
 }
 
 function EmptyRepositoryState({ message }: { message: string }) {
-  return <p className="rounded-xl border border-slate-200 bg-card p-5 text-sm text-slate-600">{message}</p>;
+  return <p className="rounded-2xl border border-slate-200 bg-card p-5 text-sm text-slate-600">{message}</p>;
 }
