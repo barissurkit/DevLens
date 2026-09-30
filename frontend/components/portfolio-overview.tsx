@@ -1,7 +1,9 @@
-import type { GitHubPortfolioAnalysis, PortfolioInsight, PortfolioScoreDimensionResult } from "../lib/types";
+import type { GitHubPortfolioAnalysis, PortfolioInsight, PortfolioRepositoryResult, PortfolioScoreDimensionResult } from "../lib/types";
 import { categoryLabel, scoreTone } from "../lib/presentation";
+import { ImprovementPriorities } from "./improvement-priorities";
 import { ScoreDimension } from "./score-dimension";
 import { ScoreMethodology } from "./score-methodology";
+import { SignalDetail } from "./signal-detail";
 
 const DIMENSION_ORDER = ["documentation_consistency", "testing_automation_adoption", "repository_hygiene_consistency"];
 const DIMENSION_LABELS: Record<string, string> = {
@@ -20,6 +22,7 @@ const cardClass = "rounded-xl border border-slate-200 bg-card p-5 shadow-card sm
 export function PortfolioOverview({ analysis }: { analysis: GitHubPortfolioAnalysis }) {
   const { aggregation, intelligence, score, selection, user } = analysis;
   const limitations = uniqueItems([...score.limitations, ...intelligence.limitations]);
+  const repositories = analysis.repository_analysis.repositories;
 
   return (
     <div className="space-y-6">
@@ -38,9 +41,11 @@ export function PortfolioOverview({ analysis }: { analysis: GitHubPortfolioAnaly
         </section>
       </div>
 
+      {score.is_available && <ImprovementPriorities dimensions={score.dimensions} overallScore={score.overall_score} />}
+
       <div className="grid gap-6 lg:grid-cols-2">
-        <InsightSection id="strengths-heading" title="Güçlü Kanıt Sinyalleri" tone="positive" items={intelligence.strength_signals} emptyMessage="Portföy genelinde tekrar eden güçlü kanıt sinyali belirlenmedi." />
-        <InsightSection id="improvements-heading" title="Gelişim Alanları" tone="attention" items={intelligence.improvement_signals} emptyMessage="Bu analizde portföy genelinde tekrarlayan bir gelişim alanı belirlenmedi." />
+        <InsightSection id="strengths-heading" title="Güçlü Kanıt Sinyalleri" tone="positive" items={intelligence.strength_signals} repositories={repositories} emptyMessage="Portföy genelinde tekrar eden güçlü kanıt sinyali belirlenmedi." />
+        <InsightSection id="improvements-heading" title="Gelişim Alanları" tone="attention" items={intelligence.improvement_signals} repositories={repositories} emptyMessage="Bu analizde portföy genelinde tekrarlayan bir gelişim alanı belirlenmedi." />
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
@@ -130,7 +135,7 @@ function SectionHeading({ id, title }: { id: string; title: string }) {
 
 const INSIGHT_ACCENT = { positive: "border-l-emerald-500", attention: "border-l-amber-500" } as const;
 
-function InsightSection({ id, title, tone, items, emptyMessage }: { id: string; title: string; tone: keyof typeof INSIGHT_ACCENT; items: PortfolioInsight[]; emptyMessage: string }) {
+function InsightSection({ id, title, tone, items, repositories, emptyMessage }: { id: string; title: string; tone: keyof typeof INSIGHT_ACCENT; items: PortfolioInsight[]; repositories: PortfolioRepositoryResult[]; emptyMessage: string }) {
   return (
     <section aria-labelledby={id} className={cardClass}>
       <SectionHeading id={id} title={title} />
@@ -139,6 +144,7 @@ function InsightSection({ id, title, tone, items, emptyMessage }: { id: string; 
             <li key={item.key} className={`rounded-lg border-l-4 bg-slate-50 p-4 text-sm leading-6 text-slate-700 ${INSIGHT_ACCENT[tone]}`}>
               <p>{item.message}</p>
               <CoverageMeter detected={item.detected_repository_count} analyzed={item.analyzed_repository_count} tone={tone} />
+              <SignalDetail signalKey={item.key} repositories={repositories} />
             </li>
           ))}</ul>
         : <p className="mt-4 text-sm leading-6 text-slate-500">{emptyMessage}</p>}
