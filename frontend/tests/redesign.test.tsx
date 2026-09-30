@@ -106,3 +106,12 @@ describe("search shortcut", () => {
     expect(other).toHaveFocus();
   });
 });
+
+describe("signal labels", () => {
+  it("names known signals in Turkish and leaves unknown keys untouched", async () => {
+    const { signalLabel } = await import("../lib/signals");
+    expect(signalLabel("ci_workflow")).toBe("CI iş akışı");
+    expect(signalLabel("readme_usage")).toBe("README kullanım bölümü");
+    expect(signalLabel("something_new")).toBe("something_new");
+  });
+});

@@ -7,7 +7,7 @@ import { AnalysisResultShell } from "./analysis-result-shell";
 import { ResultSkeleton } from "./result-skeleton";
 import { useAuth } from "./auth-provider";
 import { useAnalysis } from "./use-analysis";
-import { userPath } from "../lib/share";
+import { userPageMetadata, userPath } from "../lib/share";
 import { EXAMPLE_USERNAMES, liveUsernameHint, parseGitHubUsername } from "../lib/username";
 
 interface AnalysisFormProps {
@@ -55,6 +55,7 @@ export function AnalysisForm({ hero, preview, features, initialUsername }: Analy
     if (!shownUsername) return;
     const path = userPath(shownUsername);
     if (window.location.pathname !== path) window.history.replaceState(window.history.state, "", path);
+    document.title = userPageMetadata(shownUsername).title;
   }, [shownUsername]);
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
