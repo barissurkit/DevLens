@@ -21,8 +21,8 @@ const UNAVAILABLE_COPY: Record<InterpretationUnavailableReason, string> = {
 
 export function PortfolioInterpretationSection({ analysis, interpretation }: PortfolioInterpretationSectionProps) {
   return (
-    <section aria-labelledby="ai-interpretation-heading" className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
-      <p className="text-sm font-medium uppercase tracking-[0.16em] text-slate-500">İsteğe Bağlı AI Katmanı</p>
+    <section aria-labelledby="ai-interpretation-heading" className="rounded-xl border border-slate-200 bg-white p-6 shadow-card sm:p-8">
+      <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">İsteğe Bağlı AI Katmanı</p>
       <h3 id="ai-interpretation-heading" className="mt-2 scroll-mt-20 text-2xl font-semibold tracking-tight text-slate-950">AI Yorumu</h3>
       <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">
         Bu bölüm, DevLens&apos;in ölçtüğü deterministik kanıt sonuçlarını açıklar; skorları veya kanıtları değiştirmez.
