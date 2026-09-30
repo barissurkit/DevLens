@@ -5,6 +5,7 @@ import pytest
 from sqlalchemy.exc import OperationalError
 
 from app.config import Settings
+from app.schemas.interpretation import PortfolioInterpretation, PublicInterpretationAvailable
 from app.db.repositories.analysis_snapshots import SnapshotPayloadValidationError
 from app.services import analysis_snapshot_cache as cache_module
 from app.services.analysis_snapshot_cache import (
@@ -52,7 +53,12 @@ def test_cache_returns_validated_analysis_and_original_timestamp(monkeypatch) ->
             return type(
                 "Record",
                 (),
-                {"analysis": analysis, "analysis_generated_at": generated_at},
+                {
+                    "analysis": analysis,
+                    "analysis_generated_at": generated_at,
+                    "interpretation": None,
+                    "interpretation_schema_version": None,
+                },
             )()
 
     monkeypatch.setattr(cache_module, "AnalysisSnapshotRepository", lambda session: Repository())
@@ -66,6 +72,40 @@ def test_cache_returns_validated_analysis_and_original_timestamp(monkeypatch) ->
     assert isinstance(result, CachedAnalysis)
     assert result.analysis is analysis
     assert result.analysis_generated_at == generated_at
+    assert result.interpretation is None
+    assert result.interpretation_schema_version is None
+
+
+def test_cache_carries_the_stored_interpretation_with_its_schema_version(monkeypatch) -> None:
+    analysis = create_result()
+    stored = PublicInterpretationAvailable(
+        status="available", interpretation=PortfolioInterpretation(summary="Stored.")
+    )
+
+    class Repository:
+        async def get_latest_compatible_analysis(self, **kwargs):
+            return type(
+                "Record",
+                (),
+                {
+                    "analysis": analysis,
+                    "analysis_generated_at": datetime.now(timezone.utc),
+                    "interpretation": stored,
+                    "interpretation_schema_version": "v1",
+                },
+            )()
+
+    monkeypatch.setattr(cache_module, "AnalysisSnapshotRepository", lambda session: Repository())
+    service = AnalysisSnapshotCacheService(
+        Settings(_env_file=None, database_url="postgresql+asyncpg://local/test"),
+        session_factory_provider=lambda settings: lambda: _SessionContext(),
+    )
+
+    result = asyncio.run(service.get_fresh_analysis(username="octocat", request_kind="interpretation"))
+
+    assert result is not None
+    assert result.interpretation is stored
+    assert result.interpretation_schema_version == "v1"
 
 
 def test_cache_operational_read_failure_is_miss(monkeypatch) -> None:

@@ -31,6 +31,7 @@ from app.db.repositories.analysis_snapshots import AnalysisSnapshotRepository
 from app.main import app
 from app.schemas.interpretation import (
     InterpretationUnavailableReason,
+    PortfolioInterpretation,
     PortfolioInterpretationResult,
 )
 from app.services.analysis_snapshot_cache import AnalysisSnapshotCacheService
@@ -222,6 +223,61 @@ def test_warm_interpretation_runs_ai_again_and_writes_composite_snapshots(
         assert len(rows) == 2
         assert all(row.interpretation_payload is not None for row in rows)
         assert rows[1].analysis_generated_at == rows[0].analysis_generated_at
+        await dispose_engine(get_engine(database_url))
+        get_engine.cache_clear()
+
+    try:
+        asyncio.run(scenario())
+    finally:
+        app.dependency_overrides.clear()
+
+
+def test_warm_interpretation_reuses_a_stored_successful_interpretation(
+    database_url: str, runtime: SimpleNamespace, monkeypatch
+) -> None:
+    async def scenario() -> None:
+        await _delete_user(database_url, "synthetic-user")
+        result = create_result()
+        _set_analysis_service(monkeypatch, result, [])
+        gemini_calls: list[int] = []
+
+        async def interpret(*, analysis, client):
+            gemini_calls.append(1)
+            return PortfolioInterpretationResult(
+                available=True,
+                interpretation=PortfolioInterpretation(summary=f"Interpretation {len(gemini_calls)}."),
+            )
+
+        monkeypatch.setattr(interpretation_api, "interpret_github_portfolio", interpret)
+
+        async def compose(*, username, github_client, gemini_client):
+            return PortfolioInterpretationCompositionResult(
+                analysis=result,
+                interpretation=await interpret(analysis=result, client=gemini_client),
+            )
+
+        monkeypatch.setattr(interpretation_api, "analyze_and_interpret_github_portfolio", compose)
+        app.dependency_overrides[get_gemini_client] = lambda: object()
+
+        cold = await _request("/api/v1/interpretation", {"username": "synthetic-user"})
+        warm = await _request("/api/v1/interpretation", {"username": "synthetic-user"})
+
+        assert cold.status_code == warm.status_code == 200
+        assert cold.json()["cached"] is False
+        assert warm.json()["cached"] is True
+        # The warm request served the stored interpretation and did not call the AI provider again.
+        assert len(gemini_calls) == 1
+        assert warm.json()["interpretation"] == cold.json()["interpretation"]
+        assert warm.json()["analysis_generated_at"] == cold.json()["analysis_generated_at"]
+        assert len(await _rows(database_url, "synthetic-user")) == 1
+
+        refreshed = await _request(
+            "/api/v1/interpretation", {"username": "synthetic-user", "refresh": True}
+        )
+        assert refreshed.status_code == 200
+        assert refreshed.json()["cached"] is False
+        assert len(gemini_calls) == 2
+        assert len(await _rows(database_url, "synthetic-user")) == 2
         await dispose_engine(get_engine(database_url))
         get_engine.cache_clear()
 

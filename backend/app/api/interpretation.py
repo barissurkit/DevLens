@@ -35,13 +35,14 @@ from app.services.github.client import (
     GitHubRequestBudgetExceeded,
 )
 from app.services.analysis_snapshot_persistence import AnalysisSnapshotPersistenceService
-from app.services.analysis_snapshot_cache import AnalysisSnapshotCacheService
+from app.services.analysis_snapshot_cache import AnalysisSnapshotCacheService, CachedAnalysis
 from app.services.portfolio_interpretation import interpret_github_portfolio
 from app.services.portfolio_interpretation import PortfolioInterpreter
 from app.services.portfolio_interpretation_composition import (
     analyze_and_interpret_github_portfolio,
     PortfolioInterpretationCompositionResult,
 )
+from app.db.constants import INTERPRETATION_SNAPSHOT_SCHEMA_VERSION
 from app.observability import emit_event
 from app.services.analysis_progress import AnalysisProgress, ProgressCallback, report_progress
 from app.services.portfolio_history import PortfolioHistoryService
@@ -87,6 +88,26 @@ _INTERPRETATION_ERROR_RESPONSES = {
 }
 
 
+def _reusable_interpretation(
+    cached: CachedAnalysis | None,
+) -> PortfolioInterpretationResult | None:
+    """A stored successful interpretation of the cached analysis, so the AI provider is not called again.
+
+    Only ``available`` interpretations of the current interpretation schema are reused; an
+    unavailable one (provider rate limit, timeout, ...) is retried on the next request.
+    """
+
+    if (
+        cached is None
+        or not isinstance(cached.interpretation, PublicInterpretationAvailable)
+        or cached.interpretation_schema_version != INTERPRETATION_SNAPSHOT_SCHEMA_VERSION
+    ):
+        return None
+    return PortfolioInterpretationResult(
+        available=True, interpretation=cached.interpretation.interpretation
+    )
+
+
 async def _resolve_interpretation_response(
     *,
     request: PortfolioAnalysisRequest,
@@ -109,6 +130,7 @@ async def _resolve_interpretation_response(
     )
     if cached is not None and on_cache_hit is not None:
         await on_cache_hit()
+    reused_interpretation = _reusable_interpretation(cached)
     try:
         if cached is None:
             # Only pass the callback when streaming so the plain endpoint keeps its exact call shape.
@@ -122,14 +144,18 @@ async def _resolve_interpretation_response(
             analysis_generated_at = datetime.now(timezone.utc)
         else:
             analysis_generated_at = cached.analysis_generated_at
-            if gemini_client is not None:
-                report_progress(on_progress, "interpretation")
-            result = PortfolioInterpretationCompositionResult(
-                analysis=cached.analysis,
-                interpretation=await interpret_github_portfolio(
+            if reused_interpretation is None:
+                if gemini_client is not None:
+                    report_progress(on_progress, "interpretation")
+                interpretation_result = await interpret_github_portfolio(
                     analysis=cached.analysis,
                     client=gemini_client,
-                ),
+                )
+            else:
+                interpretation_result = reused_interpretation
+            result = PortfolioInterpretationCompositionResult(
+                analysis=cached.analysis,
+                interpretation=interpretation_result,
             )
     except (
         httpx.TimeoutException,
@@ -161,12 +187,14 @@ async def _resolve_interpretation_response(
         analysis_generated_at=analysis_generated_at,
         cached=cached is not None,
     )
-    await persistence.persist(
-        analysis=response.analysis,
-        interpretation=response.interpretation,
-        analysis_generated_at=analysis_generated_at,
-        request_kind="interpretation",
-    )
+    if reused_interpretation is None:
+        # Nothing new to store when an identical successful interpretation is already persisted.
+        await persistence.persist(
+            analysis=response.analysis,
+            interpretation=response.interpretation,
+            analysis_generated_at=analysis_generated_at,
+            request_kind="interpretation",
+        )
     if authenticated_user is not None and response.viewer_context.is_owner:
         await history.capture(user=authenticated_user, analysis=response.analysis)
     return response
