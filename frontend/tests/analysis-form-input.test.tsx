@@ -12,7 +12,13 @@ vi.mock("../lib/api", () => ({
 }));
 vi.mock("../components/auth-provider", () => ({ useAuth: mockedUseAuth }));
 vi.mock("../components/analysis-result-shell", () => ({
-  AnalysisResultShell: ({ result }: { result: GitHubPortfolioInterpretationResponse }) => <div data-testid="result-shell">{result.analysis.user.username}</div>,
+  AnalysisResultShell: ({ result, onReanalyze, onRetryInterpretation }: { result: GitHubPortfolioInterpretationResponse; onReanalyze: () => void; onRetryInterpretation?: () => void }) => (
+    <div data-testid="result-shell">
+      {result.analysis.user.username}
+      <button type="button" onClick={onReanalyze}>Yenile</button>
+      <button type="button" onClick={onRetryInterpretation}>AI yorumunu yeniden dene</button>
+    </div>
+  ),
 }));
 
 const input = () => screen.getByLabelText("GitHub kullanıcı adı") as HTMLInputElement;
@@ -135,6 +141,23 @@ describe("AnalysisForm input handling", () => {
     // Leaving the page must cancel the request so the backend stops working for nobody.
     cleanup();
     expect(signals[0].aborted).toBe(true);
+  });
+
+  it("retries only the AI interpretation without bypassing the cache, while Yenile does bypass it", async () => {
+    render(<AnalysisForm />);
+    type("octocat");
+    submit();
+    await waitFor(() => expect(screen.getByTestId("result-shell")).toBeInTheDocument());
+    expect(mockedAnalyze).toHaveBeenCalledTimes(1);
+
+    fireEvent.click(screen.getByRole("button", { name: "AI yorumunu yeniden dene" }));
+    await waitFor(() => expect(mockedAnalyze).toHaveBeenCalledTimes(2));
+    expect(mockedAnalyze).toHaveBeenNthCalledWith(2, "octocat", expect.objectContaining({ refresh: undefined }));
+    await waitFor(() => expect(screen.getByTestId("result-shell")).toBeInTheDocument());
+
+    fireEvent.click(screen.getByRole("button", { name: "Yenile" }));
+    await waitFor(() => expect(mockedAnalyze).toHaveBeenCalledTimes(3));
+    expect(mockedAnalyze).toHaveBeenNthCalledWith(3, "octocat", expect.objectContaining({ refresh: true }));
   });
 });
 

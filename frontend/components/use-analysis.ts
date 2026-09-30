@@ -105,9 +105,15 @@ export function useAnalysis(clearValidation: () => void) {
     void submit(targetRef.current || state.result.analysis.user.username, { refresh: true });
   }
 
+  /** Ask again without bypassing the cache: the analysis is reused and only the AI interpretation is retried. */
+  function retryInterpretation() {
+    if (state.status !== "success") return;
+    void submit(targetRef.current || state.result.analysis.user.username);
+  }
+
   function resetToIdle() {
     setState({ status: "idle" });
   }
 
-  return { state, submit, retry, reanalyze, resetToIdle };
+  return { state, submit, retry, reanalyze, retryInterpretation, resetToIdle };
 }

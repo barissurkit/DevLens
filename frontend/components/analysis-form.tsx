@@ -18,7 +18,7 @@ export function AnalysisForm({ hero, preview, features }: AnalysisFormProps) {
   const [username, setUsername] = useState("");
   const [validationMessage, setValidationMessage] = useState<string | null>(null);
   const usernameInputRef = useRef<HTMLInputElement>(null);
-  const { state, submit, retry, reanalyze, resetToIdle } = useAnalysis(() => setValidationMessage(null));
+  const { state, submit, retry, reanalyze, retryInterpretation, resetToIdle } = useAnalysis(() => setValidationMessage(null));
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -109,7 +109,7 @@ export function AnalysisForm({ hero, preview, features }: AnalysisFormProps) {
         {!showResult && preview}
       </div>
       {!showResult && features}
-      {state.status === "success" && <AnalysisResultShell result={state.result} onReanalyze={reanalyze} />}
+      {state.status === "success" && <AnalysisResultShell result={state.result} onReanalyze={reanalyze} onRetryInterpretation={retryInterpretation} />}
     </div>
   );
 }
