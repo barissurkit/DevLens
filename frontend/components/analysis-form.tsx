@@ -35,6 +35,20 @@ export function AnalysisForm({ hero, preview, features, initialUsername }: Analy
     void submit(initialUsername);
   }, [initialUsername, authStatus, submit]);
 
+  // "/" jumps to the search field, like on most developer sites (unless the user is already typing somewhere).
+  useEffect(() => {
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key !== "/" || event.metaKey || event.ctrlKey || event.altKey) return;
+      const target = event.target as HTMLElement | null;
+      if (target && (target.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName))) return;
+      event.preventDefault();
+      usernameInputRef.current?.focus();
+      usernameInputRef.current?.select();
+    }
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, []);
+
   // Keep the address bar on the shareable link of the result being shown.
   const shownUsername = state.status === "success" ? state.result.analysis.user.username : null;
   useEffect(() => {
@@ -83,6 +97,7 @@ export function AnalysisForm({ hero, preview, features, initialUsername }: Analy
             ref={usernameInputRef}
             id="github-username"
             name="username"
+            aria-keyshortcuts="/"
             value={username}
             onChange={(event) => {
               setUsername(event.target.value);

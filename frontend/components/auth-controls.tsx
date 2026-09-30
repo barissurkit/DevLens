@@ -25,18 +25,20 @@ export function AuthControls() {
       <div className="flex flex-wrap items-center justify-end gap-2">
         <a
           href={`/?workspace=1&username=${encodeURIComponent(user.github_login)}`}
-          className={`${controlClassName} border border-slate-300 bg-card text-slate-700 hover:bg-slate-100`}
+          aria-label="Çalışma Alanım"
+          className={`${controlClassName} whitespace-nowrap border border-slate-300 bg-card text-slate-700 hover:bg-slate-100`}
         >
-          Çalışma Alanım
+          <span aria-hidden="true" className="sm:hidden">Alanım</span>
+          <span aria-hidden="true" className="hidden sm:inline">Çalışma Alanım</span>
         </a>
-        <span className="max-w-36 truncate text-sm font-medium text-slate-700" title={user.display_name ?? user.github_login}>
+        <span className="hidden max-w-36 truncate text-sm font-medium text-slate-700 lg:inline" title={user.display_name ?? user.github_login}>
           {user.display_name ?? `@${user.github_login}`}
         </span>
         <button
           type="button"
           onClick={() => void handleLogout()}
           disabled={isLoggingOut}
-          className={`${controlClassName} border border-slate-300 bg-card text-slate-700 hover:bg-slate-100 disabled:cursor-wait disabled:opacity-60`}
+          className={`${controlClassName} whitespace-nowrap border border-slate-300 bg-card text-slate-700 hover:bg-slate-100 disabled:cursor-wait disabled:opacity-60`}
         >
           {isLoggingOut ? "Çıkış yapılıyor…" : "Çıkış yap"}
         </button>
