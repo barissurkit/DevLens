@@ -670,3 +670,43 @@ def test_result_is_deterministic_with_version_and_stable_limitation_order() -> N
             "Portföy düzeyindeki örüntüler için en az iki repository'nin başarıyla "
             "analiz edilmesi gerekir.",
     ]
+
+
+def test_strength_messages_are_distinct_per_signal_and_start_capitalized() -> None:
+    result = build_portfolio_intelligence(
+        create_aggregation(successful_repository_count=6, default_signal_count=6)
+    )
+
+    messages = {item.key: item.message for item in result.strength_signals}
+    suffix = (
+        " sinyalleri, başarıyla analiz edilen birden fazla herkese açık "
+        "repository'de tespit edildi."
+    )
+
+    assert len(messages) == len(set(messages.values()))
+    assert messages["readme_exists"] == "README içeriği" + suffix
+    assert messages["readme_title"] == "README başlığı" + suffix
+    assert messages["readme_description"] == "README açıklaması" + suffix
+    assert messages["readme_installation"] == "README kurulum bölümü" + suffix
+    assert messages["readme_usage"] == "README kullanım bölümü" + suffix
+    assert messages["readme_technologies"] == "README teknoloji bölümü" + suffix
+    assert messages["readme_requirements"] == "README gereksinimleri bölümü" + suffix
+    assert messages["tests_structure"] == "Test dizini yapısı" + suffix
+    assert messages["ci_workflow"] == "GitHub Actions iş akışı" + suffix
+    assert messages["gitignore"] == ".gitignore dosyası" + suffix
+    assert messages["license"] == "Desteklenen lisans dosyası adı" + suffix
+
+
+def test_improvement_messages_start_capitalized_and_stay_distinct() -> None:
+    result = build_portfolio_intelligence(
+        create_aggregation(successful_repository_count=6)
+    )
+
+    messages = {item.key: item.message for item in result.improvement_signals}
+
+    assert len(messages) == len(set(messages.values()))
+    assert messages["tests_structure"] == (
+        "Başarıyla analiz edilen herkese açık repository'lerin hiçbirinde "
+        "test dizini yapısı sinyali tespit edilmedi."
+    )
+    assert all(message[0].isupper() for message in messages.values())
