@@ -14,6 +14,8 @@ export type AnalysisState =
 export interface SubmitOptions {
   /** Bypass the server-side snapshot cache and recompute the analysis. */
   refresh?: boolean;
+  /** Retry only the AI interpretation, bypassing the server's cooldown after a failed attempt. */
+  retryInterpretation?: boolean;
 }
 
 /**
@@ -78,6 +80,7 @@ export function useAnalysis(clearValidation: () => void) {
     try {
       const result = await analyzePortfolioWithInterpretation(normalizedUsername, {
         refresh: options.refresh,
+        retryInterpretation: options.retryInterpretation,
         signal: controller.signal,
         onProgress: (progress) => {
           if (isStale()) return;
@@ -105,10 +108,10 @@ export function useAnalysis(clearValidation: () => void) {
     void submit(targetRef.current || state.result.analysis.user.username, { refresh: true });
   }
 
-  /** Ask again without bypassing the cache: the analysis is reused and only the AI interpretation is retried. */
+  /** Ask again without bypassing the cache: the analysis is reused and only the AI interpretation is retried (now, not after the cooldown). */
   function retryInterpretation() {
     if (state.status !== "success") return;
-    void submit(targetRef.current || state.result.analysis.user.username);
+    void submit(targetRef.current || state.result.analysis.user.username, { retryInterpretation: true });
   }
 
   function resetToIdle() {

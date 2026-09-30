@@ -2,6 +2,8 @@ export interface PortfolioAnalysisRequest {
   username: string;
   /** Skip the server-side snapshot cache and recompute. */
   refresh?: boolean;
+  /** Ask for the AI interpretation to be attempted again even right after a failed attempt. */
+  retry_interpretation?: boolean;
 }
 
 export type AnalysisProgressStage = "profile" | "repositories" | "interpretation";
