@@ -85,7 +85,7 @@ export function ActionPlan() {
     finally { setBusy(false); }
   }
 
-  return <section aria-labelledby="action-plan-heading" className="rounded-xl border border-slate-200 bg-card p-6 shadow-card sm:p-8">
+  return <section aria-labelledby="action-plan-heading" className="rounded-2xl border border-slate-200 bg-card p-6 shadow-card sm:p-8">
     <h3 id="action-plan-heading" className="text-xl font-semibold tracking-tight text-slate-950">Aksiyon Planı</h3>
     <p className="mt-2 text-sm text-slate-500">Portföyünü geliştirmek için manuel görevlerini takip et.</p>
     <form onSubmit={createTask} className="mt-5 grid gap-3">

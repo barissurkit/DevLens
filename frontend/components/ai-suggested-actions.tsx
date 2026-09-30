@@ -63,7 +63,7 @@ export function AISuggestedActions({ username }: Props) {
     setSuggestions((items) => items.map((item, itemIndex) => itemIndex === index ? { ...item, ...changes } : item));
   }
 
-  return <section aria-labelledby="ai-suggestions-heading" className="rounded-xl border border-slate-200 bg-card p-6 shadow-card sm:p-8">
+  return <section aria-labelledby="ai-suggestions-heading" className="rounded-2xl border border-slate-200 bg-card p-6 shadow-card sm:p-8">
     <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
       <div><h3 id="ai-suggestions-heading" className="text-xl font-semibold tracking-tight text-slate-950">AI Önerilen Aksiyonlar</h3><p className="mt-2 text-sm text-slate-600">Yalnızca bu analizdeki deterministik kanıtlara dayalı, gözden geçirilebilir öneriler.</p></div>
       <button type="button" onClick={() => void generate()} disabled={state === "loading" || adding !== null} className="min-h-10 rounded-xl bg-indigo-600 px-4 text-sm font-medium text-white hover:bg-primary-hover disabled:cursor-not-allowed disabled:bg-slate-400">{state === "loading" ? "Öneriler oluşturuluyor..." : state === "success" ? "Yeniden oluştur" : "Öneri oluştur"}</button>

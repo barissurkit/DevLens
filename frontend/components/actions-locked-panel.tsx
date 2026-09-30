@@ -27,7 +27,7 @@ export function ActionsLockedPanel() {
   const loginUrl = isSignedIn ? null : signInUrl();
 
   return (
-    <section aria-labelledby="actions-locked-heading" className="rounded-xl border border-slate-200 bg-card p-6 shadow-card sm:p-8">
+    <section aria-labelledby="actions-locked-heading" className="rounded-2xl border border-slate-200 bg-card p-6 shadow-card sm:p-8">
       <p className="text-xs font-semibold uppercase tracking-[0.14em] text-indigo-700">Kendi portföyün için</p>
       <h3 id="actions-locked-heading" className="mt-2 text-2xl font-semibold tracking-tight text-slate-950">
         {isSignedIn ? "Aksiyonlar yalnızca kendi portföyünde açılır" : "Aksiyonların kilidini aç"}

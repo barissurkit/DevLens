@@ -17,7 +17,7 @@ const DIMENSION_DESCRIPTIONS: Record<string, string> = {
   repository_hygiene_consistency: ".gitignore, LICENSE ve CONTRIBUTING gibi repository pratiği sinyallerinin görünümü.",
 };
 
-const cardClass = "rounded-xl border border-slate-200 bg-card p-5 shadow-card sm:p-6";
+const cardClass = "rounded-2xl border border-slate-200 bg-card p-5 shadow-card sm:p-6";
 
 export function PortfolioOverview({ analysis }: { analysis: GitHubPortfolioAnalysis }) {
   const { aggregation, intelligence, score, selection, user } = analysis;
@@ -111,10 +111,13 @@ function ScoreGauge({ score }: { score: number }) {
   const progress = Math.min(100, Math.max(0, score));
   return (
     <div className="flex shrink-0 flex-row items-center gap-3 sm:flex-col">
-      <svg aria-hidden="true" viewBox="0 0 100 100" className="h-24 w-24 -rotate-90 sm:h-28 sm:w-28">
-        <circle cx="50" cy="50" r={radius} fill="none" strokeWidth="9" className="stroke-slate-100" />
-        <circle cx="50" cy="50" r={radius} fill="none" strokeWidth="9" strokeLinecap="round" strokeDasharray={circumference} strokeDashoffset={circumference * (1 - progress / 100)} className={tone.stroke} />
-      </svg>
+      <div className="relative h-28 w-28 sm:h-32 sm:w-32">
+        <svg aria-hidden="true" viewBox="0 0 100 100" className="h-full w-full -rotate-90">
+          <circle cx="50" cy="50" r={radius} fill="none" strokeWidth="9" className="stroke-slate-100" />
+          <circle cx="50" cy="50" r={radius} fill="none" strokeWidth="9" strokeLinecap="round" strokeDasharray={circumference} strokeDashoffset={circumference * (1 - progress / 100)} className={`${tone.stroke} transition-[stroke-dashoffset] duration-700 motion-reduce:transition-none`} />
+        </svg>
+        <span aria-hidden="true" className={`absolute inset-0 flex items-center justify-center text-3xl font-semibold tracking-tight sm:text-4xl ${tone.text}`}>{progress}</span>
+      </div>
       <span className={`rounded-full px-3 py-1 text-xs font-semibold ${tone.badge}`}>{tone.label}</span>
     </div>
   );

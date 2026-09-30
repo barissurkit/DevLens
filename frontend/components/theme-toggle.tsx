@@ -76,7 +76,7 @@ export function ThemeToggle() {
             aria-pressed={pressed}
             title={option.label}
             onClick={() => selectTheme(option.value)}
-            className={`flex h-9 w-9 items-center justify-center rounded-md transition focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600 ${pressed ? "bg-indigo-600 text-white" : "text-slate-500 hover:bg-slate-100 hover:text-slate-950"}`}
+            className={`flex h-8 w-8 items-center sm:h-9 sm:w-9 justify-center rounded-md transition focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600 ${pressed ? "bg-indigo-600 text-white" : "text-slate-500 hover:bg-slate-100 hover:text-slate-950"}`}
           >
             <svg aria-hidden="true" viewBox="0 0 24 24" className="h-[18px] w-[18px]" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">{option.icon}</svg>
           </button>

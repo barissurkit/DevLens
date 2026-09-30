@@ -53,6 +53,7 @@ export function AnalysisResultShell({ result, onReanalyze, onRetryInterpretation
 
   return (
     <section aria-labelledby="portfolio-dashboard" className="space-y-6">
+      <h1 className="sr-only">@{user.username} portföy analizi</h1>
       <PortfolioHeader
         ref={dashboardHeadingRef}
         user={user}
@@ -82,7 +83,7 @@ export function AnalysisResultShell({ result, onReanalyze, onRetryInterpretation
           {hasActions ? (
             <>
               {viewer_context.is_owner && <GuidedImprovementSection improvements={result.guided_improvements} onReanalyze={onReanalyze} />}
-              {!isWorkspace && result.guided_improvements.length === 0 && <p className="rounded-xl border border-slate-200 bg-card p-6 text-sm text-slate-600 shadow-card">Şu an önerilen bir iyileştirme adımı yok.</p>}
+              {!isWorkspace && result.guided_improvements.length === 0 && <p className="rounded-2xl border border-slate-200 bg-card p-6 text-sm text-slate-600 shadow-card">Şu an önerilen bir iyileştirme adımı yok.</p>}
               {isWorkspace && <>
                 <AnalysisHistory key={`history-${user.username}`} visible={viewer_context.is_owner} />
                 <AISuggestedActions key={`suggestions-${user.username}`} username={user.username} />
