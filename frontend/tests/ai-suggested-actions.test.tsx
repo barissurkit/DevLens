@@ -25,15 +25,15 @@ describe("AI suggested actions", () => {
     const user = userEvent.setup();
     render(<AISuggestedActions username="alice" />);
     expect(mockedGenerate).not.toHaveBeenCalled();
-    await user.click(screen.getByRole("button", { name: "Generate suggestions" }));
+    await user.click(screen.getByRole("button", { name: "Öneri oluştur" }));
     expect(await screen.findByText("README düzenle")).toBeInTheDocument();
-    await user.click(screen.getAllByRole("button", { name: "Edit" })[0]);
+    await user.click(screen.getAllByRole("button", { name: "Düzenle" })[0]);
     const title = screen.getByLabelText("Öneri başlığı");
     fireEvent.change(title, { target: { value: "Güncel başlık" } });
-    await user.click(screen.getAllByRole("button", { name: "Add" })[0]);
+    await user.click(screen.getAllByRole("button", { name: "Plana ekle" })[0]);
     await waitFor(() => expect(mockedCreate).toHaveBeenCalledWith({ title: "Güncel başlık", description: "Kurulum adımlarını ekle" }));
     expect(screen.queryByText("Güncel başlık")).not.toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: "Dismiss" }));
+    await user.click(screen.getByRole("button", { name: "Yoksay" }));
     expect(screen.queryByText("İkinci öneri")).not.toBeInTheDocument();
   });
 
@@ -42,21 +42,21 @@ describe("AI suggested actions", () => {
     mockedGenerate.mockReturnValue(new Promise((complete) => { resolve = complete; }));
     const user = userEvent.setup();
     const { rerender } = render(<AISuggestedActions key="alice" username="alice" />);
-    await user.click(screen.getByRole("button", { name: "Generate suggestions" }));
+    await user.click(screen.getByRole("button", { name: "Öneri oluştur" }));
     rerender(<AISuggestedActions key="bob" username="bob" />);
     resolve({ status: "available", suggestions: [] });
-    await waitFor(() => expect(screen.getByRole("button", { name: "Generate suggestions" })).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByRole("button", { name: "Öneri oluştur" })).toBeInTheDocument());
     expect(screen.queryByText("AI önerileri şu anda kullanılamıyor.")).not.toBeInTheDocument();
   });
 
   it("surfaces the cap error and keeps the suggestion available", async () => {
     mockedGenerate.mockResolvedValue({ status: "available", suggestions: [{ title: "README düzenle", description: "Açıklama", reason: "Kanıt", evidence_refs: ["signal:readme"] }] });
-    mockedCreate.mockRejectedValue(new ApiError("Action Plan görev sınırına ulaşıldı.", 409, "action_plan_limit_reached"));
+    mockedCreate.mockRejectedValue(new ApiError("Aksiyon planı görev sınırına ulaşıldı.", 409, "action_plan_limit_reached"));
     const user = userEvent.setup();
     render(<AISuggestedActions username="alice" />);
-    await user.click(screen.getByRole("button", { name: "Generate suggestions" }));
-    await user.click(await screen.findByRole("button", { name: "Add" }));
-    expect(await screen.findByRole("alert")).toHaveTextContent("Action Plan görev sınırına ulaşıldı.");
+    await user.click(screen.getByRole("button", { name: "Öneri oluştur" }));
+    await user.click(await screen.findByRole("button", { name: "Plana ekle" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent("Aksiyon planı görev sınırına ulaşıldı.");
     expect(screen.getByText("README düzenle")).toBeInTheDocument();
   });
 
@@ -65,7 +65,7 @@ describe("AI suggested actions", () => {
     mockedGenerate.mockReturnValue(new Promise((_, fail) => { reject = fail; }));
     const user = userEvent.setup();
     const { unmount } = render(<AISuggestedActions username="alice" />);
-    await user.click(screen.getByRole("button", { name: "Generate suggestions" }));
+    await user.click(screen.getByRole("button", { name: "Öneri oluştur" }));
     unmount();
     reject(new Error("late failure"));
     await new Promise((resolve) => setTimeout(resolve, 0));
@@ -78,7 +78,7 @@ describe("AI suggested actions", () => {
       .mockRejectedValueOnce(new Error("temporary failure"));
     const user = userEvent.setup();
     render(<AISuggestedActions username="alice" />);
-    await user.click(screen.getByRole("button", { name: "Generate suggestions" }));
+    await user.click(screen.getByRole("button", { name: "Öneri oluştur" }));
     expect(await screen.findByText("İlk öneri")).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Yeniden oluştur" }));
     await waitFor(() => expect(screen.getByRole("alert")).toBeInTheDocument());
@@ -91,7 +91,7 @@ describe("AI suggested actions", () => {
       .mockResolvedValueOnce({ status: "available", suggestions: [] });
     const user = userEvent.setup();
     render(<AISuggestedActions username="alice" />);
-    await user.click(screen.getByRole("button", { name: "Generate suggestions" }));
+    await user.click(screen.getByRole("button", { name: "Öneri oluştur" }));
     expect(await screen.findByText("İlk öneri")).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Yeniden oluştur" }));
     await waitFor(() => expect(screen.queryByText("İlk öneri")).not.toBeInTheDocument());

@@ -67,7 +67,7 @@ async def create_action_plan_task(
             status_code=409,
             detail={
                 "code": "action_plan_limit_reached",
-                "message": "Action Plan görev sınırına ulaşıldı. Yeni görev eklemek için mevcut bir görevi silin.",
+                "message": "Aksiyon planı görev sınırına ulaşıldı. Yeni görev eklemek için mevcut bir görevi silin.",
             },
         ) from None
     await session.commit()

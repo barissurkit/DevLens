@@ -24,7 +24,7 @@ const mockedDelete = vi.mocked(deleteActionPlanTask);
 const user: AuthenticatedUser = { github_login: "alice", display_name: "Alice", avatar_url: null, github_html_url: null };
 const task: ActionPlanTask = { id: "task-1", title: "README geliştir", description: "Kullanım ekle", status: "todo", created_at: "2026-01-01T00:00:00Z", updated_at: "2026-01-01T00:00:00Z", completed_at: null };
 
-describe("Action Plan workspace UI", () => {
+describe("Aksiyon Planı çalışma alanı arayüzü", () => {
   afterEach(() => cleanup());
   beforeEach(() => {
     vi.clearAllMocks();
@@ -35,7 +35,7 @@ describe("Action Plan workspace UI", () => {
   it("is hidden for anonymous users and loads an empty authenticated workspace", async () => {
     mockedAuth.mockReturnValue({ status: "anonymous", user: null, errorMessage: null, refresh: vi.fn(), logout: vi.fn() });
     const { rerender } = render(<ActionPlan />);
-    expect(screen.queryByRole("heading", { name: "Action Plan" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Aksiyon Planı" })).not.toBeInTheDocument();
     mockedAuth.mockReturnValue({ status: "authenticated", user, errorMessage: null, refresh: vi.fn(), logout: vi.fn() });
     rerender(<ActionPlan />);
     expect(await screen.findByText("Henüz görev yok.")).toBeInTheDocument();
@@ -90,13 +90,13 @@ describe("Action Plan workspace UI", () => {
 
   it("surfaces the server cap error without changing the existing list", async () => {
     mockedGet.mockResolvedValue({ tasks: [task] });
-    mockedCreate.mockRejectedValue(new ApiError("Action Plan görev sınırına ulaşıldı.", 409, "action_plan_limit_reached"));
+    mockedCreate.mockRejectedValue(new ApiError("Aksiyon planı görev sınırına ulaşıldı.", 409, "action_plan_limit_reached"));
     const userActions = userEvent.setup();
     render(<ActionPlan />);
     expect(await screen.findByDisplayValue("README geliştir")).toBeInTheDocument();
     await userActions.type(screen.getByLabelText("Yeni görev"), "Yeni görev");
     await userActions.click(screen.getByRole("button", { name: "Görev ekle" }));
-    expect(await screen.findByRole("alert")).toHaveTextContent("Action Plan görev sınırına ulaşıldı.");
+    expect(await screen.findByRole("alert")).toHaveTextContent("Aksiyon planı görev sınırına ulaşıldı.");
     expect(screen.getByDisplayValue("README geliştir")).toBeInTheDocument();
     expect(screen.getAllByDisplayValue("Yeni görev")).toHaveLength(1);
   });
