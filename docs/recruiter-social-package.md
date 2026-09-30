@@ -199,7 +199,7 @@ full-stack
 
 ### Recommended Homepage
 
-`https://devlens-frontend-5hvj.onrender.com/`
+`https://devlens.barissurkit.com/`
 
 This is the production frontend URL already documented in the repository. Metadata changes require a separate explicit action.
 
@@ -245,4 +245,4 @@ The following are future work, not current capabilities:
 - [Architecture](architecture.md)
 - [Production Deployment](production-deployment.md)
 - [Portfolio Case Study](case-study.md)
-- [Live Demo](https://devlens-frontend-5hvj.onrender.com/)
+- [Live Demo](https://devlens.barissurkit.com/)

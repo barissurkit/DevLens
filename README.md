@@ -4,7 +4,7 @@ DevLens analyzes public GitHub portfolio signals with deterministic rules and us
 
 Enter a GitHub username to inspect public profile and repository evidence. DevLens returns repository-level findings, portfolio-level scoring, measurable limitations, and an optional AI interpretation. It is designed for developers and engineers who want a clearer, evidence-based view of a public portfolio.
 
-[Live Demo](https://devlens-frontend-5hvj.onrender.com/)
+[Live Demo](https://devlens.barissurkit.com/)
 
 ## Key Features
 
@@ -51,7 +51,7 @@ Gemini does not invent repository evidence, modify deterministic scores, or over
 
 DevLens is deployed using Render Free frontend and backend services, Neon Free PostgreSQL, the authenticated GitHub API, and Gemini 3.6 Flash Free Tier. The current deployment has an expected recurring infrastructure cost of **$0/month**; this reflects the current free-tier configuration and is not a pricing guarantee.
 
-The production frontend is available at the [Live Demo](https://devlens-frontend-5hvj.onrender.com/). Production images use `next start` and Uvicorn, database migrations run as a separate one-shot service, and the backend exposes `GET /health` for liveness checks. Operational configuration, migration ordering, rollback guidance, and deployment boundaries are documented in [docs/production-deployment.md](docs/production-deployment.md).
+The production frontend is available at the [Live Demo](https://devlens.barissurkit.com/). Production images use `next start` and Uvicorn, database migrations run as a separate one-shot service, and the backend exposes `GET /health` for liveness checks. Operational configuration, migration ordering, rollback guidance, and deployment boundaries are documented in [docs/production-deployment.md](docs/production-deployment.md).
 
 ## Tech Stack
 

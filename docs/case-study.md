@@ -217,4 +217,4 @@ The architecture documentation pass also validated Markdown formatting, Mermaid 
 - [Project README](../README.md)
 - [Architecture](architecture.md)
 - [Production Deployment](production-deployment.md)
-- [Live Demo](https://devlens-frontend-5hvj.onrender.com/)
+- [Live Demo](https://devlens.barissurkit.com/)
