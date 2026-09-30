@@ -287,6 +287,74 @@ def test_warm_interpretation_reuses_a_stored_successful_interpretation(
         app.dependency_overrides.clear()
 
 
+def test_recent_transient_ai_failure_is_not_retried_until_the_cooldown_or_an_explicit_retry(
+    database_url: str, runtime: SimpleNamespace, monkeypatch
+) -> None:
+    async def scenario() -> None:
+        await _delete_user(database_url, "synthetic-user")
+        result = create_result()
+        _set_analysis_service(monkeypatch, result, [])
+        gemini_calls: list[int] = []
+
+        async def interpret(*, analysis, client):
+            gemini_calls.append(1)
+            if len(gemini_calls) < 3:
+                return PortfolioInterpretationResult(
+                    available=False, reason=InterpretationUnavailableReason.RATE_LIMIT
+                )
+            return PortfolioInterpretationResult(
+                available=True, interpretation=PortfolioInterpretation(summary="Recovered.")
+            )
+
+        monkeypatch.setattr(interpretation_api, "interpret_github_portfolio", interpret)
+
+        async def compose(*, username, github_client, gemini_client):
+            return PortfolioInterpretationCompositionResult(
+                analysis=result,
+                interpretation=await interpret(analysis=result, client=gemini_client),
+            )
+
+        monkeypatch.setattr(interpretation_api, "analyze_and_interpret_github_portfolio", compose)
+        app.dependency_overrides[get_gemini_client] = lambda: object()
+
+        cold = await _request("/api/v1/interpretation", {"username": "synthetic-user"})
+        assert cold.json()["interpretation"] == {"status": "unavailable", "reason": "rate_limit"}
+        assert len(gemini_calls) == 1
+
+        # Within the cooldown the stored failure is served and the provider is left alone.
+        cooling = await _request("/api/v1/interpretation", {"username": "synthetic-user"})
+        assert cooling.json()["cached"] is True
+        assert cooling.json()["interpretation"] == {"status": "unavailable", "reason": "rate_limit"}
+        assert len(gemini_calls) == 1
+        assert len(await _rows(database_url, "synthetic-user")) == 1
+
+        # An explicit retry asks the provider again; it fails again here, so a second row is stored.
+        retried = await _request(
+            "/api/v1/interpretation", {"username": "synthetic-user", "retry_interpretation": True}
+        )
+        assert retried.json()["interpretation"]["status"] == "unavailable"
+        assert len(gemini_calls) == 2
+        assert len(await _rows(database_url, "synthetic-user")) == 2
+
+        # Another explicit retry succeeds and is stored; afterwards it is simply reused.
+        recovered = await _request(
+            "/api/v1/interpretation", {"username": "synthetic-user", "retry_interpretation": True}
+        )
+        assert recovered.json()["interpretation"]["interpretation"]["summary"] == "Recovered."
+        assert len(gemini_calls) == 3
+        reused = await _request("/api/v1/interpretation", {"username": "synthetic-user"})
+        assert reused.json()["interpretation"]["interpretation"]["summary"] == "Recovered."
+        assert len(gemini_calls) == 3
+        assert len(await _rows(database_url, "synthetic-user")) == 3
+        await dispose_engine(get_engine(database_url))
+        get_engine.cache_clear()
+
+    try:
+        asyncio.run(scenario())
+    finally:
+        app.dependency_overrides.clear()
+
+
 def test_concurrent_warm_analysis_isolated_and_does_not_write_duplicates(
     database_url: str, runtime: SimpleNamespace, monkeypatch
 ) -> None:

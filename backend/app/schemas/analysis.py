@@ -14,6 +14,8 @@ class PortfolioAnalysisRequest(BaseModel):
     username: str = Field(min_length=1, max_length=39)
     # Skip the fresh-snapshot cache and recompute (used by "Yenile" / re-analysis).
     refresh: bool = False
+    # Ask for the AI interpretation to be attempted again even if a recent attempt just failed.
+    retry_interpretation: bool = False
 
     @field_validator("username", mode="before")
     @classmethod
