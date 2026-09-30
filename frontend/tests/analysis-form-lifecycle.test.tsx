@@ -89,7 +89,8 @@ describe("AnalysisForm lifecycle protection", () => {
     submit("alice");
     await waitFor(() => expect(screen.getByTestId("result-shell")).toBeInTheDocument());
     fireEvent.click(screen.getByRole("button", { name: "Tekrar analiz et" }));
-    expect(mockedAnalyze).toHaveBeenNthCalledWith(2, "alice");
+    expect(mockedAnalyze).toHaveBeenNthCalledWith(2, "alice", expect.objectContaining({ refresh: true }));
+    expect(mockedAnalyze).toHaveBeenNthCalledWith(1, "alice", expect.objectContaining({ refresh: undefined }));
   });
 
   it.each([["alice", "bob"], ["bob", "alice"]])("prevents late response overwrite for %s to %s target changes", async (firstTarget, secondTarget) => {

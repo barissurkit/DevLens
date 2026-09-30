@@ -1,5 +1,15 @@
 export interface PortfolioAnalysisRequest {
   username: string;
+  /** Skip the server-side snapshot cache and recompute. */
+  refresh?: boolean;
+}
+
+export type AnalysisProgressStage = "profile" | "repositories" | "interpretation";
+
+export interface AnalysisProgress {
+  stage: AnalysisProgressStage;
+  completed: number;
+  total: number;
 }
 
 export interface ViewerContext {
@@ -396,4 +406,8 @@ export interface GitHubPortfolioInterpretationResponse {
   interpretation: PublicPortfolioInterpretationResult;
   viewer_context: ViewerContext;
   guided_improvements: GuidedImprovement[];
+  /** When the deterministic analysis was computed (ISO 8601). Absent on older backends. */
+  analysis_generated_at?: string | null;
+  /** True when the analysis came from the server-side snapshot cache. */
+  cached?: boolean;
 }

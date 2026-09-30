@@ -1,4 +1,5 @@
 import type {
+  AnalysisProgress,
   GitHubPortfolioInterpretationResponse,
   GitHubPortfolioAnalysis,
   GitHubPortfolioAnalysisResponse,
@@ -332,10 +333,139 @@ export async function analyzePortfolio(
   throw new ApiError(DEFAULT_ERROR_MESSAGE, response.status, "unexpected_api_error");
 }
 
+export interface AnalyzeOptions {
+  /** When set, the analysis runs through the streaming endpoint and reports progress. */
+  onProgress?: (progress: AnalysisProgress) => void;
+  /** Skip the server-side snapshot cache. */
+  refresh?: boolean;
+  signal?: AbortSignal;
+}
+
 export async function analyzePortfolioWithInterpretation(
   username: string,
+  options: AnalyzeOptions = {},
 ): Promise<GitHubPortfolioInterpretationResponse> {
-  const request: PortfolioAnalysisRequest = { username };
+  if (options.onProgress) {
+    const streamed = await streamInterpretation(username, options);
+    if (streamed !== null) return streamed;
+  }
+  return requestInterpretation(username, options);
+}
+
+const PROGRESS_STAGES: readonly string[] = ["profile", "repositories", "interpretation"];
+
+function isAbortError(error: unknown): boolean {
+  return typeof error === "object" && error !== null && (error as { name?: unknown }).name === "AbortError";
+}
+
+function buildInterpretationRequest(username: string, options: AnalyzeOptions): PortfolioAnalysisRequest {
+  return options.refresh ? { username, refresh: true } : { username };
+}
+
+function errorFromPayload(status: number, payload: unknown): ApiError {
+  if (isOperationalErrorResponse(payload)) return new ApiError(payload.detail.message, status, payload.detail.code);
+  if (status === 422) return new ApiError("Kullanıcı adı geçerli değil.", status, "validation_error");
+  return new ApiError(DEFAULT_ERROR_MESSAGE, status, "unexpected_api_error");
+}
+
+/** Returns null when the streaming endpoint is unavailable so the caller can use the plain endpoint. */
+async function streamInterpretation(
+  username: string,
+  options: AnalyzeOptions,
+): Promise<GitHubPortfolioInterpretationResponse | null> {
+  let response: Response;
+  try {
+    response = await fetch(getApiUrl(`${INTERPRETATION_PATH}/stream`), {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(buildInterpretationRequest(username, options)),
+      signal: options.signal,
+    });
+  } catch (error) {
+    if (isAbortError(error)) throw error;
+    return null;
+  }
+
+  if (!response.ok) {
+    if (response.status === 404 || response.status === 405) return null;
+    // Failures before streaming starts (rate limit, validation) use the regular JSON error contract.
+    throw errorFromPayload(response.status, await readJson(response));
+  }
+  const contentType = response.headers.get("content-type") ?? "";
+  if (!contentType.includes("application/x-ndjson") || !response.body) return null;
+  return readEventStream(response.body, options.onProgress);
+}
+
+function handleStreamLine(
+  line: string,
+  onProgress: ((progress: AnalysisProgress) => void) | undefined,
+): GitHubPortfolioInterpretationResponse | null {
+  if (!line.trim()) return null;
+  let event: unknown;
+  try {
+    event = JSON.parse(line);
+  } catch {
+    throw new ApiError("Analiz servisi geçersiz bir yanıt döndürdü.", 200, "malformed_response");
+  }
+  if (typeof event !== "object" || event === null) return null;
+  const record = event as Record<string, unknown>;
+
+  if (record.event === "progress") {
+    if (typeof record.stage === "string" && PROGRESS_STAGES.includes(record.stage) && typeof record.completed === "number" && typeof record.total === "number") {
+      onProgress?.({ stage: record.stage as AnalysisProgress["stage"], completed: record.completed, total: record.total });
+    }
+    return null;
+  }
+  if (record.event === "result") {
+    if (isGitHubPortfolioInterpretationResponse(record.data)) {
+      return { ...record.data, guided_improvements: normalizeGuidedImprovements((record.data as unknown as Record<string, unknown>).guided_improvements) || [] };
+    }
+    throw new ApiError("Analiz servisi geçersiz bir yanıt döndürdü.", 200, "malformed_response");
+  }
+  if (record.event === "error") {
+    const status = typeof record.status === "number" ? record.status : 500;
+    throw errorFromPayload(status, { detail: record.detail });
+  }
+  return null;
+}
+
+async function readEventStream(
+  body: ReadableStream<Uint8Array>,
+  onProgress: ((progress: AnalysisProgress) => void) | undefined,
+): Promise<GitHubPortfolioInterpretationResponse> {
+  const reader = body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+  try {
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      let newline = buffer.indexOf("\n");
+      while (newline >= 0) {
+        const result = handleStreamLine(buffer.slice(0, newline), onProgress);
+        if (result) return result;
+        buffer = buffer.slice(newline + 1);
+        newline = buffer.indexOf("\n");
+      }
+    }
+    const last = handleStreamLine(buffer + decoder.decode(), onProgress);
+    if (last) return last;
+  } catch (error) {
+    if (error instanceof ApiError || isAbortError(error)) throw error;
+    throw new ApiError("Analiz bağlantısı kesildi.", 0, "network_error");
+  } finally {
+    void reader.cancel().catch(() => undefined);
+  }
+  throw new ApiError("Analiz bağlantısı beklenmedik şekilde kapandı.", 0, "network_error");
+}
+
+async function requestInterpretation(
+  username: string,
+  options: AnalyzeOptions,
+): Promise<GitHubPortfolioInterpretationResponse> {
+  const request = buildInterpretationRequest(username, options);
   let response: Response;
 
   try {
@@ -344,8 +474,10 @@ export async function analyzePortfolioWithInterpretation(
       credentials: "include",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(request),
+      signal: options.signal,
     });
-  } catch {
+  } catch (error) {
+    if (isAbortError(error)) throw error;
     throw new ApiError("Analiz servisine ulaşılamadı.", 0, "network_error");
   }
 

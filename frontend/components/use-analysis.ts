@@ -2,18 +2,24 @@
 
 import { startTransition, useEffect, useRef, useState } from "react";
 import { analyzePortfolioWithInterpretation, ApiError } from "../lib/api";
-import type { GitHubPortfolioInterpretationResponse } from "../lib/types";
+import type { AnalysisProgress, GitHubPortfolioInterpretationResponse } from "../lib/types";
 import { useAuth } from "./auth-provider";
 
 export type AnalysisState =
   | { status: "idle" }
-  | { status: "loading"; username: string }
+  | { status: "loading"; username: string; progress: AnalysisProgress | null }
   | { status: "success"; result: GitHubPortfolioInterpretationResponse }
   | { status: "error"; error: ApiError; username: string };
 
+export interface SubmitOptions {
+  /** Bypass the server-side snapshot cache and recompute the analysis. */
+  refresh?: boolean;
+}
+
 /**
  * Owns the analysis request lifecycle: it ignores stale responses (superseded requests or
- * auth context changes) and resumes a pending workspace analysis after sign-in.
+ * auth context changes), aborts superseded requests, reports streamed progress and resumes a
+ * pending workspace analysis after sign-in.
  */
 export function useAnalysis(clearValidation: () => void) {
   const { status, user } = useAuth();
@@ -21,9 +27,10 @@ export function useAnalysis(clearValidation: () => void) {
   const requestGeneration = useRef(0);
   const targetRef = useRef<string | null>(null);
   const authContextRef = useRef("");
+  const abortRef = useRef<AbortController | null>(null);
   const authContextKey = `${status}:${user?.github_login ?? "anonymous"}`;
   const clearValidationRef = useRef(clearValidation);
-  const submitRef = useRef<(username: string) => Promise<void>>(async () => undefined);
+  const submitRef = useRef<(username: string, options?: SubmitOptions) => Promise<void>>(async () => undefined);
 
   // Keep the latest values readable from async callbacks and the effects below.
   useEffect(() => {
@@ -32,8 +39,11 @@ export function useAnalysis(clearValidation: () => void) {
     submitRef.current = submit;
   });
 
+  useEffect(() => () => abortRef.current?.abort(), []);
+
   useEffect(() => {
     requestGeneration.current += 1;
+    abortRef.current?.abort();
     if (status !== "authenticated") {
       targetRef.current = null;
       startTransition(() => { setState({ status: "idle" }); clearValidationRef.current(); });
@@ -51,19 +61,29 @@ export function useAnalysis(clearValidation: () => void) {
     void submitRef.current(target);
   }, [status, user]);
 
-  async function submit(normalizedUsername: string) {
+  async function submit(normalizedUsername: string, options: SubmitOptions = {}) {
     const generation = requestGeneration.current + 1;
     const requestAuthContext = authContextRef.current;
     requestGeneration.current = generation;
     targetRef.current = normalizedUsername;
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
     clearValidationRef.current();
-    setState({ status: "loading", username: normalizedUsername });
+    setState({ status: "loading", username: normalizedUsername, progress: null });
     const isStale = () =>
       generation !== requestGeneration.current
       || requestAuthContext !== authContextRef.current
       || targetRef.current !== normalizedUsername;
     try {
-      const result = await analyzePortfolioWithInterpretation(normalizedUsername);
+      const result = await analyzePortfolioWithInterpretation(normalizedUsername, {
+        refresh: options.refresh,
+        signal: controller.signal,
+        onProgress: (progress) => {
+          if (isStale()) return;
+          setState((current) => current.status === "loading" ? { ...current, progress } : current);
+        },
+      });
       if (isStale()) return;
       setState({ status: "success", result });
     } catch (error) {
@@ -79,9 +99,10 @@ export function useAnalysis(clearValidation: () => void) {
     if (state.status === "error") void submit(state.username);
   }
 
+  /** Recompute the analysis (skipping the cache); used by "Yenile" and after applying improvements. */
   function reanalyze() {
     if (state.status !== "success") return;
-    void submit(targetRef.current || state.result.analysis.user.username);
+    void submit(targetRef.current || state.result.analysis.user.username, { refresh: true });
   }
 
   function resetToIdle() {

@@ -1,3 +1,4 @@
+from datetime import datetime
 from enum import StrEnum
 from typing import Annotated, Literal
 
@@ -135,3 +136,6 @@ class GitHubPortfolioInterpretationResponse(BaseModel):
     interpretation: PublicPortfolioInterpretationResult
     viewer_context: ViewerContext
     guided_improvements: list[GuidedImprovement] = Field(default_factory=list)
+    # When the deterministic analysis was computed, and whether it came from the snapshot cache.
+    analysis_generated_at: datetime | None = None
+    cached: bool = False

@@ -12,6 +12,8 @@ class PortfolioAnalysisRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     username: str = Field(min_length=1, max_length=39)
+    # Skip the fresh-snapshot cache and recompute (used by "Yenile" / re-analysis).
+    refresh: bool = False
 
     @field_validator("username", mode="before")
     @classmethod

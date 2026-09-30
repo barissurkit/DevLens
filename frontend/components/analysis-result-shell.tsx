@@ -45,7 +45,15 @@ export function AnalysisResultShell({ result, onReanalyze }: AnalysisResultShell
 
   return (
     <section aria-labelledby="portfolio-dashboard" className="space-y-6">
-      <PortfolioHeader ref={dashboardHeadingRef} user={user} viewerContext={viewer_context} isPartial={isPartial} />
+      <PortfolioHeader
+        ref={dashboardHeadingRef}
+        user={user}
+        viewerContext={viewer_context}
+        isPartial={isPartial}
+        generatedAt={result.analysis_generated_at}
+        cached={result.cached}
+        onRefresh={onReanalyze}
+      />
 
       <div>
         <ResultTabs tabs={tabs} activeId={activeTab} onChange={setActiveTab} idPrefix={ID_PREFIX} />

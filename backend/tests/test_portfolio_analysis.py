@@ -933,3 +933,80 @@ def test_non_positive_concurrency_is_rejected_before_work_starts(
 
 def test_default_repository_concurrency_is_three() -> None:
     assert DEFAULT_MAX_CONCURRENCY == 3
+
+
+def test_progress_reports_every_repository_including_failures(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    repositories = [
+        create_repository("alpha"),
+        create_repository("bravo"),
+        create_repository("charlie"),
+    ]
+
+    async def fake_analyze_repository(
+        *,
+        owner: str,
+        repository: GitHubRepository,
+        client: GitHubClient,
+    ) -> RepositoryAnalysis:
+        if repository.name == "bravo":
+            raise httpx.ReadTimeout("slow")
+        return create_analysis(repository)
+
+    monkeypatch.setattr(
+        portfolio_analysis_module,
+        "analyze_repository",
+        fake_analyze_repository,
+    )
+    events: list[tuple[str, int, int]] = []
+
+    result = asyncio.run(
+        analyze_portfolio_repositories(
+            owner="octocat",
+            selection=create_selection(repositories),
+            client=Mock(spec=GitHubClient),
+            on_progress=lambda progress: events.append(
+                (progress.stage, progress.completed, progress.total)
+            ),
+        )
+    )
+
+    assert events == [
+        ("repositories", 0, 3),
+        ("repositories", 1, 3),
+        ("repositories", 2, 3),
+        ("repositories", 3, 3),
+    ]
+    assert len(result.repositories) == 2
+    assert len(result.failures) == 1
+
+
+def test_analysis_without_a_progress_callback_still_works(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    repository = create_repository("alpha")
+
+    async def fake_analyze_repository(
+        *,
+        owner: str,
+        repository: GitHubRepository,
+        client: GitHubClient,
+    ) -> RepositoryAnalysis:
+        return create_analysis(repository)
+
+    monkeypatch.setattr(
+        portfolio_analysis_module,
+        "analyze_repository",
+        fake_analyze_repository,
+    )
+
+    result = asyncio.run(
+        analyze_portfolio_repositories(
+            owner="octocat",
+            selection=create_selection([repository]),
+            client=Mock(spec=GitHubClient),
+        )
+    )
+
+    assert len(result.repositories) == 1

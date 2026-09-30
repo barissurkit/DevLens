@@ -5,8 +5,7 @@ import { AnalysisErrorState } from "./analysis-error-state";
 import { AnalysisLoadingState } from "./analysis-loading-state";
 import { AnalysisResultShell } from "./analysis-result-shell";
 import { useAnalysis } from "./use-analysis";
-
-const MAX_USERNAME_LENGTH = 39;
+import { EXAMPLE_USERNAMES, liveUsernameHint, parseGitHubUsername } from "../lib/username";
 
 interface AnalysisFormProps {
   /** Landing-only content: shown until a result is available. */
@@ -23,23 +22,27 @@ export function AnalysisForm({ hero, preview, features }: AnalysisFormProps) {
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const normalizedUsername = username.trim();
-    const message = !normalizedUsername
-      ? "Bir GitHub kullanıcı adı girin."
-      : normalizedUsername.length > MAX_USERNAME_LENGTH
-        ? "GitHub kullanıcı adı 39 karakterden uzun olamaz."
-        : null;
-    setValidationMessage(message);
-    if (message) {
+    const parsed = parseGitHubUsername(username);
+    setValidationMessage(parsed.ok ? null : parsed.message);
+    if (!parsed.ok) {
       resetToIdle();
       usernameInputRef.current?.focus();
-    } else {
-      void submit(normalizedUsername);
+      return;
     }
+    // A pasted profile link or "@name" is shown back as the plain username that is analyzed.
+    setUsername(parsed.username);
+    void submit(parsed.username);
+  }
+
+  function handleExample(example: string) {
+    setUsername(example);
+    setValidationMessage(null);
+    void submit(example);
   }
 
   const isLoading = state.status === "loading";
   const hasValidationError = validationMessage !== null;
+  const liveHint = hasValidationError ? null : liveUsernameHint(username);
 
   const showResult = state.status === "success";
 
@@ -76,13 +79,30 @@ export function AnalysisForm({ hero, preview, features }: AnalysisFormProps) {
             {isLoading ? "Analiz ediliyor..." : "Analiz et"}
           </button>
         </div>
-        <p id="username-hint" className="mt-3 text-sm text-slate-500">Herkese açık repository kanıtlarını incelemek için kullanıcı adını girin.</p>
+        <p id="username-hint" aria-live="polite" className={`mt-3 text-sm ${liveHint ? "text-amber-700" : "text-slate-500"}`}>
+          {liveHint ?? "Kullanıcı adını, @kullanici veya bir github.com/kullanici bağlantısını girebilirsiniz."}
+        </p>
         {validationMessage && (
           <p id="analysis-validation-error" role="alert" aria-live="assertive" className="mt-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">
             {validationMessage}
           </p>
         )}
-        {isLoading && <AnalysisLoadingState />}
+        {!showResult && !isLoading && (
+          <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-slate-100 pt-4">
+            <span className="text-sm text-slate-500">Örnek dene:</span>
+            {EXAMPLE_USERNAMES.map((example) => (
+              <button
+                key={example}
+                type="button"
+                onClick={() => handleExample(example)}
+                className="inline-flex min-h-9 items-center rounded-full border border-slate-300 bg-card px-3 text-sm font-medium text-slate-700 transition hover:border-indigo-600 hover:text-indigo-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600 focus-visible:ring-offset-2"
+              >
+                {example}
+              </button>
+            ))}
+          </div>
+        )}
+        {isLoading && <AnalysisLoadingState progress={state.status === "loading" ? state.progress : null} />}
         {state.status === "error" && <AnalysisErrorState error={state.error} onRetry={retry} />}
           </form>
         </div>

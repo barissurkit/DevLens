@@ -597,6 +597,7 @@ def test_max_concurrency_override_is_forwarded(
         selection=result.selection,
         client=client,
         max_concurrency=7,
+        on_progress=None,
     )
 
 
