@@ -35,7 +35,7 @@ export function SiteShell({ children }: { children: ReactNode }) {
             </nav>
           </div>
           <div className="flex items-center justify-end gap-2 sm:gap-3">
-            <ThemeToggle />
+            <div className="hidden sm:block"><ThemeToggle /></div>
             <AuthControls />
           </div>
         </div>
@@ -50,6 +50,7 @@ export function SiteShell({ children }: { children: ReactNode }) {
               <BrandMark className="h-7 w-7" />
               <span className="font-semibold tracking-tight text-slate-950">DevLens</span>
             </div>
+            <div className="mt-4 sm:hidden"><ThemeToggle /></div>
             <p className="mt-3 max-w-sm leading-6 text-slate-600">
               Herkese açık GitHub verilerinden kanıta dayalı portföy analizi. Skorlar deterministik kurallarla hesaplanır; yapay zekâ yalnızca yorumlar.
             </p>

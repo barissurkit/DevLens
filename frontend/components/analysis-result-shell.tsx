@@ -25,6 +25,7 @@ const ID_PREFIX = "result";
 export function AnalysisResultShell({ result, onReanalyze, onRetryInterpretation }: AnalysisResultShellProps) {
   const dashboardHeadingRef = useRef<HTMLHeadingElement>(null);
   const [activeTab, setActiveTab] = useState("overview");
+  const tabsRegionRef = useRef<HTMLDivElement>(null);
   const { analysis, interpretation, viewer_context } = result;
   const { aggregation, score, selection, user } = analysis;
   const isPartial = score.is_partial || aggregation.has_failures || aggregation.partial_evidence_repository_count > 0;
@@ -51,6 +52,17 @@ export function AnalysisResultShell({ result, onReanalyze, onRetryInterpretation
     dashboardHeadingRef.current?.focus();
   }, []);
 
+  // The tab bar is sticky, so a tab can be switched while the page is scrolled deep into another panel.
+  // Bring the new panel's start into view instead of leaving the reader in the middle of it.
+  function selectTab(id: string) {
+    setActiveTab(id);
+    const region = tabsRegionRef.current;
+    if (!region || typeof window === "undefined") return;
+    const stickyOffset = 53;
+    const top = region.getBoundingClientRect().top + window.scrollY - stickyOffset;
+    if (window.scrollY > top) window.scrollTo({ top: Math.max(0, top), behavior: "smooth" });
+  }
+
   return (
     <section aria-labelledby="portfolio-dashboard" className="space-y-6">
       <h1 className="sr-only">@{user.username} portföy analizi</h1>
@@ -64,8 +76,8 @@ export function AnalysisResultShell({ result, onReanalyze, onRetryInterpretation
         onRefresh={onReanalyze}
       />
 
-      <div>
-        <ResultTabs tabs={tabs} activeId={activeTab} onChange={setActiveTab} idPrefix={ID_PREFIX} />
+      <div ref={tabsRegionRef}>
+        <ResultTabs tabs={tabs} activeId={activeTab} onChange={selectTab} idPrefix={ID_PREFIX} />
 
         <TabPanel id="overview" activeId={activeTab}>
           <PortfolioOverview analysis={analysis} />

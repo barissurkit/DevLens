@@ -90,3 +90,19 @@ describe("not found page", () => {
     expect(screen.getByRole("link", { name: "Ana sayfaya dön" })).toHaveAttribute("href", "/");
   });
 });
+
+describe("search shortcut", () => {
+  it("focuses the search field on '/' but not while typing elsewhere", async () => {
+    const { fireEvent } = await import("@testing-library/react");
+    render(<><AnalysisForm /><textarea aria-label="not" /></>);
+    const input = screen.getByLabelText("GitHub kullanıcı adı");
+
+    fireEvent.keyDown(document.body, { key: "/" });
+    expect(input).toHaveFocus();
+
+    const other = screen.getByLabelText("not");
+    other.focus();
+    fireEvent.keyDown(other, { key: "/" });
+    expect(other).toHaveFocus();
+  });
+});
