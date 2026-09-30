@@ -13,6 +13,7 @@ from app.clients.gemini import (
     GeminiUnavailableError,
     GeminiUpstreamError,
     _GEMINI_MAX_ATTEMPTS,
+    _INTERPRETATION_MAX_ATTEMPTS,
     _GEMINI_TIMEOUT_MS,
     _log_gemini_failure,
     _log_invalid_response_failure,
@@ -258,6 +259,7 @@ def test_gemini_retries_503_with_bounded_backoff() -> None:
 
 def test_gemini_latency_budget_is_finite_and_sdk_retry_is_single_attempt() -> None:
     assert _GEMINI_MAX_ATTEMPTS == 2
+    assert _INTERPRETATION_MAX_ATTEMPTS == 4
     assert _GEMINI_TIMEOUT_MS == 30_000
 
 
