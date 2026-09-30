@@ -4,7 +4,7 @@ import logging
 from collections.abc import Awaitable, Callable
 
 import httpx
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import StreamingResponse
 from pydantic import ValidationError
@@ -23,6 +23,7 @@ from app.auth.ownership import derive_viewer_context
 from app.db.models import User
 from app.schemas.interpretation import (
     GitHubPortfolioInterpretationResponse,
+    InterpretationUnavailableReason,
     PortfolioInterpretationResult,
     PublicInterpretationAvailable,
     PublicInterpretationUnavailable,
@@ -88,24 +89,47 @@ _INTERPRETATION_ERROR_RESPONSES = {
 }
 
 
+# Provider-side failures that usually clear up on their own. Right after one, asking the provider again
+# only adds load while it is still rate limited or down, so the stored failure is served for a short while.
+_TRANSIENT_FAILURES = frozenset(
+    {
+        InterpretationUnavailableReason.RATE_LIMIT,
+        InterpretationUnavailableReason.TIMEOUT,
+        InterpretationUnavailableReason.UNAVAILABLE,
+        InterpretationUnavailableReason.UPSTREAM_ERROR,
+        InterpretationUnavailableReason.INVALID_RESPONSE,
+    }
+)
+INTERPRETATION_RETRY_COOLDOWN = timedelta(seconds=60)
+
+
 def _reusable_interpretation(
     cached: CachedAnalysis | None,
+    *,
+    retry_requested: bool = False,
+    now: datetime | None = None,
 ) -> PortfolioInterpretationResult | None:
-    """A stored successful interpretation of the cached analysis, so the AI provider is not called again.
+    """A stored interpretation of the cached analysis that can be served without calling the AI provider.
 
-    Only ``available`` interpretations of the current interpretation schema are reused; an
-    unavailable one (provider rate limit, timeout, ...) is retried on the next request.
+    A successful interpretation of the current interpretation schema is always reused. A transient
+    failure is reused for a short cooldown so a struggling provider is not hammered, unless the caller
+    explicitly asked to retry. Any other stored result is recomputed.
     """
 
-    if (
-        cached is None
-        or not isinstance(cached.interpretation, PublicInterpretationAvailable)
-        or cached.interpretation_schema_version != INTERPRETATION_SNAPSHOT_SCHEMA_VERSION
-    ):
+    if cached is None or cached.interpretation_schema_version != INTERPRETATION_SNAPSHOT_SCHEMA_VERSION:
         return None
-    return PortfolioInterpretationResult(
-        available=True, interpretation=cached.interpretation.interpretation
-    )
+    stored = cached.interpretation
+    if isinstance(stored, PublicInterpretationAvailable):
+        return PortfolioInterpretationResult(available=True, interpretation=stored.interpretation)
+    if (
+        isinstance(stored, PublicInterpretationUnavailable)
+        and stored.reason in _TRANSIENT_FAILURES
+        and not retry_requested
+        and cached.snapshot_created_at is not None
+        and (now or datetime.now(timezone.utc)) - cached.snapshot_created_at < INTERPRETATION_RETRY_COOLDOWN
+    ):
+        return PortfolioInterpretationResult(available=False, reason=stored.reason)
+    return None
 
 
 async def _resolve_interpretation_response(
@@ -130,7 +154,7 @@ async def _resolve_interpretation_response(
     )
     if cached is not None and on_cache_hit is not None:
         await on_cache_hit()
-    reused_interpretation = _reusable_interpretation(cached)
+    reused_interpretation = _reusable_interpretation(cached, retry_requested=request.retry_interpretation)
     try:
         if cached is None:
             # Only pass the callback when streaming so the plain endpoint keeps its exact call shape.

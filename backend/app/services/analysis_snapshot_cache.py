@@ -31,6 +31,8 @@ class CachedAnalysis:
     # skip the AI provider when a successful interpretation of this exact analysis already exists.
     interpretation: PublicPortfolioInterpretationResult | None = None
     interpretation_schema_version: str | None = None
+    # When the snapshot row holding that interpretation was written.
+    snapshot_created_at: datetime | None = None
 
 
 class AnalysisSnapshotCacheService:
@@ -103,4 +105,5 @@ class AnalysisSnapshotCacheService:
             analysis_generated_at=record.analysis_generated_at,
             interpretation=record.interpretation,
             interpretation_schema_version=record.interpretation_schema_version,
+            snapshot_created_at=record.created_at,
         )

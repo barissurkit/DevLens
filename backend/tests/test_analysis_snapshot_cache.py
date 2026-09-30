@@ -58,6 +58,7 @@ def test_cache_returns_validated_analysis_and_original_timestamp(monkeypatch) ->
                     "analysis_generated_at": generated_at,
                     "interpretation": None,
                     "interpretation_schema_version": None,
+                    "created_at": generated_at,
                 },
             )()
 
@@ -74,6 +75,7 @@ def test_cache_returns_validated_analysis_and_original_timestamp(monkeypatch) ->
     assert result.analysis_generated_at == generated_at
     assert result.interpretation is None
     assert result.interpretation_schema_version is None
+    assert result.snapshot_created_at == generated_at
 
 
 def test_cache_carries_the_stored_interpretation_with_its_schema_version(monkeypatch) -> None:
@@ -92,6 +94,7 @@ def test_cache_carries_the_stored_interpretation_with_its_schema_version(monkeyp
                     "analysis_generated_at": datetime.now(timezone.utc),
                     "interpretation": stored,
                     "interpretation_schema_version": "v1",
+                    "created_at": datetime.now(timezone.utc),
                 },
             )()
 

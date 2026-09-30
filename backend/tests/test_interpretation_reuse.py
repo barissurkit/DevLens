@@ -1,7 +1,7 @@
 import asyncio
 import json
 from collections.abc import Iterator
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from types import SimpleNamespace
 from unittest.mock import AsyncMock
 
@@ -165,3 +165,112 @@ def test_streamed_retry_of_an_unavailable_interpretation_reports_the_ai_step() -
     events = [json.loads(line) for line in response.text.splitlines() if line.strip()]
     assert [event["event"] for event in events] == ["progress", "result"]
     assert events[0]["stage"] == "interpretation"
+
+
+# --- cooldown after a transient provider failure ----------------------------
+
+
+def failed(reason: InterpretationUnavailableReason, *, age_seconds: float) -> AsyncMock:
+    cache = AsyncMock()
+    cache.get_fresh_analysis.return_value = CachedAnalysis(
+        analysis=create_result(),
+        analysis_generated_at=datetime.now(timezone.utc) - timedelta(minutes=5),
+        interpretation=PublicInterpretationUnavailable(status="unavailable", reason=reason),
+        interpretation_schema_version="v1",
+        snapshot_created_at=datetime.now(timezone.utc) - timedelta(seconds=age_seconds),
+    )
+    return cache
+
+
+@pytest.mark.parametrize(
+    "reason",
+    [
+        InterpretationUnavailableReason.RATE_LIMIT,
+        InterpretationUnavailableReason.TIMEOUT,
+        InterpretationUnavailableReason.UNAVAILABLE,
+        InterpretationUnavailableReason.UPSTREAM_ERROR,
+        InterpretationUnavailableReason.INVALID_RESPONSE,
+    ],
+)
+def test_a_fresh_transient_failure_is_served_without_hammering_the_provider(reason) -> None:
+    interpret, persistence, _ = setup(failed(reason, age_seconds=10))
+
+    response = post("/api/v1/interpretation", {"username": "synthetic-user"})
+
+    assert response.status_code == 200
+    assert response.json()["interpretation"] == {"status": "unavailable", "reason": reason.value}
+    interpret.assert_not_awaited()
+    persistence.persist.assert_not_awaited()
+
+
+def test_a_transient_failure_is_retried_once_the_cooldown_has_passed() -> None:
+    interpret, persistence, _ = setup(failed(InterpretationUnavailableReason.RATE_LIMIT, age_seconds=90))
+
+    response = post("/api/v1/interpretation", {"username": "synthetic-user"})
+
+    assert response.json()["interpretation"]["interpretation"]["summary"] == "Fresh interpretation."
+    interpret.assert_awaited_once()
+    persistence.persist.assert_awaited_once()
+
+
+def test_an_explicit_retry_bypasses_the_cooldown() -> None:
+    interpret, persistence, _ = setup(failed(InterpretationUnavailableReason.RATE_LIMIT, age_seconds=5))
+
+    response = post("/api/v1/interpretation", {"username": "synthetic-user", "retry_interpretation": True})
+
+    assert response.json()["interpretation"]["interpretation"]["summary"] == "Fresh interpretation."
+    interpret.assert_awaited_once()
+    persistence.persist.assert_awaited_once()
+
+
+def test_an_explicit_retry_still_reuses_a_successful_interpretation() -> None:
+    interpret, persistence, _ = setup(cached(STORED))
+
+    response = post("/api/v1/interpretation", {"username": "synthetic-user", "retry_interpretation": True})
+
+    assert response.json()["interpretation"]["interpretation"]["summary"] == "Stored interpretation."
+    interpret.assert_not_awaited()
+    persistence.persist.assert_not_awaited()
+
+
+@pytest.mark.parametrize(
+    "reason",
+    [InterpretationUnavailableReason.NOT_CONFIGURED, InterpretationUnavailableReason.INSUFFICIENT_EVIDENCE],
+)
+def test_non_transient_reasons_are_recomputed_rather_than_cooled_down(reason) -> None:
+    interpret, _, _ = setup(failed(reason, age_seconds=1))
+
+    response = post("/api/v1/interpretation", {"username": "synthetic-user"})
+
+    assert response.json()["interpretation"]["status"] == "available"
+    interpret.assert_awaited_once()
+
+
+def test_a_failure_without_a_snapshot_time_is_retried() -> None:
+    cache = failed(InterpretationUnavailableReason.RATE_LIMIT, age_seconds=1)
+    # CachedAnalysis is frozen: rebuild the entry without a snapshot time instead of mutating it.
+    entry = cache.get_fresh_analysis.return_value
+    cache.get_fresh_analysis.return_value = CachedAnalysis(
+        analysis=entry.analysis,
+        analysis_generated_at=entry.analysis_generated_at,
+        interpretation=entry.interpretation,
+        interpretation_schema_version=entry.interpretation_schema_version,
+        snapshot_created_at=None,
+    )
+    interpret, _, _ = setup(cache)
+
+    post("/api/v1/interpretation", {"username": "synthetic-user"})
+
+    interpret.assert_awaited_once()
+
+
+def test_streamed_cooldown_skips_the_ai_progress_step() -> None:
+    interpret, _, _ = setup(failed(InterpretationUnavailableReason.RATE_LIMIT, age_seconds=10))
+
+    response = post("/api/v1/interpretation/stream", {"username": "synthetic-user"})
+
+    events = [json.loads(line) for line in response.text.splitlines() if line.strip()]
+    assert [event["event"] for event in events] == ["result"]
+    assert events[0]["data"]["interpretation"] == {"status": "unavailable", "reason": "rate_limit"}
+    interpret.assert_not_awaited()
+
