@@ -27,7 +27,7 @@ from app.services.github_portfolio_analysis import (
 )
 from app.services.portfolio_history import PortfolioHistoryService
 from app.services.guided_improvement import build_guided_improvements
-from app.rate_limit import enforce_rate_limit
+from app.rate_limit import enforce_rate_limit, refund_rate_limit
 
 router = APIRouter(
     prefix="/api/v1",
@@ -55,6 +55,7 @@ async def _limit_analysis(request: Request, authenticated_user: User | None = De
 )
 async def analyze_portfolio(
     request: PortfolioAnalysisRequest,
+    http_request: Request,
     _rate_limit: None = Depends(_limit_analysis),
     client: GitHubClient = Depends(get_github_client),
     persistence: AnalysisSnapshotPersistenceService = Depends(
@@ -73,6 +74,7 @@ async def analyze_portfolio(
         )
     )
     if cached is not None:
+        await refund_rate_limit(http_request, "portfolio_analysis", authenticated_user)
         viewer_context = derive_viewer_context(
             authenticated_user=authenticated_user, target_github_user=cached.analysis.user
         )

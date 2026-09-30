@@ -18,6 +18,10 @@ from app.observability import current_request_id, emit_event
 MAX_RATE_LIMIT_STATES = 4096
 RATE_LIMIT_MESSAGE = "Çok fazla istek gönderildi. Lütfen daha sonra tekrar deneyin."
 
+# A cached analysis needs no GitHub calls (only the optional AI interpretation), so most of the
+# cost charged up front is handed back once the cache hit is known. Recomputing pays in full.
+CACHE_HIT_REFUND_FRACTION = 0.75
+
 
 @dataclass(frozen=True)
 class RateLimitPolicy:
@@ -77,6 +81,19 @@ class RateLimiter:
                 return self._retry_after(state, policy)
             state.tokens -= policy.cost
             return None
+
+    async def refund(self, bucket: str, principal: str, amount: float) -> None:
+        """Give tokens back (capped at capacity); a no-op when the principal has no tracked state."""
+        if amount <= 0:
+            return
+        policy = POLICIES[bucket]
+        now = self._clock()
+        async with self._lock:
+            state = self._states.get((bucket, principal))
+            if state is None:
+                return
+            self._refill(state, policy, now)
+            state.tokens = min(policy.capacity, state.tokens + amount)
 
     def _refill(self, state: TokenBucketState, policy: RateLimitPolicy, now: float) -> None:
         elapsed = max(0.0, now - state.last_refill)
@@ -145,6 +162,18 @@ async def enforce_rate_limit(
         principal_kind=principal_kind,
     )
     raise _rate_limit_error(retry_after)
+
+
+async def refund_rate_limit(
+    request: Request,
+    bucket: str,
+    user: User | None = None,
+    *,
+    fraction: float = CACHE_HIT_REFUND_FRACTION,
+) -> None:
+    """Return a share of the cost already charged for this request (e.g. after a cache hit)."""
+    principal, _ = principal_for(request, user)
+    await request.app.state.rate_limiter.refund(bucket, principal, POLICIES[bucket].cost * fraction)
 
 
 def rate_limit_dependency(bucket: str):

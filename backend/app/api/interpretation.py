@@ -1,6 +1,7 @@
 import asyncio
 import json
 import logging
+from collections.abc import Awaitable, Callable
 
 import httpx
 from datetime import datetime, timezone
@@ -45,7 +46,7 @@ from app.observability import emit_event
 from app.services.analysis_progress import AnalysisProgress, ProgressCallback, report_progress
 from app.services.portfolio_history import PortfolioHistoryService
 from app.services.guided_improvement import build_guided_improvements
-from app.rate_limit import enforce_rate_limit
+from app.rate_limit import enforce_rate_limit, refund_rate_limit
 
 router = APIRouter(
     prefix="/api/v1",
@@ -96,6 +97,7 @@ async def _resolve_interpretation_response(
     authenticated_user: User | None,
     history: PortfolioHistoryService,
     on_progress: ProgressCallback | None = None,
+    on_cache_hit: Callable[[], Awaitable[None]] | None = None,
 ) -> GitHubPortfolioInterpretationResponse:
     cached = (
         None
@@ -105,6 +107,8 @@ async def _resolve_interpretation_response(
             request_kind="interpretation",
         )
     )
+    if cached is not None and on_cache_hit is not None:
+        await on_cache_hit()
     try:
         if cached is None:
             # Only pass the callback when streaming so the plain endpoint keeps its exact call shape.
@@ -176,6 +180,7 @@ async def _resolve_interpretation_response(
 )
 async def interpret_portfolio(
     request: PortfolioAnalysisRequest,
+    http_request: Request,
     _rate_limit: None = Depends(_limit_interpretation),
     github_client: GitHubClient = Depends(get_github_client),
     gemini_client: PortfolioInterpreter | None = Depends(get_gemini_client),
@@ -194,6 +199,7 @@ async def interpret_portfolio(
         cache=cache,
         authenticated_user=authenticated_user,
         history=history,
+        on_cache_hit=lambda: refund_rate_limit(http_request, "portfolio_analysis", authenticated_user),
     )
 
 
@@ -214,6 +220,7 @@ def _ndjson(event: dict[str, object]) -> bytes:
 )
 async def stream_interpretation(
     request: PortfolioAnalysisRequest,
+    http_request: Request,
     _rate_limit: None = Depends(_limit_interpretation),
     github_client: GitHubClient = Depends(get_github_client),
     gemini_client: PortfolioInterpreter | None = Depends(get_gemini_client),
@@ -247,6 +254,7 @@ async def stream_interpretation(
                 authenticated_user=authenticated_user,
                 history=history,
                 on_progress=on_progress,
+                on_cache_hit=lambda: refund_rate_limit(http_request, "portfolio_analysis", authenticated_user),
             )
             queue.put_nowait({"event": "result", "data": response.model_dump(mode="json")})
         except HTTPException as exc:
