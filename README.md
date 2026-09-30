@@ -179,3 +179,6 @@ Local examples use `ENVIRONMENT=development` and disabled authentication with lo
 - `GET /health`
 - `POST /api/v1/analysis`
 - `POST /api/v1/interpretation`
+- `POST /api/v1/interpretation/stream` (same analysis as newline-delimited JSON: `progress` events with stage/completed/total, then `result` or `error`)
+
+`POST /api/v1/analysis` and `POST /api/v1/interpretation` accept an optional `refresh: true` to bypass the snapshot cache. The interpretation response includes `analysis_generated_at` and `cached` so clients can show how fresh a result is.

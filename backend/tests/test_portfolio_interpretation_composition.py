@@ -34,7 +34,9 @@ def test_composition_runs_analysis_once_and_passes_its_result_to_interpretation(
         )
     )
 
-    analyze.assert_awaited_once_with(username="octocat", client=github_client)
+    analyze.assert_awaited_once_with(
+        username="octocat", client=github_client, on_progress=None
+    )
     interpret.assert_awaited_once_with(analysis=analysis, client=gemini_client)
     assert result.analysis is analysis
     assert result.interpretation is interpretation

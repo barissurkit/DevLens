@@ -11,6 +11,7 @@ from app.schemas.analysis import (
     PortfolioRepositoryExclusionReason,
 )
 from app.schemas.github import GitHubRepository
+from app.services.analysis_progress import ProgressCallback, report_progress
 from app.services.github.client import (
     GitHubClient,
     GitHubMalformedResponseError,
@@ -110,6 +111,7 @@ async def analyze_portfolio_repositories(
     selection: PortfolioRepositorySelection,
     client: GitHubClient,
     max_concurrency: int = DEFAULT_MAX_CONCURRENCY,
+    on_progress: ProgressCallback | None = None,
 ) -> PortfolioRepositoryAnalysis:
     """Analyze and score selected repositories with bounded concurrency."""
 
@@ -136,15 +138,26 @@ async def analyze_portfolio_repositories(
         )
 
     semaphore = asyncio.Semaphore(max_concurrency)
-    tasks = [
-        asyncio.create_task(
-            _analyze_selected_repository(
-                owner=owner,
-                repository=repository,
-                client=client,
-                semaphore=semaphore,
-            )
+    total = len(selection.selected)
+    completed_count = 0
+    report_progress(on_progress, "repositories", 0, total)
+
+    async def analyze_and_report(
+        repository: GitHubRepository,
+    ) -> PortfolioRepositoryResult | PortfolioRepositoryFailure:
+        nonlocal completed_count
+        result = await _analyze_selected_repository(
+            owner=owner,
+            repository=repository,
+            client=client,
+            semaphore=semaphore,
         )
+        completed_count += 1
+        report_progress(on_progress, "repositories", completed_count, total)
+        return result
+
+    tasks = [
+        asyncio.create_task(analyze_and_report(repository))
         for repository in selection.selected
     ]
 

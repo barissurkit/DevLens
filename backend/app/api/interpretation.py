@@ -1,8 +1,11 @@
+import asyncio
+import json
 import logging
 
 import httpx
 from datetime import datetime, timezone
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi.responses import StreamingResponse
 from pydantic import ValidationError
 
 from app.api.errors import APIErrorResponse, map_github_exception
@@ -39,6 +42,7 @@ from app.services.portfolio_interpretation_composition import (
     PortfolioInterpretationCompositionResult,
 )
 from app.observability import emit_event
+from app.services.analysis_progress import AnalysisProgress, ProgressCallback, report_progress
 from app.services.portfolio_history import PortfolioHistoryService
 from app.services.guided_improvement import build_guided_improvements
 from app.rate_limit import enforce_rate_limit
@@ -71,46 +75,51 @@ def to_public_interpretation_result(
     return PublicInterpretationUnavailable(status="unavailable", reason=result.reason)
 
 
-@router.post(
-    "/interpretation",
-    response_model=GitHubPortfolioInterpretationResponse,
-    summary="Analyze a GitHub portfolio with optional interpretation",
-    responses={
-        404: {"model": APIErrorResponse, "description": "GitHub user not found."},
-        429: {"model": APIErrorResponse, "description": "GitHub rate limit reached."},
-        502: {"model": APIErrorResponse, "description": "GitHub upstream error."},
-        503: {
-            "model": APIErrorResponse,
-            "description": "GitHub service unavailable or timed out.",
-        },
+_INTERPRETATION_ERROR_RESPONSES = {
+    404: {"model": APIErrorResponse, "description": "GitHub user not found."},
+    429: {"model": APIErrorResponse, "description": "GitHub rate limit reached."},
+    502: {"model": APIErrorResponse, "description": "GitHub upstream error."},
+    503: {
+        "model": APIErrorResponse,
+        "description": "GitHub service unavailable or timed out.",
     },
-)
-async def interpret_portfolio(
+}
+
+
+async def _resolve_interpretation_response(
+    *,
     request: PortfolioAnalysisRequest,
-    _rate_limit: None = Depends(_limit_interpretation),
-    github_client: GitHubClient = Depends(get_github_client),
-    gemini_client: PortfolioInterpreter | None = Depends(get_gemini_client),
-    persistence: AnalysisSnapshotPersistenceService = Depends(
-        get_snapshot_persistence_service
-    ),
-    cache: AnalysisSnapshotCacheService = Depends(get_analysis_snapshot_cache_service),
-    authenticated_user: User | None = Depends(get_optional_authenticated_user),
-    history: PortfolioHistoryService = Depends(get_portfolio_history_service),
+    github_client: GitHubClient,
+    gemini_client: PortfolioInterpreter | None,
+    persistence: AnalysisSnapshotPersistenceService,
+    cache: AnalysisSnapshotCacheService,
+    authenticated_user: User | None,
+    history: PortfolioHistoryService,
+    on_progress: ProgressCallback | None = None,
 ) -> GitHubPortfolioInterpretationResponse:
-    cached = await cache.get_fresh_analysis(
-        username=request.username,
-        request_kind="interpretation",
+    cached = (
+        None
+        if request.refresh
+        else await cache.get_fresh_analysis(
+            username=request.username,
+            request_kind="interpretation",
+        )
     )
     try:
         if cached is None:
+            # Only pass the callback when streaming so the plain endpoint keeps its exact call shape.
+            progress_kwargs = {"on_progress": on_progress} if on_progress is not None else {}
             result = await analyze_and_interpret_github_portfolio(
                 username=request.username,
                 github_client=github_client,
                 gemini_client=gemini_client,
+                **progress_kwargs,
             )
             analysis_generated_at = datetime.now(timezone.utc)
         else:
             analysis_generated_at = cached.analysis_generated_at
+            if gemini_client is not None:
+                report_progress(on_progress, "interpretation")
             result = PortfolioInterpretationCompositionResult(
                 analysis=cached.analysis,
                 interpretation=await interpret_github_portfolio(
@@ -145,6 +154,8 @@ async def interpret_portfolio(
         interpretation=public_interpretation,
         viewer_context=viewer_context,
         guided_improvements=build_guided_improvements(result.analysis, viewer_context),
+        analysis_generated_at=analysis_generated_at,
+        cached=cached is not None,
     )
     await persistence.persist(
         analysis=response.analysis,
@@ -155,3 +166,117 @@ async def interpret_portfolio(
     if authenticated_user is not None and response.viewer_context.is_owner:
         await history.capture(user=authenticated_user, analysis=response.analysis)
     return response
+
+
+@router.post(
+    "/interpretation",
+    response_model=GitHubPortfolioInterpretationResponse,
+    summary="Analyze a GitHub portfolio with optional interpretation",
+    responses=_INTERPRETATION_ERROR_RESPONSES,
+)
+async def interpret_portfolio(
+    request: PortfolioAnalysisRequest,
+    _rate_limit: None = Depends(_limit_interpretation),
+    github_client: GitHubClient = Depends(get_github_client),
+    gemini_client: PortfolioInterpreter | None = Depends(get_gemini_client),
+    persistence: AnalysisSnapshotPersistenceService = Depends(
+        get_snapshot_persistence_service
+    ),
+    cache: AnalysisSnapshotCacheService = Depends(get_analysis_snapshot_cache_service),
+    authenticated_user: User | None = Depends(get_optional_authenticated_user),
+    history: PortfolioHistoryService = Depends(get_portfolio_history_service),
+) -> GitHubPortfolioInterpretationResponse:
+    return await _resolve_interpretation_response(
+        request=request,
+        github_client=github_client,
+        gemini_client=gemini_client,
+        persistence=persistence,
+        cache=cache,
+        authenticated_user=authenticated_user,
+        history=history,
+    )
+
+
+def _ndjson(event: dict[str, object]) -> bytes:
+    return (json.dumps(event, ensure_ascii=False) + "\n").encode("utf-8")
+
+
+@router.post(
+    "/interpretation/stream",
+    summary="Analyze a GitHub portfolio and stream progress as NDJSON",
+    description=(
+        "Same analysis as `/interpretation`, delivered as newline-delimited JSON. "
+        "Each line is one event: `progress` (stage, completed, total), then either "
+        "`result` (the interpretation response) or `error` (status and detail)."
+    ),
+    response_class=StreamingResponse,
+    responses=_INTERPRETATION_ERROR_RESPONSES,
+)
+async def stream_interpretation(
+    request: PortfolioAnalysisRequest,
+    _rate_limit: None = Depends(_limit_interpretation),
+    github_client: GitHubClient = Depends(get_github_client),
+    gemini_client: PortfolioInterpreter | None = Depends(get_gemini_client),
+    persistence: AnalysisSnapshotPersistenceService = Depends(
+        get_snapshot_persistence_service
+    ),
+    cache: AnalysisSnapshotCacheService = Depends(get_analysis_snapshot_cache_service),
+    authenticated_user: User | None = Depends(get_optional_authenticated_user),
+    history: PortfolioHistoryService = Depends(get_portfolio_history_service),
+) -> StreamingResponse:
+    queue: asyncio.Queue[dict[str, object] | None] = asyncio.Queue()
+
+    def on_progress(progress: AnalysisProgress) -> None:
+        queue.put_nowait(
+            {
+                "event": "progress",
+                "stage": progress.stage,
+                "completed": progress.completed,
+                "total": progress.total,
+            }
+        )
+
+    async def run() -> None:
+        try:
+            response = await _resolve_interpretation_response(
+                request=request,
+                github_client=github_client,
+                gemini_client=gemini_client,
+                persistence=persistence,
+                cache=cache,
+                authenticated_user=authenticated_user,
+                history=history,
+                on_progress=on_progress,
+            )
+            queue.put_nowait({"event": "result", "data": response.model_dump(mode="json")})
+        except HTTPException as exc:
+            queue.put_nowait({"event": "error", "status": exc.status_code, "detail": exc.detail})
+        except asyncio.CancelledError:
+            raise
+        except Exception:
+            logger.exception("interpretation.stream.failed")
+            queue.put_nowait(
+                {
+                    "event": "error",
+                    "status": 500,
+                    "detail": {"code": "internal_error", "message": "Analiz tamamlanamadı."},
+                }
+            )
+        finally:
+            queue.put_nowait(None)
+
+    task = asyncio.create_task(run())
+
+    async def events():
+        try:
+            while (item := await queue.get()) is not None:
+                yield _ndjson(item)
+        finally:
+            # Stop the analysis when the client disconnects before it finished.
+            task.cancel()
+
+    return StreamingResponse(
+        events(),
+        media_type="application/x-ndjson",
+        headers={"Cache-Control": "no-cache, no-transform", "X-Accel-Buffering": "no"},
+    )

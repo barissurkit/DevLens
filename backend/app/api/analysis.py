@@ -64,9 +64,13 @@ async def analyze_portfolio(
     authenticated_user: User | None = Depends(get_optional_authenticated_user),
     history: PortfolioHistoryService = Depends(get_portfolio_history_service),
 ) -> GitHubPortfolioAnalysisResponse:
-    cached = await cache.get_fresh_analysis(
-        username=request.username,
-        request_kind="analysis",
+    cached = (
+        None
+        if request.refresh
+        else await cache.get_fresh_analysis(
+            username=request.username,
+            request_kind="analysis",
+        )
     )
     if cached is not None:
         viewer_context = derive_viewer_context(

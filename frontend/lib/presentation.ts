@@ -18,9 +18,13 @@ export interface ScoreTone {
   badge: string;
 }
 
+/** Lower bounds of the score bands shown next to the portfolio score. */
+export const SCORE_STRONG_MIN = 75;
+export const SCORE_MODERATE_MIN = 50;
+
 export function scoreTone(score: number): ScoreTone {
-  if (score >= 75) return { label: "Güçlü", text: "text-emerald-700", stroke: "stroke-emerald-500", badge: "bg-emerald-50 text-emerald-800" };
-  if (score >= 50) return { label: "Gelişebilir", text: "text-amber-700", stroke: "stroke-amber-500", badge: "bg-amber-50 text-amber-800" };
+  if (score >= SCORE_STRONG_MIN) return { label: "Güçlü", text: "text-emerald-700", stroke: "stroke-emerald-500", badge: "bg-emerald-50 text-emerald-800" };
+  if (score >= SCORE_MODERATE_MIN) return { label: "Gelişebilir", text: "text-amber-700", stroke: "stroke-amber-500", badge: "bg-amber-50 text-amber-800" };
   return { label: "Zayıf", text: "text-rose-700", stroke: "stroke-rose-500", badge: "bg-rose-50 text-rose-800" };
 }
 

@@ -1,4 +1,5 @@
 from app.schemas.analysis import GitHubPortfolioAnalysis
+from app.services.analysis_progress import ProgressCallback, report_progress
 from app.services.github.client import GitHubClient
 from app.services.portfolio_aggregation import aggregate_portfolio
 from app.services.portfolio_analysis import (
@@ -21,10 +22,12 @@ async def analyze_github_portfolio(
     username: str,
     client: GitHubClient,
     max_concurrency: int = DEFAULT_MAX_CONCURRENCY,
+    on_progress: ProgressCallback | None = None,
 ) -> GitHubPortfolioAnalysis:
     """Run the complete deterministic portfolio analysis use case."""
 
     with use_github_request_budget(GitHubRequestBudget()):
+        report_progress(on_progress, "profile")
         user = await client.get_user(username)
         repositories = await client.get_repositories(username)
         selection = select_portfolio_repositories(repositories)
@@ -33,6 +36,7 @@ async def analyze_github_portfolio(
             selection=selection,
             client=client,
             max_concurrency=max_concurrency,
+            on_progress=on_progress,
         )
     aggregation = aggregate_portfolio(repository_analysis)
     intelligence = build_portfolio_intelligence(aggregation)

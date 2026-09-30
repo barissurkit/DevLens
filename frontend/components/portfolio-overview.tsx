@@ -1,6 +1,7 @@
 import type { GitHubPortfolioAnalysis, PortfolioInsight, PortfolioScoreDimensionResult } from "../lib/types";
 import { categoryLabel, scoreTone } from "../lib/presentation";
 import { ScoreDimension } from "./score-dimension";
+import { ScoreMethodology } from "./score-methodology";
 
 const DIMENSION_ORDER = ["documentation_consistency", "testing_automation_adoption", "repository_hygiene_consistency"];
 const DIMENSION_LABELS: Record<string, string> = {
@@ -22,7 +23,7 @@ export function PortfolioOverview({ analysis }: { analysis: GitHubPortfolioAnaly
 
   return (
     <div className="space-y-6">
-      <div className="grid gap-6 lg:grid-cols-3">
+      <div className="grid gap-6 lg:grid-cols-3 lg:items-start">
         <ScoreCard analysis={analysis} className="lg:col-span-2" />
         <section aria-labelledby="stats-heading" className={cardClass}>
           <SectionHeading id="stats-heading" title="Analiz kapsamı" />
@@ -82,6 +83,10 @@ function ScoreCard({ analysis, className = "" }: { analysis: GitHubPortfolioAnal
       {dimensions.length > 0
         ? <div className="mt-6 grid gap-4 border-t border-slate-100 pt-6 md:grid-cols-3">{dimensions.map((dimension) => <ScoreDimension key={dimension.key} label={DIMENSION_LABELS[dimension.key] || dimension.label} score={dimension.score} pointsEarned={dimension.points_earned} pointsPossible={dimension.points_possible} description={DIMENSION_DESCRIPTIONS[dimension.key] || dimension.label} />)}</div>
         : <p className="mt-6 rounded-lg bg-slate-50 px-4 py-3 text-sm text-slate-600">Skor kullanılabilir olduğunda boyut dağılımı burada görünecek.</p>}
+      <ScoreMethodology
+        dimensions={dimensions.map((dimension) => ({ ...dimension, label: DIMENSION_LABELS[dimension.key] || dimension.label }))}
+        scoredRepositoryCount={score.scored_repository_count}
+      />
     </section>
   );
 }
@@ -130,9 +135,33 @@ function InsightSection({ id, title, tone, items, emptyMessage }: { id: string; 
     <section aria-labelledby={id} className={cardClass}>
       <SectionHeading id={id} title={title} />
       {items.length > 0
-        ? <ul className="mt-4 space-y-3">{items.map((item) => <li key={item.key} className={`rounded-lg border-l-4 bg-slate-50 p-4 text-sm leading-6 text-slate-700 ${INSIGHT_ACCENT[tone]}`}>{item.message}</li>)}</ul>
+        ? <ul className="mt-4 space-y-3">{items.map((item) => (
+            <li key={item.key} className={`rounded-lg border-l-4 bg-slate-50 p-4 text-sm leading-6 text-slate-700 ${INSIGHT_ACCENT[tone]}`}>
+              <p>{item.message}</p>
+              <CoverageMeter detected={item.detected_repository_count} analyzed={item.analyzed_repository_count} tone={tone} />
+            </li>
+          ))}</ul>
         : <p className="mt-4 text-sm leading-6 text-slate-500">{emptyMessage}</p>}
     </section>
+  );
+}
+
+const METER_FILL = { positive: "bg-emerald-500", attention: "bg-amber-500" } as const;
+
+/** Shows in how many of the analyzed repositories a signal was found, e.g. "2 / 6 repository". */
+function CoverageMeter({ detected, analyzed, tone }: { detected: number; analyzed: number; tone: keyof typeof INSIGHT_ACCENT }) {
+  if (analyzed <= 0) return null;
+  const percent = Math.min(100, Math.max(0, Math.round((detected / analyzed) * 100)));
+  return (
+    <div className="mt-3 flex items-center gap-3">
+      <div aria-hidden="true" className="h-1.5 min-w-0 flex-1 overflow-hidden rounded-full bg-slate-200">
+        <div className={`h-full rounded-full ${METER_FILL[tone]}`} style={{ width: `${percent}%` }} />
+      </div>
+      <span className="shrink-0 text-xs font-semibold text-slate-700">
+        {detected} / {analyzed} repository
+        <span className="sr-only"> (yaklaşık %{percent})</span>
+      </span>
+    </div>
   );
 }
 

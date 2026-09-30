@@ -141,7 +141,16 @@ def test_available_response_is_composite_and_emits_one_safe_outcome_event(
 
     assert response.status_code == 200
     body = response.json()
-    assert set(body) == {"analysis", "interpretation", "viewer_context", "guided_improvements"}
+    assert set(body) == {
+        "analysis",
+        "interpretation",
+        "viewer_context",
+        "guided_improvements",
+        "analysis_generated_at",
+        "cached",
+    }
+    assert body["cached"] is False
+    assert body["analysis_generated_at"] is not None
     assert body["guided_improvements"] == []
     assert body["viewer_context"] == {"is_owner": False, "mode": "explore"}
     assert body["interpretation"] == {

@@ -1,14 +1,19 @@
 import { forwardRef } from "react";
 import type { GitHubUser, ViewerContext } from "../lib/types";
 import { portfolioModeLabel } from "../lib/presentation";
+import { FreshnessNote } from "./freshness-note";
 
 interface PortfolioHeaderProps {
   user: GitHubUser;
   viewerContext: ViewerContext;
   isPartial: boolean;
+  /** ISO time the analysis was computed; the freshness line is hidden when the backend does not provide it. */
+  generatedAt?: string | null;
+  cached?: boolean;
+  onRefresh?: () => void;
 }
 
-export const PortfolioHeader = forwardRef<HTMLHeadingElement, PortfolioHeaderProps>(function PortfolioHeader({ user, viewerContext, isPartial }, headingRef) {
+export const PortfolioHeader = forwardRef<HTMLHeadingElement, PortfolioHeaderProps>(function PortfolioHeader({ user, viewerContext, isPartial, generatedAt, cached = false, onRefresh }, headingRef) {
   const displayName = user.name || `@${user.username}`;
   return (
     <header className="rounded-xl border border-slate-200 bg-card p-5 shadow-card sm:p-6">
@@ -35,6 +40,7 @@ export const PortfolioHeader = forwardRef<HTMLHeadingElement, PortfolioHeaderPro
         </div>
       </div>
       {isPartial && <p className="mt-5 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">Bu sonuç, bazı repository verileri eksik olduğu için kısmi kanıt içerebilir.</p>}
+      {generatedAt && onRefresh && <FreshnessNote generatedAt={generatedAt} cached={cached} onRefresh={onRefresh} />}
     </header>
   );
 });
