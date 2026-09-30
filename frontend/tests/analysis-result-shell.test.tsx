@@ -1,4 +1,5 @@
 import { cleanup, render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { AnalysisResultShell } from "../components/analysis-result-shell";
 import type { GitHubPortfolioInterpretationResponse } from "../lib/types";
@@ -28,14 +29,38 @@ function response(isOwner: boolean): GitHubPortfolioInterpretationResponse {
 
 afterEach(cleanup);
 
-describe("AnalysisResultShell Guided Improvement visibility", () => {
-  it("renders owner guidance from viewer context", () => {
+describe("AnalysisResultShell tabs and Guided Improvement visibility", () => {
+  it("shows the overview tab first and keeps other panels hidden", () => {
     render(<AnalysisResultShell result={response(true)} onReanalyze={vi.fn()} />);
+    expect(screen.getByRole("tab", { name: /Genel Bakış/ })).toHaveAttribute("aria-selected", "true");
+    expect(screen.getByRole("tabpanel", { name: /Genel Bakış/ })).toBeVisible();
+    expect(screen.queryByRole("heading", { name: "Guided Improvement" })).not.toBeInTheDocument();
+  });
+
+  it("renders owner guidance in the Aksiyonlar tab from viewer context", async () => {
+    const user = userEvent.setup();
+    render(<AnalysisResultShell result={response(true)} onReanalyze={vi.fn()} />);
+    await user.click(screen.getByRole("tab", { name: /Aksiyonlar/ }));
     expect(screen.getByRole("heading", { name: "Guided Improvement" })).toBeInTheDocument();
   });
 
-  it("does not render guidance for Explore even when a fixture contains items", () => {
+  it("does not offer the Aksiyonlar tab for Explore even when a fixture contains items", () => {
     render(<AnalysisResultShell result={response(false)} onReanalyze={vi.fn()} />);
+    expect(screen.queryByRole("tab", { name: /Aksiyonlar/ })).not.toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "Guided Improvement" })).not.toBeInTheDocument();
+  });
+
+  it("supports arrow, Home and End keyboard navigation between tabs", async () => {
+    const user = userEvent.setup();
+    render(<AnalysisResultShell result={response(true)} onReanalyze={vi.fn()} />);
+    screen.getByRole("tab", { name: /Genel Bakış/ }).focus();
+    await user.keyboard("{ArrowRight}");
+    expect(screen.getByRole("tab", { name: /Repository'ler/ })).toHaveAttribute("aria-selected", "true");
+    await user.keyboard("{End}");
+    expect(screen.getByRole("tab", { name: /Aksiyonlar/ })).toHaveAttribute("aria-selected", "true");
+    await user.keyboard("{ArrowRight}");
+    expect(screen.getByRole("tab", { name: /Genel Bakış/ })).toHaveAttribute("aria-selected", "true");
+    await user.keyboard("{Home}");
+    expect(screen.getByRole("tab", { name: /Genel Bakış/ })).toHaveFocus();
   });
 });
