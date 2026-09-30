@@ -19,6 +19,10 @@ COPY next.config.ts postcss.config.mjs tsconfig.json next-env.d.ts eslint.config
 ARG NEXT_PUBLIC_API_BASE_URL=http://localhost:8000
 ENV NEXT_PUBLIC_API_BASE_URL=${NEXT_PUBLIC_API_BASE_URL}
 
+# Render passes its service and system variables as build args; /version reports this one.
+ARG RENDER_GIT_COMMIT
+ENV RENDER_GIT_COMMIT=${RENDER_GIT_COMMIT}
+
 RUN npm run build
 
 FROM node:22.18.0-alpine AS runtime

@@ -4,11 +4,12 @@ describe("/version", () => {
   it("reports the build commit and time without caching", async () => {
     vi.stubEnv("BUILD_COMMIT", "abc1234");
     vi.stubEnv("BUILD_TIME", "2026-09-30T12:00:00.000Z");
+    vi.stubEnv("RENDER_GIT_COMMIT", "def5678");
     const { GET } = await import("../app/version/route");
 
     const response = GET();
 
-    expect(await response.json()).toEqual({ commit: "abc1234", builtAt: "2026-09-30T12:00:00.000Z" });
+    expect(await response.json()).toEqual({ commit: "abc1234", builtAt: "2026-09-30T12:00:00.000Z", runningCommit: "def5678" });
     expect(response.headers.get("Cache-Control")).toBe("no-store");
     vi.unstubAllEnvs();
   });
