@@ -25,7 +25,7 @@ export function AuthControls() {
       <div className="flex flex-wrap items-center justify-end gap-2">
         <a
           href={`/?workspace=1&username=${encodeURIComponent(user.github_login)}`}
-          className={`${controlClassName} border border-slate-300 bg-white text-slate-700 hover:bg-slate-100`}
+          className={`${controlClassName} border border-slate-300 bg-card text-slate-700 hover:bg-slate-100`}
         >
           My Workspace
         </a>
@@ -36,7 +36,7 @@ export function AuthControls() {
           type="button"
           onClick={() => void handleLogout()}
           disabled={isLoggingOut}
-          className={`${controlClassName} border border-slate-300 bg-white text-slate-700 hover:bg-slate-100 disabled:cursor-wait disabled:opacity-60`}
+          className={`${controlClassName} border border-slate-300 bg-card text-slate-700 hover:bg-slate-100 disabled:cursor-wait disabled:opacity-60`}
         >
           {isLoggingOut ? "Çıkış yapılıyor…" : "Çıkış yap"}
         </button>
@@ -51,7 +51,7 @@ export function AuthControls() {
     <div className="flex flex-wrap items-center justify-end gap-2">
       <a
         href={getAuthStartUrl()}
-        className={`${controlClassName} bg-indigo-600 text-white hover:bg-indigo-700`}
+        className={`${controlClassName} bg-indigo-600 text-white hover:bg-primary-hover`}
       >
         Sign in with GitHub
       </a>
@@ -59,7 +59,7 @@ export function AuthControls() {
         <button
           type="button"
           onClick={() => void refresh()}
-          className={`${controlClassName} border border-slate-300 bg-white text-slate-700 hover:bg-slate-100`}
+          className={`${controlClassName} border border-slate-300 bg-card text-slate-700 hover:bg-slate-100`}
         >
           Durumu yenile
         </button>

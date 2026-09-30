@@ -14,7 +14,7 @@ const DIMENSION_DESCRIPTIONS: Record<string, string> = {
   repository_hygiene_consistency: ".gitignore, LICENSE ve CONTRIBUTING gibi repository pratiği sinyallerinin görünümü.",
 };
 
-const cardClass = "rounded-xl border border-slate-200 bg-white p-5 shadow-card sm:p-6";
+const cardClass = "rounded-xl border border-slate-200 bg-card p-5 shadow-card sm:p-6";
 
 export function PortfolioOverview({ analysis }: { analysis: GitHubPortfolioAnalysis }) {
   const { aggregation, intelligence, score, selection, user } = analysis;

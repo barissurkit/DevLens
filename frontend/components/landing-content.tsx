@@ -27,8 +27,8 @@ export function SamplePreview() {
   const circumference = 2 * Math.PI * radius;
   return (
     <div aria-hidden="true" className="relative mx-auto w-full max-w-md">
-      <div className="absolute -inset-4 -z-10 rounded-3xl bg-gradient-to-br from-indigo-100 via-white to-slate-100 blur-2xl" />
-      <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-raised">
+      <div className="absolute -inset-4 -z-10 rounded-3xl bg-gradient-to-br from-indigo-100 via-card to-slate-100 blur-2xl" />
+      <div className="rounded-xl border border-slate-200 bg-card p-5 shadow-raised">
         <div className="flex items-center justify-between">
           <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Portföy Kanıt Skoru</p>
           <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-600">Örnek görünüm</span>
@@ -66,7 +66,7 @@ export function FeatureStrip() {
   return (
     <ul className="grid gap-4 sm:grid-cols-3">
       {FEATURES.map((feature) => (
-        <li key={feature.title} className="rounded-xl border border-slate-200 bg-white p-5 shadow-card">
+        <li key={feature.title} className="rounded-xl border border-slate-200 bg-card p-5 shadow-card">
           <h2 className="text-sm font-semibold text-slate-950">{feature.title}</h2>
           <p className="mt-2 text-sm leading-6 text-slate-600">{feature.text}</p>
         </li>

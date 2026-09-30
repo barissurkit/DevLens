@@ -65,10 +65,10 @@ export function AnalysisResultShell({ result, onReanalyze }: AnalysisResultShell
         {hasActions && (
           <TabPanel id="actions" activeId={activeTab}>
             {viewer_context.is_owner && <GuidedImprovementSection improvements={result.guided_improvements} onReanalyze={onReanalyze} />}
-            {!isWorkspace && result.guided_improvements.length === 0 && <p className="rounded-xl border border-slate-200 bg-white p-6 text-sm text-slate-600 shadow-card">Şu an önerilen bir iyileştirme adımı yok.</p>}
+            {!isWorkspace && result.guided_improvements.length === 0 && <p className="rounded-xl border border-slate-200 bg-card p-6 text-sm text-slate-600 shadow-card">Şu an önerilen bir iyileştirme adımı yok.</p>}
             {isWorkspace && <>
-              <AnalysisHistory key={user.username} visible={viewer_context.is_owner} />
-              <AISuggestedActions key={user.username} username={user.username} />
+              <AnalysisHistory key={`history-${user.username}`} visible={viewer_context.is_owner} />
+              <AISuggestedActions key={`suggestions-${user.username}`} username={user.username} />
               <ActionPlan />
             </>}
           </TabPanel>

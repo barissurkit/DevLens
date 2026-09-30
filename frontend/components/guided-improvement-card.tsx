@@ -18,7 +18,7 @@ export function GuidedImprovementCard({ item }: { item: GuidedImprovement }) {
           {item.steps.map((step, index) => <li key={`${item.rule_key}-step-${index}`}>{step}</li>)}
         </ol>
       </div>
-      <div className="rounded-lg border border-slate-200 bg-white p-4">
+      <div className="rounded-lg border border-slate-200 bg-card p-4">
         <h5 className="font-medium text-slate-900">Doğrulama</h5>
         <p className="mt-1">Durum: {statusLabel}</p>
         <p className="mt-1 text-slate-600">{item.verification.detected_repository_count} repository tespit edildi, {item.verification.analyzed_repository_count} repository analiz edildi.</p>
