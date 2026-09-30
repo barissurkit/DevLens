@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { userPath } from "../lib/share";
+import { copyText, userPath } from "../lib/share";
 
 type CopyState = "idle" | "copied" | "failed";
 
@@ -16,13 +16,8 @@ export function CopyLinkButton({ username }: { username: string }) {
 
   async function copy() {
     const url = `${window.location.origin}${userPath(username)}`;
-    try {
-      await navigator.clipboard.writeText(url);
-      setState("copied");
-    } catch {
-      // Clipboard access can be denied or unavailable (insecure context); the address bar already holds the link.
-      setState("failed");
-    }
+    // When both clipboard routes fail the address bar still holds the link.
+    setState(await copyText(url) ? "copied" : "failed");
     window.clearTimeout(timer.current);
     timer.current = window.setTimeout(() => setState("idle"), RESET_MS);
   }

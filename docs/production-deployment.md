@@ -94,6 +94,8 @@ Development-only localhost HTTP examples are not valid production configuration.
 {"status":"ok"}
 ```
 
+The frontend serves `GET /version` (`{"commit":"<sha>","builtAt":"<time>"}`, taken from Render's `RENDER_GIT_COMMIT` at build time). After a merge, `scripts/check-deploy.sh` compares it with `origin/main`. Once the deploy has finished, a mismatch means Render served a stale build: run Manual Deploy -> "Clear build cache & deploy" on the frontend service (this fixed the one stale deploy seen so far; the root cause is unknown).
+
 Normal application responses include a server-generated `X-Request-ID`. Structured logs correlate request lifecycle and provider activity; this document does not claim that every possible raw unhandled 500 response has the header.
 
 ## Analysis Verification
