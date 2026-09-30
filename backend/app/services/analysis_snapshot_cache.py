@@ -15,6 +15,7 @@ from app.db.repositories.analysis_snapshots import (
     SnapshotPayloadValidationError,
 )
 from app.schemas.analysis import GitHubPortfolioAnalysis
+from app.schemas.interpretation import PublicPortfolioInterpretationResult
 from app.observability import emit_event
 
 logger = logging.getLogger(__name__)
@@ -26,6 +27,10 @@ SessionFactoryProvider = Callable[[Settings], async_sessionmaker[AsyncSession]]
 class CachedAnalysis:
     analysis: GitHubPortfolioAnalysis
     analysis_generated_at: datetime
+    # The interpretation stored with the latest snapshot, when there is one. It lets a cache hit
+    # skip the AI provider when a successful interpretation of this exact analysis already exists.
+    interpretation: PublicPortfolioInterpretationResult | None = None
+    interpretation_schema_version: str | None = None
 
 
 class AnalysisSnapshotCacheService:
@@ -96,4 +101,6 @@ class AnalysisSnapshotCacheService:
         return CachedAnalysis(
             analysis=record.analysis,
             analysis_generated_at=record.analysis_generated_at,
+            interpretation=record.interpretation,
+            interpretation_schema_version=record.interpretation_schema_version,
         )
