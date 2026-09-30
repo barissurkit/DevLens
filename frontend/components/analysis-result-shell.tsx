@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { GitHubPortfolioInterpretationResponse } from "../lib/types";
+import { ActionsLockedPanel } from "./actions-locked-panel";
 import { PortfolioInterpretationSection } from "./portfolio-interpretation-section";
 import { ActionPlan } from "./action-plan";
 import { AISuggestedActions } from "./ai-suggested-actions";
@@ -15,11 +16,13 @@ import { panelElementId, ResultTabs, tabElementId, type ResultTab } from "./resu
 interface AnalysisResultShellProps {
   result: GitHubPortfolioInterpretationResponse;
   onReanalyze: () => void;
+  /** Retries only the AI interpretation; omitted where retrying is not possible. */
+  onRetryInterpretation?: () => void;
 }
 
 const ID_PREFIX = "result";
 
-export function AnalysisResultShell({ result, onReanalyze }: AnalysisResultShellProps) {
+export function AnalysisResultShell({ result, onReanalyze, onRetryInterpretation }: AnalysisResultShellProps) {
   const dashboardHeadingRef = useRef<HTMLHeadingElement>(null);
   const [activeTab, setActiveTab] = useState("overview");
   const { analysis, interpretation, viewer_context } = result;
@@ -35,7 +38,12 @@ export function AnalysisResultShell({ result, onReanalyze }: AnalysisResultShell
       { id: "repositories", label: "Repository'ler", badge: repositories.length },
       { id: "ai", label: "AI Yorumu" },
     ];
-    if (hasActions) list.push({ id: "actions", label: "Aksiyonlar", badge: viewer_context.is_owner && result.guided_improvements.length > 0 ? result.guided_improvements.length : undefined });
+    list.push({
+      id: "actions",
+      label: "Aksiyonlar",
+      locked: !hasActions,
+      badge: viewer_context.is_owner && result.guided_improvements.length > 0 ? result.guided_improvements.length : undefined,
+    });
     return list;
   }, [hasActions, repositories.length, result.guided_improvements.length, viewer_context.is_owner]);
 
@@ -67,20 +75,24 @@ export function AnalysisResultShell({ result, onReanalyze }: AnalysisResultShell
         </TabPanel>
 
         <TabPanel id="ai" activeId={activeTab}>
-          <PortfolioInterpretationSection analysis={analysis} interpretation={interpretation} />
+          <PortfolioInterpretationSection analysis={analysis} interpretation={interpretation} onRetry={onRetryInterpretation} />
         </TabPanel>
 
-        {hasActions && (
-          <TabPanel id="actions" activeId={activeTab}>
-            {viewer_context.is_owner && <GuidedImprovementSection improvements={result.guided_improvements} onReanalyze={onReanalyze} />}
-            {!isWorkspace && result.guided_improvements.length === 0 && <p className="rounded-xl border border-slate-200 bg-card p-6 text-sm text-slate-600 shadow-card">Şu an önerilen bir iyileştirme adımı yok.</p>}
-            {isWorkspace && <>
-              <AnalysisHistory key={`history-${user.username}`} visible={viewer_context.is_owner} />
-              <AISuggestedActions key={`suggestions-${user.username}`} username={user.username} />
-              <ActionPlan />
-            </>}
-          </TabPanel>
-        )}
+        <TabPanel id="actions" activeId={activeTab}>
+          {hasActions ? (
+            <>
+              {viewer_context.is_owner && <GuidedImprovementSection improvements={result.guided_improvements} onReanalyze={onReanalyze} />}
+              {!isWorkspace && result.guided_improvements.length === 0 && <p className="rounded-xl border border-slate-200 bg-card p-6 text-sm text-slate-600 shadow-card">Şu an önerilen bir iyileştirme adımı yok.</p>}
+              {isWorkspace && <>
+                <AnalysisHistory key={`history-${user.username}`} visible={viewer_context.is_owner} />
+                <AISuggestedActions key={`suggestions-${user.username}`} username={user.username} />
+                <ActionPlan />
+              </>}
+            </>
+          ) : (
+            <ActionsLockedPanel />
+          )}
+        </TabPanel>
       </div>
     </section>
   );

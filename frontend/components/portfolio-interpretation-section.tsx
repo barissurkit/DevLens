@@ -7,7 +7,17 @@ import type {
 interface PortfolioInterpretationSectionProps {
   analysis: GitHubPortfolioAnalysis;
   interpretation: PublicPortfolioInterpretationResult;
+  /** Re-requests only the AI interpretation (the analysis itself comes from the server cache). */
+  onRetry?: () => void;
 }
+
+/** Provider-side problems that usually clear up on their own, so a retry is worth offering. */
+const RETRYABLE_REASONS: ReadonlySet<InterpretationUnavailableReason> = new Set<InterpretationUnavailableReason>([
+  "timeout",
+  "rate_limit",
+  "unavailable",
+  "upstream_error",
+]);
 
 const UNAVAILABLE_COPY: Record<InterpretationUnavailableReason, string> = {
   not_configured: "AI yorumu bu analiz için yapılandırılmamış.",
@@ -19,7 +29,7 @@ const UNAVAILABLE_COPY: Record<InterpretationUnavailableReason, string> = {
   invalid_response: "AI yorumu bu analiz için kullanılamadı.",
 };
 
-export function PortfolioInterpretationSection({ analysis, interpretation }: PortfolioInterpretationSectionProps) {
+export function PortfolioInterpretationSection({ analysis, interpretation, onRetry }: PortfolioInterpretationSectionProps) {
   return (
     <section aria-labelledby="ai-interpretation-heading" className="rounded-xl border border-slate-200 bg-card p-6 shadow-card sm:p-8">
       <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">İsteğe Bağlı AI Katmanı</p>
@@ -34,6 +44,18 @@ export function PortfolioInterpretationSection({ analysis, interpretation }: Por
           <p className="font-semibold">AI yorumu şu anda kullanılamıyor.</p>
           <p className="mt-1 text-amber-900">{UNAVAILABLE_COPY[interpretation.reason]}</p>
           <p className="mt-3 text-amber-900">Portföy skoru ve repository analizleri yine de kullanılabilir.</p>
+          {onRetry && RETRYABLE_REASONS.has(interpretation.reason) && (
+            <div className="mt-4 flex flex-wrap items-center gap-3">
+              <button
+                type="button"
+                onClick={onRetry}
+                className="min-h-10 rounded-lg border border-amber-300 bg-card px-3 text-sm font-medium text-amber-950 transition hover:bg-amber-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-800 focus-visible:ring-offset-2"
+              >
+                AI yorumunu yeniden dene
+              </button>
+              <span className="text-xs text-amber-900">Sağlayıcı yoğunsa bir dakika kadar bekleyip denemek daha iyi sonuç verir.</span>
+            </div>
+          )}
         </div>
       )}
     </section>

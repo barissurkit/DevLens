@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { ApiError, getAnalysisHistory } from "../lib/api";
 import type { HistoryResponse } from "../lib/types";
 import { useAuth } from "./auth-provider";
+import { ScoreTrend } from "./score-trend";
 
 export function AnalysisHistory({ visible }: { visible: boolean }) {
   const { user } = useAuth();
@@ -37,6 +38,7 @@ export function AnalysisHistory({ visible }: { visible: boolean }) {
       <Metric label="Önceki skor" value={data.previous?.portfolio_score === null || data.previous?.portfolio_score === undefined ? "—" : String(data.previous.portfolio_score)} />
       <Metric label="Değişim" value={!delta || !delta.comparable || delta.portfolio_score === null ? "—" : formatDelta(delta.portfolio_score)} />
     </div>
+    <ScoreTrend history={data.history} />
     {!data.previous && <p className="mt-4 text-sm text-slate-600">Bu analiz mevcut başlangıç noktanız. Değişimi görmek için daha sonra yeniden analiz edin.</p>}
     {delta?.note && <p className="mt-4 text-sm text-amber-800">{delta.note}</p>}
     {delta?.comparable && delta.category_scores.length > 0 && <ul className="mt-4 flex flex-wrap gap-2">{delta.category_scores.map((item) => <li key={item.key} className="rounded-full bg-slate-50 px-3 py-1.5 text-sm text-slate-700">{item.label}: {formatDelta(item.delta)}</li>)}</ul>}
