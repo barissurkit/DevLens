@@ -1,11 +1,12 @@
 import { AnalysisForm } from "../components/analysis-form";
 import { AuthControls } from "../components/auth-controls";
+import { ThemeToggle } from "../components/theme-toggle";
 import { FeatureStrip, HeroCopy, SamplePreview } from "../components/landing-content";
 
 export default function Home() {
   return (
     <div className="flex min-h-screen flex-col">
-      <header className="border-b border-slate-200 bg-white">
+      <header className="border-b border-slate-200 bg-card">
         <div className="mx-auto flex w-full max-w-6xl flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-6 lg:px-8">
           <div className="flex items-center gap-3">
             <div
@@ -17,7 +18,10 @@ export default function Home() {
             <span className="text-lg font-semibold tracking-tight text-slate-950">DevLens</span>
             <span className="hidden rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-600 sm:inline">Herkese Açık Portföy Analizi</span>
           </div>
-          <AuthControls />
+          <div className="flex flex-wrap items-center justify-end gap-3">
+            <ThemeToggle />
+            <AuthControls />
+          </div>
         </div>
       </header>
 
@@ -25,7 +29,7 @@ export default function Home() {
         <AnalysisForm hero={<HeroCopy />} preview={<SamplePreview />} features={<FeatureStrip />} />
       </main>
 
-      <footer className="border-t border-slate-200 bg-white">
+      <footer className="border-t border-slate-200 bg-card">
         <div className="mx-auto w-full max-w-6xl px-4 py-5 text-sm text-slate-500 sm:px-6 lg:px-8">
           DevLens · Herkese açık GitHub verilerinden kanıta dayalı portföy analizi
         </div>
