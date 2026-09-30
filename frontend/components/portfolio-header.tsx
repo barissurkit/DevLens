@@ -1,6 +1,7 @@
 import { forwardRef } from "react";
 import type { GitHubUser, ViewerContext } from "../lib/types";
 import { portfolioModeLabel } from "../lib/presentation";
+import { CopyLinkButton } from "./copy-link-button";
 import { FreshnessNote } from "./freshness-note";
 
 interface PortfolioHeaderProps {
@@ -34,9 +35,12 @@ export const PortfolioHeader = forwardRef<HTMLHeadingElement, PortfolioHeaderPro
             <Meta label="Repository" value={user.public_repos} />
             <Meta label="Takipçi" value={user.followers} />
           </dl>
-          <a href={user.html_url} target="_blank" rel="noreferrer" className="inline-flex min-h-10 items-center rounded-lg border border-slate-300 bg-card px-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600 focus-visible:ring-offset-2">
-            GitHub profilini aç
-          </a>
+          <div className="flex flex-wrap items-center gap-2 sm:justify-end">
+            <CopyLinkButton username={user.username} />
+            <a href={user.html_url} target="_blank" rel="noreferrer" className="inline-flex min-h-10 items-center rounded-lg border border-slate-300 bg-card px-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600 focus-visible:ring-offset-2">
+              GitHub profilini aç
+            </a>
+          </div>
         </div>
       </div>
       {isPartial && <p className="mt-5 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">Bu sonuç, bazı repository verileri eksik olduğu için kısmi kanıt içerebilir.</p>}
