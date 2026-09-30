@@ -15,6 +15,11 @@ Enter a GitHub username to inspect public profile and repository evidence. DevLe
 - Graceful partial success when Gemini is unavailable
 - Bounded asynchronous repository analysis
 - PostgreSQL-backed deterministic analysis cache
+- Live analysis progress streamed from the backend, and an explanation of exactly how the score is computed
+- Signal drill-down (which repositories have or lack each signal) and a ranked list of the steps that would raise the score most
+- Shareable result links (`/u/<username>`) with a social preview image
+- Cached results reuse their stored AI interpretation; a struggling AI provider is retried after a short cooldown
+- Light and dark themes, tabbed results, and an accessibility-checked interface
 
 ## How It Works
 
@@ -181,4 +186,4 @@ Local examples use `ENVIRONMENT=development` and disabled authentication with lo
 - `POST /api/v1/interpretation`
 - `POST /api/v1/interpretation/stream` (same analysis as newline-delimited JSON: `progress` events with stage/completed/total, then `result` or `error`)
 
-`POST /api/v1/analysis` and `POST /api/v1/interpretation` accept an optional `refresh: true` to bypass the snapshot cache. The interpretation response includes `analysis_generated_at` and `cached` so clients can show how fresh a result is.
+`POST /api/v1/analysis` and `POST /api/v1/interpretation` accept an optional `refresh: true` to bypass the snapshot cache. The interpretation response includes `analysis_generated_at` and `cached` so clients can show how fresh a result is. A cached analysis also reuses its stored successful AI interpretation; a recent transient AI failure (rate limit, timeout, ...) is served for 60 seconds instead of asking the provider again, and `retry_interpretation: true` overrides that cooldown.
