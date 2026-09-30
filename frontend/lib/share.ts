@@ -34,3 +34,28 @@ export function userPageMetadata(username: string): UserPageMetadata {
     path: userPath(username),
   };
 }
+
+/** Copies text with the async Clipboard API, falling back to a hidden textarea when it is unavailable or denied. */
+export async function copyText(text: string): Promise<boolean> {
+  try {
+    await navigator.clipboard.writeText(text);
+    return true;
+  } catch {
+    // Fall through: the API is missing (insecure context) or the permission was denied.
+  }
+  const field = document.createElement("textarea");
+  field.value = text;
+  field.setAttribute("readonly", "");
+  field.setAttribute("aria-hidden", "true");
+  field.style.position = "fixed";
+  field.style.opacity = "0";
+  document.body.appendChild(field);
+  try {
+    field.select();
+    return typeof document.execCommand === "function" && document.execCommand("copy");
+  } catch {
+    return false;
+  } finally {
+    field.remove();
+  }
+}

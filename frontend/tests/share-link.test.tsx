@@ -97,6 +97,20 @@ describe("CopyLinkButton", () => {
     expect(screen.getByRole("status")).toHaveTextContent("adres çubuğundaki bağlantıyı kullanabilirsiniz");
   });
 
+  it("falls back to a hidden textarea when the clipboard permission is denied", async () => {
+    vi.stubGlobal("navigator", { clipboard: { writeText: vi.fn().mockRejectedValue(new Error("denied")) } });
+    const execCommand = vi.fn().mockReturnValue(true);
+    Object.defineProperty(document, "execCommand", { value: execCommand, configurable: true });
+    render(<CopyLinkButton username="octocat" />);
+
+    fireEvent.click(screen.getByRole("button"));
+
+    await waitFor(() => expect(screen.getByRole("button")).toHaveTextContent("Kopyalandı"));
+    expect(execCommand).toHaveBeenCalledWith("copy");
+    expect(document.querySelector("textarea")).toBeNull();
+    Reflect.deleteProperty(document, "execCommand");
+  });
+
   it("also works when the clipboard API is missing entirely", async () => {
     const user = userEvent.setup();
     vi.stubGlobal("navigator", {});
