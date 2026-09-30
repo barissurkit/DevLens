@@ -9,6 +9,7 @@ import type {
   ExcludedPortfolioRepository,
 } from "../lib/types";
 import { categoryLabel, scoreTone } from "../lib/presentation";
+import { ScoreDimension } from "./score-dimension";
 
 interface RepositoryAnalysisSectionProps {
   repositories: PortfolioRepositoryResult[];
@@ -77,7 +78,7 @@ export function RepositoryAnalysisSection({ repositories, failures, excluded }: 
     <section aria-labelledby="repository-analysis-heading" className="space-y-5">
       <div>
         <p className="text-sm font-medium uppercase tracking-[0.16em] text-emerald-600">Repository Analizi</p>
-        <h3 id="repository-analysis-heading" className="mt-2 text-2xl font-semibold tracking-tight text-slate-950">Repository kanıtları</h3>
+        <h3 id="repository-analysis-heading" className="mt-2 scroll-mt-20 text-2xl font-semibold tracking-tight text-slate-950">Repository kanıtları</h3>
         <p className="mt-2 text-sm leading-6 text-slate-600">Her repository için backend analizinin sunduğu deterministik kanıt sonuçları.</p>
       </div>
 
@@ -150,16 +151,16 @@ function RepositoryCard({ result }: { result: PortfolioRepositoryResult }) {
 
   return (
     <details className="group rounded-2xl border border-slate-200 bg-white shadow-sm">
-      <summary className="flex cursor-pointer list-none items-start gap-3 rounded-2xl p-5 outline-none transition focus-visible:ring-2 focus-visible:ring-slate-950 focus-visible:ring-offset-2 sm:items-center sm:p-6">
+      <summary className="grid cursor-pointer list-none grid-cols-[auto_minmax(0,1fr)] items-start gap-x-3 gap-y-3 rounded-2xl p-5 outline-none transition focus-visible:ring-2 focus-visible:ring-slate-950 focus-visible:ring-offset-2 sm:grid-cols-[auto_minmax(0,1fr)_auto] sm:items-center sm:p-6">
         <span aria-hidden="true" className="mt-1 shrink-0 text-xl leading-none text-slate-500 transition-transform group-open:rotate-90">›</span>
-        <div className="min-w-0 flex-1">
+        <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
             <span className="max-w-full break-words text-lg font-semibold text-slate-950">{repository.name}</span>
             {score.is_partial && <span className="rounded-full bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-800">Kısmi kanıt</span>}
           </div>
           <p className="mt-2 break-words text-sm text-slate-600">{analysis.classification.primary_category}</p>
         </div>
-        <div className="w-full shrink-0 sm:w-auto sm:text-right">
+        <div className="col-start-2 sm:col-start-auto sm:text-right">
           <p className="text-xs font-medium uppercase tracking-[0.12em] text-slate-500">Repository Kanıt Skoru</p>
           <p className={`mt-1 text-2xl font-semibold ${scoreTone(score.overall_score).text}`}>{score.overall_score} / 100</p>
         </div>
@@ -169,7 +170,7 @@ function RepositoryCard({ result }: { result: PortfolioRepositoryResult }) {
         {score.is_partial && <p className="mb-5 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-900">Repository tree kısmi olduğu için yapı tabanlı kanıt eksik olabilir. Bu durum analiz hatası değildir.</p>}
         {score.limitations.length > 0 && <ul className="mb-5 space-y-2 text-sm text-slate-600">{score.limitations.map((limitation) => <li key={limitation}>{limitation}</li>)}</ul>}
 
-        <div className="grid gap-4 md:grid-cols-3">{score.dimensions.map((dimension) => <ScoreDimension key={dimension.key} dimension={dimension} />)}</div>
+        <div className="grid gap-4 md:grid-cols-3">{score.dimensions.map((dimension) => <ScoreDimension key={dimension.key} label={dimension.label} score={dimension.score} pointsEarned={dimension.points_earned} pointsPossible={dimension.points_possible} />)}</div>
         <div className="mt-6 grid gap-6 lg:grid-cols-2">
           <EvidenceList title="README Sinyalleri" items={README_LABELS.filter(([key]) => analysis.readme[key]).map(([, label]) => label)} emptyMessage="Tespit edilen README sinyali yok." />
           <EvidenceList title="Repository Yapısı" items={STRUCTURE_LABELS.filter(([key]) => analysis.structure[key]).map(([, label]) => label)} emptyMessage="Tespit edilen yapı sinyali yok." />
@@ -182,11 +183,6 @@ function RepositoryCard({ result }: { result: PortfolioRepositoryResult }) {
       </div>
     </details>
   );
-}
-
-function ScoreDimension({ dimension }: { dimension: ScoreDimensionResult }) {
-  const progress = Number.isFinite(dimension.score) ? Math.min(100, Math.max(0, dimension.score)) : 0;
-  return <article className="min-w-0 rounded-xl bg-slate-50 p-4"><div className="flex flex-wrap items-baseline justify-between gap-2"><h4 className="min-w-0 font-medium text-slate-950">{dimension.label}</h4><span className="shrink-0 text-sm font-semibold text-slate-700">{dimension.points_earned} / {dimension.points_possible}</span></div><div role="progressbar" aria-label={`${dimension.label} skoru`} aria-valuenow={progress} aria-valuemin={0} aria-valuemax={100} className="mt-4 h-2 overflow-hidden rounded-full bg-slate-200"><div className="h-full rounded-full bg-slate-700" style={{ width: `${progress}%` }} /></div></article>;
 }
 
 function RuleBreakdown({ dimensions }: { dimensions: ScoreDimensionResult[] }) {
