@@ -28,13 +28,21 @@ const DEFAULT_ERROR_MESSAGE = "Analiz sırasında beklenmeyen bir hata oluştu."
 export class ApiError extends Error {
   readonly status: number;
   readonly code: string | undefined;
+  /** Seconds the server asked the client to wait (from the Retry-After header), when known. */
+  readonly retryAfterSeconds: number | undefined;
 
-  constructor(message: string, status: number, code?: string) {
+  constructor(message: string, status: number, code?: string, retryAfterSeconds?: number) {
     super(message);
     this.name = "ApiError";
     this.status = status;
     this.code = code;
+    this.retryAfterSeconds = retryAfterSeconds;
   }
+}
+
+function parseRetryAfter(response: Response): number | undefined {
+  const seconds = Number(response.headers.get("Retry-After"));
+  return Number.isFinite(seconds) && seconds > 0 ? Math.ceil(seconds) : undefined;
 }
 
 function getAnalysisUrl(): string {
@@ -323,7 +331,7 @@ export async function analyzePortfolio(
   }
 
   if (isOperationalErrorResponse(payload)) {
-    throw new ApiError(payload.detail.message, response.status, payload.detail.code);
+    throw new ApiError(payload.detail.message, response.status, payload.detail.code, parseRetryAfter(response));
   }
 
   if (response.status === 422) {
@@ -362,8 +370,8 @@ function buildInterpretationRequest(username: string, options: AnalyzeOptions): 
   return options.refresh ? { username, refresh: true } : { username };
 }
 
-function errorFromPayload(status: number, payload: unknown): ApiError {
-  if (isOperationalErrorResponse(payload)) return new ApiError(payload.detail.message, status, payload.detail.code);
+function errorFromPayload(status: number, payload: unknown, retryAfterSeconds?: number): ApiError {
+  if (isOperationalErrorResponse(payload)) return new ApiError(payload.detail.message, status, payload.detail.code, retryAfterSeconds);
   if (status === 422) return new ApiError("Kullanıcı adı geçerli değil.", status, "validation_error");
   return new ApiError(DEFAULT_ERROR_MESSAGE, status, "unexpected_api_error");
 }
@@ -390,7 +398,7 @@ async function streamInterpretation(
   if (!response.ok) {
     if (response.status === 404 || response.status === 405) return null;
     // Failures before streaming starts (rate limit, validation) use the regular JSON error contract.
-    throw errorFromPayload(response.status, await readJson(response));
+    throw errorFromPayload(response.status, await readJson(response), parseRetryAfter(response));
   }
   const contentType = response.headers.get("content-type") ?? "";
   if (!contentType.includes("application/x-ndjson") || !response.body) return null;
@@ -490,7 +498,7 @@ async function requestInterpretation(
   }
 
   if (isOperationalErrorResponse(payload)) {
-    throw new ApiError(payload.detail.message, response.status, payload.detail.code);
+    throw new ApiError(payload.detail.message, response.status, payload.detail.code, parseRetryAfter(response));
   }
 
   if (response.status === 422) {

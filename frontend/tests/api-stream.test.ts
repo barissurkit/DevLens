@@ -114,6 +114,28 @@ describe("streaming analysis", () => {
     });
   });
 
+  it("carries the Retry-After hint of a rate limit response", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response(
+      JSON.stringify({ detail: { code: "rate_limited", message: "Çok fazla istek." } }),
+      { status: 429, headers: { "Retry-After": "42" } },
+    ));
+
+    await expect(analyzePortfolioWithInterpretation("alice", { onProgress: () => undefined })).rejects.toMatchObject({
+      code: "rate_limited",
+      retryAfterSeconds: 42,
+    });
+  });
+
+  it("ignores a missing or invalid Retry-After header", async () => {
+    vi.spyOn(globalThis, "fetch")
+      .mockResolvedValueOnce(new Response(JSON.stringify({ detail: { code: "rate_limited", message: "x" } }), { status: 429, headers: { "Retry-After": "soon" } }));
+
+    await expect(analyzePortfolioWithInterpretation("alice", { onProgress: () => undefined })).rejects.toMatchObject({
+      code: "rate_limited",
+      retryAfterSeconds: undefined,
+    });
+  });
+
   it("falls back to the plain endpoint when the streaming endpoint does not exist", async () => {
     const fetchMock = vi.spyOn(globalThis, "fetch")
       .mockResolvedValueOnce(new Response("Not Found", { status: 404 }))
