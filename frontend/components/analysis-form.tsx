@@ -1,10 +1,12 @@
 "use client";
 
-import { type FormEvent, type ReactNode, useRef, useState } from "react";
+import { type FormEvent, type ReactNode, useEffect, useRef, useState } from "react";
 import { AnalysisErrorState } from "./analysis-error-state";
 import { AnalysisLoadingState } from "./analysis-loading-state";
 import { AnalysisResultShell } from "./analysis-result-shell";
+import { useAuth } from "./auth-provider";
 import { useAnalysis } from "./use-analysis";
+import { userPath } from "../lib/share";
 import { EXAMPLE_USERNAMES, liveUsernameHint, parseGitHubUsername } from "../lib/username";
 
 interface AnalysisFormProps {
@@ -12,13 +14,33 @@ interface AnalysisFormProps {
   hero?: ReactNode;
   preview?: ReactNode;
   features?: ReactNode;
+  /** A login to analyze as soon as the page has loaded (shareable /u/[username] pages). */
+  initialUsername?: string;
 }
 
-export function AnalysisForm({ hero, preview, features }: AnalysisFormProps) {
-  const [username, setUsername] = useState("");
+export function AnalysisForm({ hero, preview, features, initialUsername }: AnalysisFormProps) {
+  const { status: authStatus } = useAuth();
+  const [username, setUsername] = useState(initialUsername ?? "");
   const [validationMessage, setValidationMessage] = useState<string | null>(null);
   const usernameInputRef = useRef<HTMLInputElement>(null);
   const { state, submit, retry, reanalyze, retryInterpretation, resetToIdle } = useAnalysis(() => setValidationMessage(null));
+
+  // Start the linked analysis once the session state is known: the analysis lifecycle resets itself
+  // whenever the signed-in identity changes, so starting earlier would be cancelled by that reset.
+  const startedInitial = useRef(false);
+  useEffect(() => {
+    if (!initialUsername || startedInitial.current || authStatus === "loading") return;
+    startedInitial.current = true;
+    void submit(initialUsername);
+  }, [initialUsername, authStatus, submit]);
+
+  // Keep the address bar on the shareable link of the result being shown.
+  const shownUsername = state.status === "success" ? state.result.analysis.user.username : null;
+  useEffect(() => {
+    if (!shownUsername) return;
+    const path = userPath(shownUsername);
+    if (window.location.pathname !== path) window.history.replaceState(window.history.state, "", path);
+  }, [shownUsername]);
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
