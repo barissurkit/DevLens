@@ -49,3 +49,23 @@ export function splitRepositoriesBySignal(repositories: PortfolioRepositoryResul
   }
   return { present, missing };
 }
+
+const SIGNAL_LABELS: Record<string, string> = {
+  readme_exists: "README",
+  readme_title: "README başlığı",
+  readme_description: "README açıklaması",
+  readme_installation: "README kurulum bölümü",
+  readme_usage: "README kullanım bölümü",
+  readme_requirements: "README gereksinimler bölümü",
+  readme_technologies: "README teknolojiler bölümü",
+  tests_structure: "Test yapısı",
+  ci_workflow: "CI iş akışı",
+  gitignore: ".gitignore",
+  license: "Lisans dosyası",
+  contributing: "Katkı rehberi",
+};
+
+/** A readable Turkish name for a signal key; unknown keys are shown as they are. */
+export function signalLabel(key: string): string {
+  return SIGNAL_LABELS[key] ?? key;
+}

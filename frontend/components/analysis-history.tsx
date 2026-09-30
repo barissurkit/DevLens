@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { ApiError, getAnalysisHistory } from "../lib/api";
 import type { HistoryResponse } from "../lib/types";
 import { useAuth } from "./auth-provider";
+import { signalLabel } from "../lib/signals";
 import { ScoreTrend } from "./score-trend";
 
 export function AnalysisHistory({ visible }: { visible: boolean }) {
@@ -39,6 +40,7 @@ export function AnalysisHistory({ visible }: { visible: boolean }) {
       <Metric label="Değişim" value={!delta || !delta.comparable || delta.portfolio_score === null ? "—" : formatDelta(delta.portfolio_score)} />
     </div>
     <ScoreTrend history={data.history} />
+    {delta?.comparable && <CheckChanges passing={delta.newly_passing_checks} failing={delta.newly_failing_checks} />}
     {!data.previous && <p className="mt-4 text-sm text-slate-600">Bu analiz mevcut başlangıç noktanız. Değişimi görmek için daha sonra yeniden analiz edin.</p>}
     {delta?.note && <p className="mt-4 text-sm text-amber-800">{delta.note}</p>}
     {delta?.comparable && delta.category_scores.length > 0 && <ul className="mt-4 flex flex-wrap gap-2">{delta.category_scores.map((item) => <li key={item.key} className="rounded-full bg-slate-50 px-3 py-1.5 text-sm text-slate-700">{item.label}: {formatDelta(item.delta)}</li>)}</ul>}
@@ -49,6 +51,15 @@ export function AnalysisHistory({ visible }: { visible: boolean }) {
 }
 
 function HistoryCard({ title, children }: { title: string; children: React.ReactNode }) { return <section aria-labelledby="history-heading" className="rounded-2xl border border-slate-200 bg-card p-6 shadow-card sm:p-8"><h3 id="history-heading" className="text-xl font-semibold tracking-tight text-slate-950">{title}</h3><div className="mt-5">{children}</div></section>; }
+function CheckChanges({ passing, failing }: { passing: string[]; failing: string[] }) {
+  if (passing.length === 0 && failing.length === 0) return null;
+  return (
+    <div className="mt-4 space-y-2 text-sm">
+      {passing.length > 0 && <p className="text-emerald-800"><span className="font-semibold">Yeni karşılanan kriterler:</span> {passing.map(signalLabel).join(", ")}</p>}
+      {failing.length > 0 && <p className="text-amber-800"><span className="font-semibold">Artık karşılanmayan kriterler:</span> {failing.map(signalLabel).join(", ")}</p>}
+    </div>
+  );
+}
 function Metric({ label, value }: { label: string; value: string }) { return <div className="rounded-xl bg-slate-50 p-4"><p className="text-xs text-slate-500">{label}</p><p className="mt-2 text-2xl font-semibold text-slate-950">{value}</p></div>; }
 function formatDelta(value: number) { return value > 0 ? `+${value}` : String(value); }
 function formatDate(value: string) { return new Intl.DateTimeFormat("tr-TR", { dateStyle: "medium", timeZone: "Europe/Istanbul" }).format(new Date(value)); }
