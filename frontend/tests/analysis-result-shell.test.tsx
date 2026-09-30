@@ -1,10 +1,12 @@
 import { cleanup, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { AnalysisResultShell } from "../components/analysis-result-shell";
 import type { GitHubPortfolioInterpretationResponse } from "../lib/types";
 
-vi.mock("../components/auth-provider", () => ({ useAuth: () => ({ status: "authenticated", user: { github_login: "alice" } }) }));
+const mockedUseAuth = vi.hoisted(() => vi.fn());
+
+vi.mock("../components/auth-provider", () => ({ useAuth: mockedUseAuth }));
 vi.mock("../components/portfolio-interpretation-section", () => ({ PortfolioInterpretationSection: () => null }));
 vi.mock("../components/repository-analysis-section", () => ({ RepositoryAnalysisSection: () => null }));
 vi.mock("../components/analysis-history", () => ({ AnalysisHistory: () => null }));
@@ -27,7 +29,14 @@ function response(isOwner: boolean): GitHubPortfolioInterpretationResponse {
   };
 }
 
-afterEach(cleanup);
+beforeEach(() => {
+  vi.stubEnv("NEXT_PUBLIC_API_BASE_URL", "http://localhost:8000");
+  mockedUseAuth.mockReturnValue({ status: "authenticated", user: { github_login: "alice" } });
+});
+afterEach(() => {
+  cleanup();
+  vi.unstubAllEnvs();
+});
 
 describe("AnalysisResultShell tabs and Yönlendirmeli İyileştirme görünürlüğü", () => {
   it("shows the overview tab first and keeps other panels hidden", () => {
@@ -44,10 +53,43 @@ describe("AnalysisResultShell tabs and Yönlendirmeli İyileştirme görünürl�
     expect(screen.getByRole("heading", { name: "Yönlendirmeli İyileştirme" })).toBeInTheDocument();
   });
 
-  it("does not offer the Aksiyonlar tab for Explore even when a fixture contains items", () => {
+  it("keeps the Aksiyonlar tab locked for Explore even when a fixture contains items", async () => {
+    const user = userEvent.setup();
     render(<AnalysisResultShell result={response(false)} onReanalyze={vi.fn()} />);
-    expect(screen.queryByRole("tab", { name: /Aksiyonlar/ })).not.toBeInTheDocument();
+
+    const tab = screen.getByRole("tab", { name: /Aksiyonlar/ });
+    expect(tab).toHaveTextContent("(giriş gerekli)");
+    await user.click(tab);
     expect(screen.queryByRole("heading", { name: "Yönlendirmeli İyileştirme" })).not.toBeInTheDocument();
+    expect(screen.getByRole("tabpanel", { name: /Aksiyonlar/ })).toBeVisible();
+  });
+
+  it("invites an anonymous visitor to sign in from the locked tab", async () => {
+    mockedUseAuth.mockReturnValue({ status: "anonymous", user: null });
+    const user = userEvent.setup();
+    render(<AnalysisResultShell result={response(false)} onReanalyze={vi.fn()} />);
+    await user.click(screen.getByRole("tab", { name: /Aksiyonlar/ }));
+
+    expect(screen.getByRole("heading", { name: "Aksiyonların kilidini aç" })).toBeInTheDocument();
+    expect(screen.getByText("İlerleme geçmişi")).toBeInTheDocument();
+    expect(screen.getByText("AI önerilen aksiyonlar")).toBeInTheDocument();
+    expect(screen.getByText("Aksiyon planı")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "GitHub ile giriş yap" })).toHaveAttribute("href", "http://localhost:8000/api/v1/auth/github");
+  });
+
+  it("points a signed-in visitor to their own portfolio instead of the sign-in link", async () => {
+    const user = userEvent.setup();
+    render(<AnalysisResultShell result={response(false)} onReanalyze={vi.fn()} />);
+    await user.click(screen.getByRole("tab", { name: /Aksiyonlar/ }));
+
+    expect(screen.getByRole("heading", { name: "Aksiyonlar yalnızca kendi portföyünde açılır" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Kendi portföyünü analiz et" })).toHaveAttribute("href", "/?workspace=1&username=alice");
+    expect(screen.queryByRole("link", { name: "GitHub ile giriş yap" })).not.toBeInTheDocument();
+  });
+
+  it("does not lock the tab for the portfolio owner", () => {
+    render(<AnalysisResultShell result={response(true)} onReanalyze={vi.fn()} />);
+    expect(screen.getByRole("tab", { name: /Aksiyonlar/ })).not.toHaveTextContent("(giriş gerekli)");
   });
 
   it("supports arrow, Home and End keyboard navigation between tabs", async () => {
