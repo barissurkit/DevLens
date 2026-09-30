@@ -43,7 +43,7 @@ describe("frontend authentication state", () => {
     mockedGetAuthMe.mockResolvedValue({ authenticated: false, user: null });
     renderAuthControls();
 
-    const signIn = await screen.findByRole("link", { name: "Sign in with GitHub" });
+    const signIn = await screen.findByRole("link", { name: "GitHub ile giriş yap" });
     expect(signIn).toHaveAttribute("href", "http://localhost:8000/api/v1/auth/github");
     expect(screen.queryByText("Senin portföyün")).not.toBeInTheDocument();
   });
@@ -61,12 +61,12 @@ describe("frontend authentication state", () => {
     renderAuthControls();
 
     expect(await screen.findByText("Example User")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "My Workspace" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "Çalışma Alanım" })).toHaveAttribute(
       "href",
       "/?workspace=1&username=example",
     );
     expect(screen.getByRole("button", { name: "Çıkış yap" })).toBeInTheDocument();
-    expect(screen.queryByRole("link", { name: "Sign in with GitHub" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "GitHub ile giriş yap" })).not.toBeInTheDocument();
   });
 
   it("revokes the server session before returning to anonymous state", async () => {
@@ -79,7 +79,7 @@ describe("frontend authentication state", () => {
     await screen.findByText("@example");
     await userEvent.click(screen.getByRole("button", { name: "Çıkış yap" }));
 
-    await waitFor(() => expect(screen.getByRole("link", { name: "Sign in with GitHub" })).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByRole("link", { name: "GitHub ile giriş yap" })).toBeInTheDocument());
     expect(mockedLogout).toHaveBeenCalledOnce();
   });
 

@@ -27,7 +27,7 @@ export function AuthControls() {
           href={`/?workspace=1&username=${encodeURIComponent(user.github_login)}`}
           className={`${controlClassName} border border-slate-300 bg-card text-slate-700 hover:bg-slate-100`}
         >
-          My Workspace
+          Çalışma Alanım
         </a>
         <span className="max-w-36 truncate text-sm font-medium text-slate-700" title={user.display_name ?? user.github_login}>
           {user.display_name ?? `@${user.github_login}`}
@@ -53,7 +53,7 @@ export function AuthControls() {
         href={getAuthStartUrl()}
         className={`${controlClassName} bg-indigo-600 text-white hover:bg-primary-hover`}
       >
-        Sign in with GitHub
+        GitHub ile giriş yap
       </a>
       {status === "error" && (
         <button

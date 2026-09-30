@@ -29,25 +29,25 @@ function response(isOwner: boolean): GitHubPortfolioInterpretationResponse {
 
 afterEach(cleanup);
 
-describe("AnalysisResultShell tabs and Guided Improvement visibility", () => {
+describe("AnalysisResultShell tabs and Yönlendirmeli İyileştirme görünürlüğü", () => {
   it("shows the overview tab first and keeps other panels hidden", () => {
     render(<AnalysisResultShell result={response(true)} onReanalyze={vi.fn()} />);
     expect(screen.getByRole("tab", { name: /Genel Bakış/ })).toHaveAttribute("aria-selected", "true");
     expect(screen.getByRole("tabpanel", { name: /Genel Bakış/ })).toBeVisible();
-    expect(screen.queryByRole("heading", { name: "Guided Improvement" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Yönlendirmeli İyileştirme" })).not.toBeInTheDocument();
   });
 
   it("renders owner guidance in the Aksiyonlar tab from viewer context", async () => {
     const user = userEvent.setup();
     render(<AnalysisResultShell result={response(true)} onReanalyze={vi.fn()} />);
     await user.click(screen.getByRole("tab", { name: /Aksiyonlar/ }));
-    expect(screen.getByRole("heading", { name: "Guided Improvement" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Yönlendirmeli İyileştirme" })).toBeInTheDocument();
   });
 
   it("does not offer the Aksiyonlar tab for Explore even when a fixture contains items", () => {
     render(<AnalysisResultShell result={response(false)} onReanalyze={vi.fn()} />);
     expect(screen.queryByRole("tab", { name: /Aksiyonlar/ })).not.toBeInTheDocument();
-    expect(screen.queryByRole("heading", { name: "Guided Improvement" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Yönlendirmeli İyileştirme" })).not.toBeInTheDocument();
   });
 
   it("supports arrow, Home and End keyboard navigation between tabs", async () => {

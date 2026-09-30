@@ -26,7 +26,7 @@ describe("Analysis history privacy and progress UI", () => {
   it("shows owner baseline and stays absent outside workspace", async () => {
     mockedGet.mockResolvedValue({ latest: record("a", 61, "2026-08-15T00:00:00Z"), previous: null, comparison: null, history: [record("a", 61, "2026-08-15T00:00:00Z")] });
     const { rerender } = render(<AnalysisHistory visible />);
-    expect(await screen.findByText(/baseline/i)).toBeInTheDocument();
+    expect(await screen.findByText(/başlangıç noktanız/i)).toBeInTheDocument();
     rerender(<AnalysisHistory visible={false} />);
     expect(screen.queryByText("İlerleme")).not.toBeInTheDocument();
   });

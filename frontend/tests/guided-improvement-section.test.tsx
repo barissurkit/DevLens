@@ -13,12 +13,12 @@ const item = {
 
 afterEach(cleanup);
 
-describe("Guided Improvement section", () => {
+describe("Yönlendirmeli İyileştirme bölümü", () => {
   it("renders Turkish guidance, verification, and the shared re-analysis action", async () => {
     const onReanalyze = vi.fn();
     const user = userEvent.setup();
     render(<GuidedImprovementSection improvements={[item]} onReanalyze={onReanalyze} />);
-    expect(screen.getByRole("heading", { name: "Guided Improvement" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Yönlendirmeli İyileştirme" })).toBeInTheDocument();
     expect(screen.getByText(item.why)).toBeInTheDocument();
     expect(screen.getByText(item.steps[0])).toBeInTheDocument();
     expect(screen.getByText(/2 repository tespit edildi/)).toBeInTheDocument();
@@ -29,7 +29,7 @@ describe("Guided Improvement section", () => {
 
   it("does not render an empty guidance section", () => {
     render(<GuidedImprovementSection improvements={[]} onReanalyze={vi.fn()} />);
-    expect(screen.queryByRole("heading", { name: "Guided Improvement" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Yönlendirmeli İyileştirme" })).not.toBeInTheDocument();
     expect(screen.queryByText(/Tüm kontrolleri geçtin|tamamen doğrulandı/i)).not.toBeInTheDocument();
   });
 });
