@@ -181,4 +181,4 @@ Local examples use `ENVIRONMENT=development` and disabled authentication with lo
 - `POST /api/v1/interpretation`
 - `POST /api/v1/interpretation/stream` (same analysis as newline-delimited JSON: `progress` events with stage/completed/total, then `result` or `error`)
 
-`POST /api/v1/analysis` and `POST /api/v1/interpretation` accept an optional `refresh: true` to bypass the snapshot cache. The interpretation response includes `analysis_generated_at` and `cached` so clients can show how fresh a result is.
+`POST /api/v1/analysis` and `POST /api/v1/interpretation` accept an optional `refresh: true` to bypass the snapshot cache. The interpretation response includes `analysis_generated_at` and `cached` so clients can show how fresh a result is. A cached analysis also reuses its stored successful AI interpretation; a recent transient AI failure (rate limit, timeout, ...) is served for 60 seconds instead of asking the provider again, and `retry_interpretation: true` overrides that cooldown.
