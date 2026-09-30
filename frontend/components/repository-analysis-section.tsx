@@ -1,3 +1,6 @@
+"use client";
+
+import { useMemo, useState } from "react";
 import type {
   PortfolioRepositoryFailure,
   PortfolioRepositoryResult,
@@ -5,7 +8,7 @@ import type {
   ScoreDimensionResult,
   ExcludedPortfolioRepository,
 } from "../lib/types";
-import { categoryLabel } from "../lib/presentation";
+import { categoryLabel, scoreTone } from "../lib/presentation";
 
 interface RepositoryAnalysisSectionProps {
   repositories: PortfolioRepositoryResult[];
@@ -41,8 +44,34 @@ const EXCLUSION_REASON_LABELS: Record<string, string> = {
   archived_repository: "Arşivlenmiş repository",
 };
 
+type SortKey = "default" | "score_desc" | "score_asc" | "name";
+
+const SORT_OPTIONS: Array<[SortKey, string]> = [
+  ["default", "Varsayılan sıra"],
+  ["score_desc", "Skor: yüksekten düşüğe"],
+  ["score_asc", "Skor: düşükten yükseğe"],
+  ["name", "İsim: A → Z"],
+];
+
+const LOW_SCORE_THRESHOLD = 50;
+
+function sortRepositories(repositories: PortfolioRepositoryResult[], sort: SortKey) {
+  const sorted = [...repositories];
+  if (sort === "score_desc") sorted.sort((a, b) => b.score.overall_score - a.score.overall_score);
+  if (sort === "score_asc") sorted.sort((a, b) => a.score.overall_score - b.score.overall_score);
+  if (sort === "name") sorted.sort((a, b) => a.repository.name.localeCompare(b.repository.name, "tr"));
+  return sorted;
+}
+
 export function RepositoryAnalysisSection({ repositories, failures, excluded }: RepositoryAnalysisSectionProps) {
   const hasAnyRepositoryState = repositories.length > 0 || failures.length > 0 || excluded.length > 0;
+  const [sort, setSort] = useState<SortKey>("default");
+  const [onlyPartial, setOnlyPartial] = useState(false);
+  const [onlyLowScore, setOnlyLowScore] = useState(false);
+  const visibleRepositories = useMemo(() => {
+    const filtered = repositories.filter((item) => (!onlyPartial || item.score.is_partial) && (!onlyLowScore || item.score.overall_score < LOW_SCORE_THRESHOLD));
+    return sortRepositories(filtered, sort);
+  }, [repositories, sort, onlyPartial, onlyLowScore]);
 
   return (
     <section aria-labelledby="repository-analysis-heading" className="space-y-5">
@@ -52,14 +81,65 @@ export function RepositoryAnalysisSection({ repositories, failures, excluded }: 
         <p className="mt-2 text-sm leading-6 text-slate-600">Her repository için backend analizinin sunduğu deterministik kanıt sonuçları.</p>
       </div>
 
-      {repositories.length > 0 ? (
-        <div className="space-y-4">{repositories.map((repository) => <RepositoryCard key={repository.repository.html_url} result={repository} />)}</div>
-      ) : <EmptyRepositoryState message="Başarılı repository analizi bulunmuyor." />}
+      {repositories.length > 1 && (
+        <RepositoryControls
+          sort={sort}
+          onSortChange={setSort}
+          onlyPartial={onlyPartial}
+          onOnlyPartialChange={setOnlyPartial}
+          onlyLowScore={onlyLowScore}
+          onOnlyLowScoreChange={setOnlyLowScore}
+          visibleCount={visibleRepositories.length}
+          totalCount={repositories.length}
+        />
+      )}
+
+      {repositories.length === 0 ? (
+        <EmptyRepositoryState message="Başarılı repository analizi bulunmuyor." />
+      ) : visibleRepositories.length > 0 ? (
+        <div className="space-y-4">{visibleRepositories.map((repository) => <RepositoryCard key={repository.repository.html_url} result={repository} />)}</div>
+      ) : <EmptyRepositoryState message="Seçilen filtrelerle eşleşen repository yok." />}
 
       {failures.length > 0 && <FailureSection failures={failures} />}
       {excluded.length > 0 && <ExcludedSection repositories={excluded} />}
       {!hasAnyRepositoryState && <p className="rounded-xl border border-slate-200 bg-white p-5 text-sm text-slate-600">Bu analizde repository sonucu bulunmuyor.</p>}
     </section>
+  );
+}
+
+interface RepositoryControlsProps {
+  sort: SortKey;
+  onSortChange: (sort: SortKey) => void;
+  onlyPartial: boolean;
+  onOnlyPartialChange: (value: boolean) => void;
+  onlyLowScore: boolean;
+  onOnlyLowScoreChange: (value: boolean) => void;
+  visibleCount: number;
+  totalCount: number;
+}
+
+function RepositoryControls({ sort, onSortChange, onlyPartial, onOnlyPartialChange, onlyLowScore, onOnlyLowScoreChange, visibleCount, totalCount }: RepositoryControlsProps) {
+  const checkboxClass = "h-4 w-4 rounded border-slate-300 text-slate-950 focus:ring-2 focus:ring-slate-950";
+  return (
+    <div role="group" aria-label="Repository listesi sıralama ve filtreleme" className="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:p-5">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-5">
+        <label className="flex items-center gap-2 text-sm text-slate-700">
+          <span className="font-medium text-slate-900">Sırala</span>
+          <select value={sort} onChange={(event) => onSortChange(event.target.value as SortKey)} className="min-h-10 rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 focus:border-slate-950 focus:outline-none focus:ring-2 focus:ring-slate-950/20">
+            {SORT_OPTIONS.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+          </select>
+        </label>
+        <label className="flex items-center gap-2 text-sm text-slate-700">
+          <input type="checkbox" checked={onlyPartial} onChange={(event) => onOnlyPartialChange(event.target.checked)} className={checkboxClass} />
+          Yalnızca kısmi kanıtlı
+        </label>
+        <label className="flex items-center gap-2 text-sm text-slate-700">
+          <input type="checkbox" checked={onlyLowScore} onChange={(event) => onOnlyLowScoreChange(event.target.checked)} className={checkboxClass} />
+          Yalnızca düşük skorlu (&lt; {LOW_SCORE_THRESHOLD})
+        </label>
+      </div>
+      <p role="status" aria-live="polite" className="text-sm text-slate-500">{visibleCount} / {totalCount} repository gösteriliyor</p>
+    </div>
   );
 }
 
@@ -81,7 +161,7 @@ function RepositoryCard({ result }: { result: PortfolioRepositoryResult }) {
         </div>
         <div className="w-full shrink-0 sm:w-auto sm:text-right">
           <p className="text-xs font-medium uppercase tracking-[0.12em] text-slate-500">Repository Kanıt Skoru</p>
-          <p className="mt-1 text-2xl font-semibold text-slate-950">{score.overall_score} / 100</p>
+          <p className={`mt-1 text-2xl font-semibold ${scoreTone(score.overall_score).text}`}>{score.overall_score} / 100</p>
         </div>
       </summary>
       <div className="border-t border-slate-100 px-5 pb-6 pt-5 sm:px-6">

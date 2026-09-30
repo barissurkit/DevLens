@@ -38,7 +38,7 @@ export default function Home() {
         </section>
 
         <footer className="border-t border-slate-200 pt-5 text-sm text-slate-500">
-          DevLens · İlk sürüm hazırlanıyor
+          DevLens · Herkese açık GitHub verilerinden kanıta dayalı portföy analizi
         </footer>
       </div>
     </main>
