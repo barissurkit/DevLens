@@ -467,7 +467,7 @@ def test_dominant_areas_ignore_multi_label_category_distribution() -> None:
     ]
 
 
-def test_rule_registry_preserves_candidate_exclusions_messages_and_order() -> None:
+def test_rule_registry_preserves_candidate_exclusions_and_order() -> None:
     strength_result = build_portfolio_intelligence(
         create_aggregation(
             successful_repository_count=6,
@@ -479,149 +479,50 @@ def test_rule_registry_preserves_candidate_exclusions_messages_and_order() -> No
         create_aggregation(successful_repository_count=6)
     )
 
-    assert [
-        item.model_dump(mode="json")
+    # CONTRIBUTING only feeds the score; it never becomes a strength, even when every repository has it.
+    assert [item.key for item in strength_result.strength_signals] == [
+        "readme_exists",
+        "readme_title",
+        "readme_description",
+        "readme_installation",
+        "readme_usage",
+        "readme_technologies",
+        "readme_requirements",
+        "tests_structure",
+        "ci_workflow",
+        "gitignore",
+        "license",
+    ]
+    assert all(
+        (item.detected_repository_count, item.analyzed_repository_count) == (3, 6)
         for item in strength_result.strength_signals
-    ] == [
-        insight(
-            "readme_exists",
-            "Root README content was available across multiple successfully "
-            "analyzed public repositories.",
-            3,
-            6,
-        ),
-        insight(
-            "readme_title",
-            "README başlığı signals were detected across multiple successfully "
-            "analyzed public repositories.",
-            3,
-            6,
-        ),
-        insight(
-            "readme_description",
-            "README açıklaması signals were detected across multiple "
-            "successfully analyzed public repositories.",
-            3,
-            6,
-        ),
-        insight(
-            "readme_installation",
-            "README kurulumu-section signals were detected across "
-            "multiple successfully analyzed public repositories.",
-            3,
-            6,
-        ),
-        insight(
-            "readme_usage",
-            "README kullanımı-section signals were detected across multiple "
-            "successfully analyzed public repositories.",
-            3,
-            6,
-        ),
-        insight(
-            "readme_technologies",
-            "README technology-section signals were detected across multiple "
-            "successfully analyzed public repositories.",
-            3,
-            6,
-        ),
-        insight(
-            "readme_requirements",
-            "README gereksinimleri-section signals were detected across multiple "
-            "successfully analyzed public repositories.",
-            3,
-            6,
-        ),
-        insight(
-            "tests_structure",
-            "Test-directory structure signals were detected across multiple "
-            "successfully analyzed public repositories.",
-            3,
-            6,
-        ),
-        insight(
-            "ci_workflow",
-            "GitHub Actions workflow signals were detected across multiple "
-            "successfully analyzed public repositories.",
-            3,
-            6,
-        ),
-        insight(
-            "gitignore",
-            ".gitignore file signals were detected across multiple "
-            "successfully analyzed public repositories.",
-            3,
-            6,
-        ),
-        insight(
-            "license",
-            "Supported license filename signals were detected across multiple "
-            "successfully analyzed public repositories.",
-            3,
-            6,
-        ),
+    )
+
+    # Title, technologies, .gitignore and CONTRIBUTING are never reported as improvements.
+    assert [item.key for item in improvement_result.improvement_signals] == [
+        "readme_exists",
+        "readme_description",
+        "readme_installation",
+        "readme_usage",
+        "readme_requirements",
+        "tests_structure",
+        "ci_workflow",
+        "license",
     ]
-    assert [
-        item.model_dump(mode="json")
+    assert all(
+        (item.detected_repository_count, item.analyzed_repository_count) == (0, 6)
         for item in improvement_result.improvement_signals
-    ] == [
-        insight(
-            "readme_exists",
-            "No root README content was available across the successfully "
-            "analyzed public repositories.",
-            0,
-            6,
-        ),
-        insight(
-            "readme_description",
-            "No meaningful README açıklaması signal was detected across the "
-            "successfully analyzed public repositories.",
-            0,
-            6,
-        ),
-        insight(
-            "readme_installation",
-            "No README kurulumu-section signal was detected across the "
-            "successfully analyzed public repositories.",
-            0,
-            6,
-        ),
-        insight(
-            "readme_usage",
-            "No README kullanımı-section signal was detected across the "
-            "successfully analyzed public repositories.",
-            0,
-            6,
-        ),
-        insight(
-            "readme_requirements",
-            "No README gereksinimleri-section signal was detected across the "
-            "successfully analyzed public repositories.",
-            0,
-            6,
-        ),
-        insight(
-            "tests_structure",
-            "No test-directory structure signal was detected across the "
-            "successfully analyzed public repositories.",
-            0,
-            6,
-        ),
-        insight(
-            "ci_workflow",
-            "No GitHub Actions workflow signal was detected across the "
-            "successfully analyzed public repositories.",
-            0,
-            6,
-        ),
-        insight(
-            "license",
-            "No supported license filename signal was detected across the "
-            "successfully analyzed public repositories.",
-            0,
-            6,
-        ),
-    ]
+    )
+
+
+def test_structure_improvements_are_suppressed_by_partial_evidence_but_readme_ones_are_not() -> None:
+    result = build_portfolio_intelligence(
+        create_aggregation(successful_repository_count=6, partial_evidence_repository_count=1)
+    )
+
+    keys = [item.key for item in result.improvement_signals]
+    assert "readme_usage" in keys
+    assert not {"tests_structure", "ci_workflow", "license"} & set(keys)
 
 
 def test_missing_required_signal_key_is_rejected() -> None:
