@@ -346,6 +346,8 @@ export interface AnalyzeOptions {
   onProgress?: (progress: AnalysisProgress) => void;
   /** Skip the server-side snapshot cache. */
   refresh?: boolean;
+  /** Retry the AI interpretation now, bypassing the server's short cooldown after a failed attempt. */
+  retryInterpretation?: boolean;
   signal?: AbortSignal;
 }
 
@@ -367,7 +369,10 @@ function isAbortError(error: unknown): boolean {
 }
 
 function buildInterpretationRequest(username: string, options: AnalyzeOptions): PortfolioAnalysisRequest {
-  return options.refresh ? { username, refresh: true } : { username };
+  const request: PortfolioAnalysisRequest = { username };
+  if (options.refresh) request.refresh = true;
+  if (options.retryInterpretation) request.retry_interpretation = true;
+  return request;
 }
 
 function errorFromPayload(status: number, payload: unknown, retryAfterSeconds?: number): ApiError {

@@ -61,6 +61,30 @@ describe("streaming analysis", () => {
     expect(JSON.parse(String(fetchMock.mock.calls[0][1]?.body))).toEqual({ username: "alice", refresh: true });
   });
 
+  it("sends retry_interpretation only when an AI retry is requested", async () => {
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockImplementation(async () => ndjson([{ event: "result", data: resultBody }]));
+
+    await analyzePortfolioWithInterpretation("alice", { onProgress: () => undefined, retryInterpretation: true });
+    await analyzePortfolioWithInterpretation("alice", { onProgress: () => undefined, refresh: true, retryInterpretation: true });
+    await analyzePortfolioWithInterpretation("alice", { onProgress: () => undefined });
+
+    const bodies = fetchMock.mock.calls.map((call) => JSON.parse(String(call[1]?.body)));
+    expect(bodies).toEqual([
+      { username: "alice", retry_interpretation: true },
+      { username: "alice", refresh: true, retry_interpretation: true },
+      { username: "alice" },
+    ]);
+  });
+
+  it("also sends the flags on the plain endpoint", async () => {
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response(JSON.stringify(resultBody), { status: 200 }));
+
+    await analyzePortfolioWithInterpretation("alice", { retryInterpretation: true });
+
+    expect(fetchMock.mock.calls[0][0]).toBe("http://localhost:8000/api/v1/interpretation");
+    expect(JSON.parse(String(fetchMock.mock.calls[0][1]?.body))).toEqual({ username: "alice", retry_interpretation: true });
+  });
+
   it("maps a streamed error event to an ApiError", async () => {
     vi.spyOn(globalThis, "fetch").mockResolvedValue(ndjson([
       { event: "progress", stage: "profile", completed: 0, total: 0 },

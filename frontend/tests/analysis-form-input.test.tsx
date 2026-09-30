@@ -152,12 +152,12 @@ describe("AnalysisForm input handling", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "AI yorumunu yeniden dene" }));
     await waitFor(() => expect(mockedAnalyze).toHaveBeenCalledTimes(2));
-    expect(mockedAnalyze).toHaveBeenNthCalledWith(2, "octocat", expect.objectContaining({ refresh: undefined }));
+    expect(mockedAnalyze).toHaveBeenNthCalledWith(2, "octocat", expect.objectContaining({ refresh: undefined, retryInterpretation: true }));
     await waitFor(() => expect(screen.getByTestId("result-shell")).toBeInTheDocument());
 
     fireEvent.click(screen.getByRole("button", { name: "Yenile" }));
     await waitFor(() => expect(mockedAnalyze).toHaveBeenCalledTimes(3));
-    expect(mockedAnalyze).toHaveBeenNthCalledWith(3, "octocat", expect.objectContaining({ refresh: true }));
+    expect(mockedAnalyze).toHaveBeenNthCalledWith(3, "octocat", expect.objectContaining({ refresh: true, retryInterpretation: undefined }));
   });
 });
 
