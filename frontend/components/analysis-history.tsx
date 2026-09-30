@@ -26,8 +26,8 @@ export function AnalysisHistory({ visible }: { visible: boolean }) {
 
   if (!visible || !identity) return null;
   const isCurrentRequest = state.loadedFor === requestKey;
-  if (state.status === "loading" || !isCurrentRequest) return <section aria-labelledby="history-heading" className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"><h3 id="history-heading" className="text-xl font-semibold">İlerleme</h3><p className="mt-3 text-sm text-slate-500">Geçmiş analizler yükleniyor...</p></section>;
-  if (state.status === "error") return <section aria-labelledby="history-heading" className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"><h3 id="history-heading" className="text-xl font-semibold">İlerleme</h3><p role="alert" className="mt-3 text-sm text-red-700">{state.message}</p></section>;
+  if (state.status === "loading" || !isCurrentRequest) return <section aria-labelledby="history-heading" className="rounded-xl border border-slate-200 bg-white p-6 shadow-card"><h3 id="history-heading" className="text-xl font-semibold">İlerleme</h3><p className="mt-3 text-sm text-slate-500">Geçmiş analizler yükleniyor...</p></section>;
+  if (state.status === "error") return <section aria-labelledby="history-heading" className="rounded-xl border border-slate-200 bg-white p-6 shadow-card"><h3 id="history-heading" className="text-xl font-semibold">İlerleme</h3><p role="alert" className="mt-3 text-sm text-red-700">{state.message}</p></section>;
   const data = state.data;
   if (!data || !data.latest) return <HistoryCard title="İlerleme"><p className="text-sm leading-6 text-slate-600">Henüz bir geçmiş analiz kaydı yok. Bu analiz başlangıç noktası olarak kullanılacak.</p></HistoryCard>;
   const delta = data.comparison;
@@ -46,7 +46,7 @@ export function AnalysisHistory({ visible }: { visible: boolean }) {
   </HistoryCard>;
 }
 
-function HistoryCard({ title, children }: { title: string; children: React.ReactNode }) { return <section aria-labelledby="history-heading" className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8"><h3 id="history-heading" className="text-xl font-semibold tracking-tight text-slate-950">{title}</h3><div className="mt-5">{children}</div></section>; }
+function HistoryCard({ title, children }: { title: string; children: React.ReactNode }) { return <section aria-labelledby="history-heading" className="rounded-xl border border-slate-200 bg-white p-6 shadow-card sm:p-8"><h3 id="history-heading" className="text-xl font-semibold tracking-tight text-slate-950">{title}</h3><div className="mt-5">{children}</div></section>; }
 function Metric({ label, value }: { label: string; value: string }) { return <div className="rounded-xl bg-slate-50 p-4"><p className="text-xs text-slate-500">{label}</p><p className="mt-2 text-2xl font-semibold text-slate-950">{value}</p></div>; }
 function formatDelta(value: number) { return value > 0 ? `+${value}` : String(value); }
 function formatDate(value: string) { return new Intl.DateTimeFormat("tr-TR", { dateStyle: "medium", timeZone: "Europe/Istanbul" }).format(new Date(value)); }

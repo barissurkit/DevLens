@@ -77,7 +77,7 @@ export function RepositoryAnalysisSection({ repositories, failures, excluded }: 
   return (
     <section aria-labelledby="repository-analysis-heading" className="space-y-5">
       <div>
-        <p className="text-sm font-medium uppercase tracking-[0.16em] text-emerald-600">Repository Analizi</p>
+        <p className="text-xs font-semibold uppercase tracking-[0.14em] text-indigo-600">Repository Analizi</p>
         <h3 id="repository-analysis-heading" className="mt-2 scroll-mt-20 text-2xl font-semibold tracking-tight text-slate-950">Repository kanıtları</h3>
         <p className="mt-2 text-sm leading-6 text-slate-600">Her repository için backend analizinin sunduğu deterministik kanıt sonuçları.</p>
       </div>
@@ -120,13 +120,13 @@ interface RepositoryControlsProps {
 }
 
 function RepositoryControls({ sort, onSortChange, onlyPartial, onOnlyPartialChange, onlyLowScore, onOnlyLowScoreChange, visibleCount, totalCount }: RepositoryControlsProps) {
-  const checkboxClass = "h-4 w-4 rounded border-slate-300 text-slate-950 focus:ring-2 focus:ring-slate-950";
+  const checkboxClass = "h-4 w-4 rounded border-slate-300 text-slate-950 focus:ring-2 focus:ring-indigo-600";
   return (
-    <div role="group" aria-label="Repository listesi sıralama ve filtreleme" className="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:p-5">
+    <div role="group" aria-label="Repository listesi sıralama ve filtreleme" className="flex flex-col gap-4 rounded-xl border border-slate-200 bg-white p-4 shadow-card sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:p-5">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-5">
         <label className="flex items-center gap-2 text-sm text-slate-700">
           <span className="font-medium text-slate-900">Sırala</span>
-          <select value={sort} onChange={(event) => onSortChange(event.target.value as SortKey)} className="min-h-10 rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 focus:border-slate-950 focus:outline-none focus:ring-2 focus:ring-slate-950/20">
+          <select value={sort} onChange={(event) => onSortChange(event.target.value as SortKey)} className="min-h-10 rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 focus:border-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-600/20">
             {SORT_OPTIONS.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
           </select>
         </label>
@@ -150,8 +150,8 @@ function RepositoryCard({ result }: { result: PortfolioRepositoryResult }) {
   const categories = analysis.classification.categories;
 
   return (
-    <details className="group rounded-2xl border border-slate-200 bg-white shadow-sm">
-      <summary className="grid cursor-pointer list-none grid-cols-[auto_minmax(0,1fr)] items-start gap-x-3 gap-y-3 rounded-2xl p-5 outline-none transition focus-visible:ring-2 focus-visible:ring-slate-950 focus-visible:ring-offset-2 sm:grid-cols-[auto_minmax(0,1fr)_auto] sm:items-center sm:p-6">
+    <details className="group rounded-xl border border-slate-200 bg-white shadow-card">
+      <summary className="grid cursor-pointer list-none grid-cols-[auto_minmax(0,1fr)] items-start gap-x-3 gap-y-3 rounded-xl p-5 outline-none transition focus-visible:ring-2 focus-visible:ring-indigo-600 focus-visible:ring-offset-2 sm:grid-cols-[auto_minmax(0,1fr)_auto] sm:items-center sm:p-6">
         <span aria-hidden="true" className="mt-1 shrink-0 text-xl leading-none text-slate-500 transition-transform group-open:rotate-90">›</span>
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
@@ -166,7 +166,7 @@ function RepositoryCard({ result }: { result: PortfolioRepositoryResult }) {
         </div>
       </summary>
       <div className="border-t border-slate-100 px-5 pb-6 pt-5 sm:px-6">
-        <a href={repository.html_url} target="_blank" rel="noreferrer" className="inline-flex min-h-11 items-center rounded-lg text-sm font-medium text-slate-700 underline decoration-slate-300 underline-offset-4 hover:text-slate-950 hover:decoration-slate-950 focus:outline-none focus:ring-2 focus:ring-slate-950 focus:ring-offset-2">Repository sayfasını aç</a>
+        <a href={repository.html_url} target="_blank" rel="noreferrer" className="inline-flex min-h-11 items-center rounded-lg text-sm font-medium text-slate-700 underline decoration-slate-300 underline-offset-4 hover:text-slate-950 hover:decoration-slate-950 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2">Repository sayfasını aç</a>
         {score.is_partial && <p className="mb-5 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-900">Repository tree kısmi olduğu için yapı tabanlı kanıt eksik olabilir. Bu durum analiz hatası değildir.</p>}
         {score.limitations.length > 0 && <ul className="mb-5 space-y-2 text-sm text-slate-600">{score.limitations.map((limitation) => <li key={limitation}>{limitation}</li>)}</ul>}
 
@@ -198,11 +198,11 @@ function ChipList({ title, items, emptyMessage }: { title: string; items: string
 }
 
 function FailureSection({ failures }: { failures: PortfolioRepositoryFailure[] }) {
-  return <section aria-labelledby="repository-failures-heading" className="rounded-2xl border border-amber-200 bg-amber-50 p-5 sm:p-6"><h4 id="repository-failures-heading" className="text-lg font-semibold text-amber-950">Repository Analiz Sorunları</h4><p className="mt-2 text-sm text-amber-900">Bu repository’ler için analiz verileri tamamlanamadı.</p><ul className="mt-4 space-y-3">{failures.map((failure) => <li key={`${failure.repository.html_url}-${failure.code}`} className="rounded-xl border border-amber-200 bg-white/70 p-4"><p className="break-words font-medium text-slate-950">{failure.repository.name}</p><p className="mt-1 text-sm leading-6 text-slate-700">{failure.message}</p></li>)}</ul></section>;
+  return <section aria-labelledby="repository-failures-heading" className="rounded-xl border border-amber-200 bg-amber-50 p-5 sm:p-6"><h4 id="repository-failures-heading" className="text-lg font-semibold text-amber-950">Repository Analiz Sorunları</h4><p className="mt-2 text-sm text-amber-900">Bu repository’ler için analiz verileri tamamlanamadı.</p><ul className="mt-4 space-y-3">{failures.map((failure) => <li key={`${failure.repository.html_url}-${failure.code}`} className="rounded-xl border border-amber-200 bg-white/70 p-4"><p className="break-words font-medium text-slate-950">{failure.repository.name}</p><p className="mt-1 text-sm leading-6 text-slate-700">{failure.message}</p></li>)}</ul></section>;
 }
 
 function ExcludedSection({ repositories }: { repositories: ExcludedPortfolioRepository[] }) {
-  return <section aria-labelledby="excluded-repositories-heading" className="rounded-2xl border border-slate-200 bg-slate-50 p-5 sm:p-6"><h4 id="excluded-repositories-heading" className="text-lg font-semibold text-slate-950">Hariç Tutulan Repository’ler</h4><p className="mt-2 text-sm text-slate-600">Bu repository’ler seçim politikası nedeniyle analiz kapsamı dışındadır.</p><ul className="mt-4 space-y-2">{repositories.map((item) => <li key={item.repository.html_url} className="flex flex-wrap items-baseline justify-between gap-2 rounded-lg bg-white p-3 text-sm"><span className="break-words font-medium text-slate-800">{item.repository.name}</span><span className="break-words text-slate-500">{item.reasons.map((reason) => EXCLUSION_REASON_LABELS[reason] || "Seçim politikası").join(" · ")}</span></li>)}</ul></section>;
+  return <section aria-labelledby="excluded-repositories-heading" className="rounded-xl border border-slate-200 bg-slate-50 p-5 sm:p-6"><h4 id="excluded-repositories-heading" className="text-lg font-semibold text-slate-950">Hariç Tutulan Repository’ler</h4><p className="mt-2 text-sm text-slate-600">Bu repository’ler seçim politikası nedeniyle analiz kapsamı dışındadır.</p><ul className="mt-4 space-y-2">{repositories.map((item) => <li key={item.repository.html_url} className="flex flex-wrap items-baseline justify-between gap-2 rounded-lg bg-white p-3 text-sm"><span className="break-words font-medium text-slate-800">{item.repository.name}</span><span className="break-words text-slate-500">{item.reasons.map((reason) => EXCLUSION_REASON_LABELS[reason] || "Seçim politikası").join(" · ")}</span></li>)}</ul></section>;
 }
 
 function EmptyRepositoryState({ message }: { message: string }) {
