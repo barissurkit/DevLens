@@ -12,8 +12,17 @@ interface AnalysisErrorStateProps {
   onRetry: () => void;
 }
 
+/** Turns the server's Retry-After hint into a short, human wait suggestion. */
+export function rateLimitMessage(retryAfterSeconds: number | undefined): string {
+  if (!retryAfterSeconds) return "Kısa bir süre bekleyip tekrar deneyin.";
+  if (retryAfterSeconds < 60) return `Yaklaşık ${retryAfterSeconds} saniye bekleyip tekrar deneyebilirsiniz.`;
+  return `Yaklaşık ${Math.ceil(retryAfterSeconds / 60)} dakika bekleyip tekrar deneyebilirsiniz.`;
+}
+
 function getErrorPresentation(error: ApiError): ErrorPresentation {
   switch (error.code) {
+    case "rate_limited":
+      return { title: "Çok fazla istek gönderildi", message: rateLimitMessage(error.retryAfterSeconds), canRetry: true };
     case "github_user_not_found":
       return { title: "GitHub kullanıcısı bulunamadı", message: "Kullanıcı adını kontrol edip tekrar deneyin.", canRetry: false };
     case "github_rate_limit":
