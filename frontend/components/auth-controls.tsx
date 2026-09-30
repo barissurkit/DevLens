@@ -4,7 +4,7 @@ import { useState } from "react";
 import { getAuthStartUrl } from "../lib/api";
 import { useAuth } from "./auth-provider";
 
-const controlClassName = "min-h-11 rounded-lg px-3 py-2 text-sm font-medium transition focus:outline-none focus:ring-2 focus:ring-slate-950 focus:ring-offset-2";
+const controlClassName = "min-h-11 rounded-lg px-3 py-2 text-sm font-medium transition focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2";
 
 export function AuthControls() {
   const { status, user, errorMessage, refresh, logout } = useAuth();
@@ -51,7 +51,7 @@ export function AuthControls() {
     <div className="flex flex-wrap items-center justify-end gap-2">
       <a
         href={getAuthStartUrl()}
-        className={`${controlClassName} bg-slate-950 text-white hover:bg-slate-800`}
+        className={`${controlClassName} bg-indigo-600 text-white hover:bg-indigo-700`}
       >
         Sign in with GitHub
       </a>
