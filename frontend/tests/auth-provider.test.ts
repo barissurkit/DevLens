@@ -45,7 +45,7 @@ describe("frontend authentication state", () => {
 
     const signIn = await screen.findByRole("link", { name: "Sign in with GitHub" });
     expect(signIn).toHaveAttribute("href", "http://localhost:8000/api/v1/auth/github");
-    expect(screen.queryByText("Your Portfolio")).not.toBeInTheDocument();
+    expect(screen.queryByText("Senin portföyün")).not.toBeInTheDocument();
   });
 
   it("renders the minimum authenticated identity and replaces sign-in", async () => {
