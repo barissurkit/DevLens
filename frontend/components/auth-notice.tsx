@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const MESSAGES: Record<string, string> = {
   authentication_failed: "GitHub ile giriş tamamlanamadı. Giriş iptal edilmiş veya süresi dolmuş olabilir; lütfen tekrar deneyin.",
@@ -10,15 +10,23 @@ const FALLBACK_MESSAGE = "Giriş sırasında bir sorun oluştu. Lütfen tekrar d
 /** Explains a failed sign-in: the backend sends the user back with `?auth_error=...` and nothing else. */
 export function AuthNotice() {
   const [message, setMessage] = useState<string | null>(null);
+  // Effects can run twice in development; the parameter is removed on the first run, so remember it.
+  const codeRef = useRef<string | null>(null);
 
   useEffect(() => {
     const url = new URL(window.location.href);
     const code = url.searchParams.get("auth_error");
-    if (!code) return;
-    // Keep the address clean so a reload or a copied link does not show the notice again.
-    url.searchParams.delete("auth_error");
-    window.history.replaceState(window.history.state, "", `${url.pathname}${url.search}${url.hash}`);
-    setMessage(MESSAGES[code] ?? FALLBACK_MESSAGE);
+    if (code) {
+      codeRef.current = code;
+      // Keep the address clean so a reload or a copied link does not show the notice again.
+      url.searchParams.delete("auth_error");
+      window.history.replaceState(window.history.state, "", `${url.pathname}${url.search}${url.hash}`);
+    }
+    const pending = codeRef.current;
+    if (!pending) return;
+    // Set from a timer callback: the parameter only exists in the browser, so it cannot seed the initial state.
+    const timer = window.setTimeout(() => setMessage(MESSAGES[pending] ?? FALLBACK_MESSAGE), 0);
+    return () => window.clearTimeout(timer);
   }, []);
 
   if (!message) return null;
