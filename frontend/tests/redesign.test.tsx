@@ -107,6 +107,31 @@ describe("search shortcut", () => {
   });
 });
 
+describe("failed sign-in notice", () => {
+  afterEach(() => window.history.replaceState(null, "", "/"));
+
+  it("explains a failed login and cleans the address", async () => {
+    window.history.replaceState(null, "", "/?auth_error=authentication_failed");
+    render(<SiteShell><p>içerik</p></SiteShell>);
+
+    expect(await screen.findByRole("alert")).toHaveTextContent("GitHub ile giriş tamamlanamadı");
+    expect(window.location.search).toBe("");
+  });
+
+  it("can be dismissed and stays quiet without the parameter", async () => {
+    const { fireEvent } = await import("@testing-library/react");
+    window.history.replaceState(null, "", "/?auth_error=whatever");
+    const { unmount } = render(<SiteShell><p>içerik</p></SiteShell>);
+    expect(await screen.findByRole("alert")).toHaveTextContent("Giriş sırasında bir sorun oluştu");
+    fireEvent.click(screen.getByRole("button", { name: "Kapat" }));
+    expect(screen.queryByRole("alert")).toBeNull();
+    unmount();
+
+    render(<SiteShell><p>içerik</p></SiteShell>);
+    expect(screen.queryByRole("alert")).toBeNull();
+  });
+});
+
 describe("signal labels", () => {
   it("names known signals in Turkish and leaves unknown keys untouched", async () => {
     const { signalLabel } = await import("../lib/signals");
