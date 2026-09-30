@@ -158,7 +158,7 @@ function RepositoryCard({ result }: { result: PortfolioRepositoryResult }) {
             <span className="max-w-full break-words text-lg font-semibold text-slate-950">{repository.name}</span>
             {score.is_partial && <span className="rounded-full bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-800">Kısmi kanıt</span>}
           </div>
-          <p className="mt-2 break-words text-sm text-slate-600">{analysis.classification.primary_category}</p>
+          <p className="mt-2 break-words text-sm text-slate-600">{categoryLabel(analysis.classification.primary_category)}</p>
         </div>
         <div className="col-start-2 sm:col-start-auto sm:text-right">
           <p className="text-xs font-medium uppercase tracking-[0.12em] text-slate-500">Repository Kanıt Skoru</p>

@@ -205,7 +205,7 @@ def test_action_plan_api_boundaries_and_existing_data_compatibility() -> None:
                 assert limit_error.value.status_code == 409
                 assert limit_error.value.detail == {
                     "code": "action_plan_limit_reached",
-                    "message": "Action Plan görev sınırına ulaşıldı. Yeni görev eklemek için mevcut bir görevi silin.",
+                    "message": "Aksiyon planı görev sınırına ulaşıldı. Yeni görev eklemek için mevcut bir görevi silin.",
                 }
 
             user_101 = await seed(101)

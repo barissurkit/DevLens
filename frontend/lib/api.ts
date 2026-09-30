@@ -229,14 +229,14 @@ async function actionPlanRequest(path: string, init: RequestInit = {}): Promise<
   try {
     response = await fetch(getApiUrl(path), request);
   } catch {
-    throw new ApiError("Action Plan servisine ulaşılamadı.", 0, "network_error");
+    throw new ApiError("Aksiyon planı servisine ulaşılamadı.", 0, "network_error");
   }
   const payload = await readJson(response);
   if (!response.ok) {
     if (isOperationalErrorResponse(payload)) {
       throw new ApiError(payload.detail.message, response.status, payload.detail.code);
     }
-    throw new ApiError("Action Plan işlemi tamamlanamadı.", response.status, "action_plan_error");
+    throw new ApiError("Aksiyon planı işlemi tamamlanamadı.", response.status, "action_plan_error");
   }
   return payload;
 }
@@ -244,7 +244,7 @@ async function actionPlanRequest(path: string, init: RequestInit = {}): Promise<
 export async function getActionPlan(): Promise<ActionPlanResponse> {
   const payload = await actionPlanRequest(ACTION_PLAN_PATH);
   if (isActionPlanResponse(payload)) return payload;
-  throw new ApiError("Action Plan geçersiz bir yanıt döndürdü.", 200, "malformed_response");
+  throw new ApiError("Aksiyon planı geçersiz bir yanıt döndürdü.", 200, "malformed_response");
 }
 
 export async function getAnalysisHistory(): Promise<HistoryResponse> {
@@ -260,13 +260,13 @@ export async function getAnalysisHistory(): Promise<HistoryResponse> {
 export async function createActionPlanTask(input: { title: string; description?: string }): Promise<ActionPlanTask> {
   const payload = await actionPlanRequest(ACTION_PLAN_PATH, { method: "POST", body: JSON.stringify(input) });
   if (typeof payload === "object" && payload !== null && "id" in payload) return payload as ActionPlanTask;
-  throw new ApiError("Action Plan geçersiz bir yanıt döndürdü.", 201, "malformed_response");
+  throw new ApiError("Aksiyon planı geçersiz bir yanıt döndürdü.", 201, "malformed_response");
 }
 
 export async function updateActionPlanTask(id: string, input: { title?: string; description?: string | null; status?: ActionPlanStatus }): Promise<ActionPlanTask> {
   const payload = await actionPlanRequest(`${ACTION_PLAN_PATH}/${encodeURIComponent(id)}`, { method: "PATCH", body: JSON.stringify(input) });
   if (typeof payload === "object" && payload !== null && "id" in payload) return payload as ActionPlanTask;
-  throw new ApiError("Action Plan geçersiz bir yanıt döndürdü.", 200, "malformed_response");
+  throw new ApiError("Aksiyon planı geçersiz bir yanıt döndürdü.", 200, "malformed_response");
 }
 
 export async function deleteActionPlanTask(id: string): Promise<void> {

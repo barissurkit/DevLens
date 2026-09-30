@@ -4,7 +4,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import { RepositoryAnalysisSection } from "../components/repository-analysis-section";
 import type { PortfolioRepositoryResult } from "../lib/types";
 
-function makeResult(name: string, overall: number, isPartial = false): PortfolioRepositoryResult {
+function makeResult(name: string, overall: number, isPartial = false, category = "Backend"): PortfolioRepositoryResult {
   const repository = {
     name, description: null, html_url: `https://github.com/demo/${name}`, primary_language: null,
     stars: 0, forks: 0, topics: [], created_at: "", updated_at: "", archived: false, fork: false, default_branch: "main",
@@ -18,7 +18,7 @@ function makeResult(name: string, overall: number, isPartial = false): Portfolio
       structure: { has_tests: false, has_ci: false, has_dockerfile: false, has_compose: false, has_env_example: false, has_license: false, has_gitignore: false, has_contributing: false },
       tree_truncated: isPartial,
       technologies: { dependencies: [], technologies: [] },
-      classification: { categories: [], primary_category: "Backend" },
+      classification: { categories: [], primary_category: category },
     },
   };
 }
@@ -71,5 +71,11 @@ describe("RepositoryAnalysisSection sıralama ve filtreleme", () => {
   it("tek repository varsa kontrolleri göstermez", () => {
     render(<RepositoryAnalysisSection repositories={[makeResult("bravo", 80)]} failures={[]} excluded={[]} />);
     expect(screen.queryByRole("combobox")).not.toBeInTheDocument();
+  });
+
+  it("kategori adını Türkçe etiketle gösterir", () => {
+    render(<RepositoryAnalysisSection repositories={[makeResult("ml-repo", 70, false, "Machine Learning")]} failures={[]} excluded={[]} />);
+    expect(screen.getByText("Makine Öğrenmesi")).toBeInTheDocument();
+    expect(screen.queryByText("Machine Learning")).not.toBeInTheDocument();
   });
 });
