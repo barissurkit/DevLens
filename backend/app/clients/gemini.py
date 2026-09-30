@@ -31,6 +31,7 @@ from app.schemas.interpretation import (
 
 logger = logging.getLogger(__name__)
 _GEMINI_MAX_ATTEMPTS = 2
+_INTERPRETATION_MAX_ATTEMPTS = 4  # Gemini 503 "high demand" spikes are common; retry them longer
 _GEMINI_RETRY_INITIAL_DELAY_SECONDS = 0.5
 _GEMINI_TIMEOUT_MS = 30_000
 _SUGGESTIONS_TIMEOUT_SECONDS = 20.0
@@ -520,7 +521,7 @@ class GeminiClient:
             response_mime_type="application/json",
             candidate_count=1,
         )
-        for attempt in range(_GEMINI_MAX_ATTEMPTS):
+        for attempt in range(_INTERPRETATION_MAX_ATTEMPTS):
             started_at = time.monotonic()
             try:
                 response = await self._client.aio.models.generate_content(
@@ -541,7 +542,7 @@ class GeminiClient:
                 if (
                     isinstance(error, genai_errors.APIError)
                     and error.code == 503
-                    and attempt < _GEMINI_MAX_ATTEMPTS - 1
+                    and attempt < _INTERPRETATION_MAX_ATTEMPTS - 1
                 ):
                     await asyncio.sleep(
                         _GEMINI_RETRY_INITIAL_DELAY_SECONDS * (2**attempt)
