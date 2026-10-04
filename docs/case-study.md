@@ -24,11 +24,14 @@ The core principle is: **deterministic evidence first, optional AI interpretatio
 
 ## What the System Analyzes
 
-Repository scoring focuses on three deterministic dimensions:
+The portfolio score (version v3, 100 points) focuses on four deterministic dimensions:
 
-- Documentation
-- Testing & Automation
-- Repository Hygiene
+- Documentation (40)
+- Testing & Automation (25)
+- Repository Hygiene (15)
+- Maintenance & Visibility (20): repository description, topics and an update within the last twelve months
+
+The recent-activity rule compares the repository's last update with the analysis time, so it is the one rule whose result changes as time passes; everything else depends only on repository evidence. Scores from older scoring versions are marked as such in the progress history and are not joined into its trend line.
 
 The scoring model is versioned and uses repository evidence such as README sections, test structure, CI workflows, licenses, `.gitignore`, and related engineering-practice signals. Stars, forks, popularity, commit count, technology choice, and category labels are not treated as quality signals. DevLens evaluates observable public portfolio evidence, not a developer's complete ability or job fit.
 

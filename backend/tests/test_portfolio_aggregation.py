@@ -17,22 +17,30 @@ from app.schemas.analysis import (
     ScoreRuleResult,
     TechnologyAnalysis,
 )
+from datetime import datetime, timezone
+
 from app.schemas.github import GitHubRepository
 from app.services.portfolio_aggregation import aggregate_portfolio
 
 
-def create_repository(name: str) -> GitHubRepository:
+def create_repository(
+    name: str,
+    *,
+    description: str | None = None,
+    topics: tuple[str, ...] = (),
+    updated_at: str = "2025-02-20T15:30:00Z",
+) -> GitHubRepository:
     return GitHubRepository.model_validate(
         {
             "name": name,
-            "description": None,
+            "description": description,
             "html_url": f"https://github.com/octocat/{name}",
             "language": "Python",
             "stargazers_count": 0,
             "forks_count": 0,
-            "topics": [],
+            "topics": list(topics),
             "created_at": "2025-01-10T12:00:00Z",
-            "updated_at": "2025-02-20T15:30:00Z",
+            "updated_at": updated_at,
             "archived": False,
             "fork": False,
             "default_branch": "main",
@@ -87,8 +95,11 @@ def create_result(
     overall_score: int = 0,
     score_is_partial: bool = False,
     tree_truncated: bool = False,
+    description: str | None = None,
+    topics: tuple[str, ...] = (),
+    updated_at: str = "2025-02-20T15:30:00Z",
 ) -> PortfolioRepositoryResult:
-    repository = create_repository(name)
+    repository = create_repository(name, description=description, topics=topics, updated_at=updated_at)
     analysis = RepositoryAnalysis(
         repository=repository,
         readme=ReadmeAnalysis(
@@ -246,6 +257,21 @@ def test_empty_portfolio_returns_canonical_zero_aggregation() -> None:
                 {
                     "key": "contributing",
                     "label": "CONTRIBUTING",
+                    "detected_repository_count": 0,
+                },
+                {
+                    "key": "repo_description",
+                    "label": "Repository açıklaması",
+                    "detected_repository_count": 0,
+                },
+                {
+                    "key": "repo_topics",
+                    "label": "Konu etiketleri",
+                    "detected_repository_count": 0,
+                },
+                {
+                    "key": "recent_activity",
+                    "label": "Son 12 ayda güncelleme",
                     "detected_repository_count": 0,
                 },
             ],
@@ -440,7 +466,7 @@ def test_primary_category_counts_total_successful_repositories() -> None:
     ) == result.successful_repository_count
 
 
-def test_portfolio_signals_return_all_twelve_positive_evidence_counts() -> None:
+def test_portfolio_signals_return_all_fifteen_evidence_counts() -> None:
     result = aggregate_portfolio(
         create_portfolio_analysis(
             [
@@ -511,6 +537,9 @@ def test_portfolio_signals_return_all_twelve_positive_evidence_counts() -> None:
         ("gitignore", 2),
         ("license", 2),
         ("contributing", 1),
+        ("repo_description", 0),
+        ("repo_topics", 0),
+        ("recent_activity", 0),
     ]
 
 
@@ -718,3 +747,52 @@ def test_selection_version_is_preserved() -> None:
     )
 
     assert result.selection_version == "selection-v42"
+
+
+NOW = datetime(2026, 6, 1, tzinfo=timezone.utc)
+
+
+def _count(result, key: str) -> int:
+    return next(item.detected_repository_count for item in result.portfolio_signals if item.key == key)
+
+
+def test_repository_metadata_signals_count_descriptions_and_topics() -> None:
+    result = aggregate_portfolio(
+        create_portfolio_analysis(
+            [
+                create_result("with-both", description="Hızlı bir API", topics=("fastapi", "python")),
+                create_result("blank-description", description="   ", topics=()),
+                create_result("topics-only", description=None, topics=("cli",)),
+                create_result("nothing"),
+            ]
+        ),
+        now=NOW,
+    )
+
+    assert _count(result, "repo_description") == 1
+    assert _count(result, "repo_topics") == 2
+
+
+def test_recent_activity_uses_a_twelve_month_window_from_the_reference_time() -> None:
+    result = aggregate_portfolio(
+        create_portfolio_analysis(
+            [
+                create_result("fresh", updated_at="2026-05-01T00:00:00Z"),
+                create_result("edge", updated_at="2025-06-01T00:00:00Z"),
+                create_result("stale", updated_at="2025-05-31T23:59:59Z"),
+                create_result("ancient", updated_at="2023-01-01T00:00:00Z"),
+            ]
+        ),
+        now=NOW,
+    )
+
+    # Exactly one year old still counts; a second older does not.
+    assert _count(result, "recent_activity") == 2
+
+
+def test_time_based_signals_are_deterministic_for_the_same_reference_time() -> None:
+    portfolio = create_portfolio_analysis([create_result("a", updated_at="2026-01-01T00:00:00Z")])
+
+    assert aggregate_portfolio(portfolio, now=NOW) == aggregate_portfolio(portfolio, now=NOW)
+    later = aggregate_portfolio(portfolio, now=datetime(2028, 1, 1, tzinfo=timezone.utc))
+    assert _count(later, "recent_activity") == 0

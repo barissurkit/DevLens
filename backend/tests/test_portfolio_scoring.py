@@ -25,6 +25,9 @@ SIGNAL_LABELS: tuple[tuple[str, str], ...] = (
     ("gitignore", ".gitignore"),
     ("license", "LICENSE"),
     ("contributing", "CONTRIBUTING"),
+    ("repo_description", "Repository açıklaması"),
+    ("repo_topics", "Konu etiketleri"),
+    ("recent_activity", "Son 12 ayda güncelleme"),
 )
 
 
@@ -115,12 +118,12 @@ def test_policy_has_exact_order_and_weights() -> None:
             "documentation_consistency",
                 "Dokümantasyon Tutarlılığı",
             [
-                ("readme_exists", "README mevcut", 8),
-                ("readme_title", "README başlığı", 5),
-                ("readme_description", "README açıklaması", 8),
-                ("readme_installation", "README kurulumu", 9),
-                ("readme_usage", "README kullanımı", 9),
-                ("readme_technologies", "README teknolojileri", 6),
+                ("readme_exists", "README mevcut", 6),
+                ("readme_title", "README başlığı", 4),
+                ("readme_description", "README açıklaması", 6),
+                ("readme_installation", "README kurulumu", 7),
+                ("readme_usage", "README kullanımı", 7),
+                ("readme_technologies", "README teknolojileri", 5),
                 ("readme_requirements", "README gereksinimleri", 5),
             ],
         ),
@@ -128,17 +131,26 @@ def test_policy_has_exact_order_and_weights() -> None:
             "testing_automation_adoption",
                 "Test ve Otomasyon Kullanımı",
             [
-                ("tests_structure", "Test Yapısı", 18),
-                ("ci_workflow", "CI İş Akışı", 12),
+                ("tests_structure", "Test Yapısı", 15),
+                ("ci_workflow", "CI İş Akışı", 10),
             ],
         ),
         (
             "repository_hygiene_consistency",
                 "Repository Hijyeni Tutarlılığı",
             [
-                ("gitignore", ".gitignore", 8),
-                ("license", "LICENSE", 7),
-                ("contributing", "CONTRIBUTING", 5),
+                ("gitignore", ".gitignore", 6),
+                ("license", "LICENSE", 5),
+                ("contributing", "CONTRIBUTING", 4),
+            ],
+        ),
+        (
+            "maintenance_visibility",
+            "Bakım ve Görünürlük",
+            [
+                ("repo_description", "Repository açıklaması", 6),
+                ("repo_topics", "Konu etiketleri", 6),
+                ("recent_activity", "Son 12 ayda güncelleme", 8),
             ],
         ),
     ]
@@ -146,7 +158,7 @@ def test_policy_has_exact_order_and_weights() -> None:
         sum(rule.weight for rule in item.rules)
         for item in PORTFOLIO_SCORING_DIMENSIONS
     ]
-    assert totals == [50, 30, 20]
+    assert totals == [40, 25, 15, 20]
     assert sum(totals) == 100
 
 
@@ -176,7 +188,7 @@ def test_valid_portfolio_with_zero_evidence_has_available_zero_score() -> None:
     assert result.is_available is True
     assert result.overall_score == 0
     assert result.overall_score is not None
-    assert [item.points_earned for item in result.dimensions] == [0, 0, 0]
+    assert [item.points_earned for item in result.dimensions] == [0, 0, 0, 0]
 
 
 def test_perfect_coverage_returns_one_hundred() -> None:
@@ -188,7 +200,7 @@ def test_perfect_coverage_returns_one_hundred() -> None:
     assert [
         (item.points_earned, item.points_possible, item.score)
         for item in result.dimensions
-    ] == [(50, 50, 100), (30, 30, 100), (20, 20, 100)]
+    ] == [(40, 40, 100), (25, 25, 100), (15, 15, 100), (20, 20, 100)]
 
 
 def test_documentation_uses_exact_weighted_coverage_math() -> None:
@@ -208,8 +220,9 @@ def test_documentation_uses_exact_weighted_coverage_math() -> None:
     )
     documentation = dimension(result, "documentation_consistency")
 
-    assert documentation.points_earned == 15
-    assert documentation.points_possible == 50
+    # (6*4 + 4*4 + 6*3 + 7*1 + 5*1) / 6 = 70 / 6, rounded once to 12 of 40 points.
+    assert documentation.points_earned == 12
+    assert documentation.points_possible == 40
     assert documentation.score == 30
 
 
@@ -223,8 +236,8 @@ def test_testing_uses_exact_weighted_coverage_math() -> None:
     testing = dimension(result, "testing_automation_adoption")
 
     assert (testing.points_earned, testing.points_possible, testing.score) == (
-        12,
-        30,
+        10,
+        25,
         40,
     )
 
@@ -243,9 +256,9 @@ def test_hygiene_uses_exact_weighted_coverage_math() -> None:
     hygiene = dimension(result, "repository_hygiene_consistency")
 
     assert (hygiene.points_earned, hygiene.points_possible, hygiene.score) == (
-        11,
-        20,
-        55,
+        8,
+        15,
+        53,
     )
 
 
@@ -253,13 +266,14 @@ def test_dimension_normalization_rounds_non_exact_value() -> None:
     result = score_portfolio(
         create_aggregation(
             successful=24,
-            signal_counts={"ci_workflow": 1},
+            signal_counts={"ci_workflow": 3},
         )
     )
     testing = dimension(result, "testing_automation_adoption")
 
+    # 10 * 3 / 24 = 1.25 points, kept as 1 of 25.
     assert testing.points_earned == 1
-    assert testing.score == 3
+    assert testing.score == 4
 
 
 @pytest.mark.parametrize(
@@ -297,7 +311,7 @@ def test_dimension_rounds_once_instead_of_rounding_each_rule() -> None:
     )
 
     documentation = dimension(result, "documentation_consistency")
-    assert documentation.points_earned == 25
+    assert documentation.points_earned == 20
 
 
 def test_overall_is_the_sum_of_dimension_points() -> None:
@@ -332,7 +346,7 @@ def test_rule_results_are_explainable_and_stably_ordered() -> None:
     assert rules[0].model_dump() == {
         "key": "readme_exists",
         "label": "README mevcut",
-        "weight": 8,
+        "weight": 6,
         "detected_repository_count": 3,
         "analyzed_repository_count": 4,
     }
@@ -517,4 +531,4 @@ def test_result_is_deterministic_and_versioned() -> None:
     second = score_portfolio(aggregation)
 
     assert second == first
-    assert first.version == "v2"
+    assert first.version == "v3"
