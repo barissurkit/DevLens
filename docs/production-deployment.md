@@ -53,6 +53,12 @@ The backend is deployed as a Render Docker runtime with Uvicorn's trusted-proxy 
 | `GITHUB_API_BASE_URL` | Backend runtime | Public configuration | Defaults to `https://api.github.com` |
 | `GEMINI_API_KEY` | Backend runtime | Secret | Optional Gemini credential |
 | `GEMINI_MODEL` | Backend runtime | Non-secret | Defaults to `gemini-3.6-flash` |
+| `AI_PROVIDER` | Backend runtime | Non-secret | `gemini` (default) or `openrouter`; see [ai-provider.md](ai-provider.md) |
+| `OPENROUTER_API_KEY` | Backend runtime | Secret | Optional OpenRouter credential (use a key with a credit limit) |
+| `OPENROUTER_MODEL` | Backend runtime | Non-secret | Primary model, defaults to `z-ai/glm-5.3-flash` |
+| `OPENROUTER_FALLBACK_MODELS` | Backend runtime | Non-secret | Comma separated, defaults to `openai/gpt-6-luna` |
+| `OPENROUTER_MAX_TOKENS` | Backend runtime | Non-secret | Output limit per request, defaults to `6000` |
+| `AI_DAILY_CALL_LIMIT` | Backend runtime | Non-secret | Provider calls per UTC day, defaults to `500`; `0` turns the cap off |
 | `ANALYSIS_CACHE_TTL_SECONDS` | Backend runtime | Non-secret | Defaults to `900` seconds |
 | `GITHUB_APP_CLIENT_ID` | Backend runtime | Public configuration | GitHub OAuth client ID |
 | `GITHUB_APP_CLIENT_SECRET` | Backend runtime | Secret | GitHub OAuth client secret |

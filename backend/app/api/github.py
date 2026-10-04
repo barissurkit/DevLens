@@ -4,6 +4,7 @@ from pydantic import ValidationError
 
 from app.api.errors import APIErrorResponse, map_github_exception
 from app.clients.gemini import GeminiClient, GeminiNotConfiguredError
+from app.clients.openrouter import OpenRouterClient
 from app.schemas.github import GitHubUser
 from app.services.analysis_snapshot_persistence import AnalysisSnapshotPersistenceService
 from app.services.analysis_snapshot_cache import AnalysisSnapshotCacheService
@@ -21,11 +22,15 @@ async def get_github_client(request: Request) -> GitHubClient:
     return GitHubClient(request.app.state.settings)
 
 
-async def get_gemini_client(request: Request) -> GeminiClient | None:
+async def get_gemini_client(request: Request) -> GeminiClient | OpenRouterClient | None:
+    """The configured AI provider's client (the name is historical: it is not Gemini only), or None."""
+
     settings = request.app.state.settings
-    if not settings.gemini_api_key:
+    if not settings.ai_configured:
         return None
     try:
+        if settings.ai_provider == "openrouter":
+            return OpenRouterClient(settings)
         return GeminiClient(settings)
     except GeminiNotConfiguredError:
         return None

@@ -86,7 +86,7 @@ const dimensionRows: Array<{ label: string; points: number; detail: string }> = 
 
 const FAQ: Array<{ question: string; answer: string }> = [
   { question: "Skor nasıl hesaplanıyor?", answer: "Her kural bir ağırlığa sahiptir; kuralın puanı, ağırlığı ile tespit edildiği repository oranının çarpımıdır. Toplam 100 puandır: 40 dokümantasyon, 25 test ve otomasyon, 15 repository hijyeni, 20 bakım ve görünürlük. Aynı veri ve aynı tarih için skor hep aynıdır; yalnızca \"son 12 ayda güncelleme\" kuralı zamanla değişebilir." },
-  { question: "AI skoru değiştirir mi?", answer: "Hayır. Gemini yalnızca hesaplanmış bulguları açıklar ve bir sonraki proje için öneri sunar. AI yanıt vermediğinde bile skor ve bulgular eksiksiz görünür." },
+  { question: "AI skoru değiştirir mi?", answer: "Hayır. AI yalnızca hesaplanmış bulguları açıklar ve bir sonraki proje için öneri sunar. AI yanıt vermediğinde bile skor ve bulgular eksiksiz görünür." },
   { question: "Özel repository'lerimi görüyor mu?", answer: "Hayır. Yalnızca herkese açık GitHub verileri analiz edilir. Fork'lar ve arşivlenmiş repository'ler kapsam dışı bırakılır." },
   { question: "Neden giriş yapmalıyım?", answer: "Analiz için gerekmez. GitHub ile giriş yaptığında kendi portföyün için skor geçmişini, yönlendirmeli iyileştirmeleri, AI önerilerini ve aksiyon planını kullanabilirsin." },
   { question: "Sonuçlar ne kadar güncel?", answer: "Sonuçlar kısa süre önbellekte tutulur ve ne zaman hesaplandığı sonuç sayfasında yazar. \"Yenile\" ile analizi baştan hesaplatabilirsin." },
