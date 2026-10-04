@@ -20,7 +20,8 @@
 
 /* Dark theme: remap the palette variables so every existing utility adapts.
    Applies for the system preference unless the user picked light, or when dark is chosen explicitly. */
-@media (prefers-color-scheme: dark) {
+/* The dark palette is for screens only: a printed report is always dark ink on white paper. */
+@media screen and (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     --color-slate-50: oklch(12.9% 0.042 264.695);
     --color-slate-100: oklch(27.9% 0.041 260.031);
@@ -83,6 +84,7 @@
   }
 }
 
+@media screen {
 :root[data-theme="dark"] {
   --color-slate-50: oklch(12.9% 0.042 264.695);
   --color-slate-100: oklch(27.9% 0.041 260.031);
@@ -142,6 +144,7 @@
   --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.4);
   --shadow-raised: 0 8px 32px rgba(0, 0, 0, 0.45);
   color-scheme: dark;
+}
 }
 
 * {
@@ -273,8 +276,11 @@ html, body {
   .print-cover {
     display: flex !important;
     flex-direction: column;
-    /* The content area of an A4 page is 269 mm high; a little less keeps the cover from spilling onto a second page. */
-    height: 262mm;
+    /* The content area of an A4 page is 269 mm high (a Letter page: 252 mm). The cover has to be clearly shorter,
+       counting everything above it (the page padding is removed in print) and its own margin, or its last lines
+       spill onto a second page and leave it almost empty. */
+    height: 238mm;
+    margin: 0 !important;
     overflow: hidden;
     break-after: page;
     padding: 6mm 4mm;

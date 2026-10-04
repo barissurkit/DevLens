@@ -225,6 +225,73 @@ test.describe("printed report", () => {
     }
   });
 
+  test("the whole cover fits on the first page, including its last lines", async ({ page }) => {
+    // The content area of an A4 page is 269 mm (about 1017 px); a Letter page has 252 mm (about 952 px).
+    const LETTER_CONTENT_HEIGHT_PX = (252 * 96) / 25.4;
+    await page.setViewportSize({ width: 794, height: 1123 });
+    await page.goto(`/u/${OWNER}`);
+    await expect(page.getByRole("tab", { name: /AI Yorumu/ })).toBeVisible();
+    await page.emulateMedia({ media: "print" });
+
+    const cover = await page.locator(".print-cover").boundingBox();
+    const note = await page.locator(".print-cover p").last().boundingBox();
+    expect(cover).not.toBeNull();
+    // Nothing above the cover (the page padding is removed in print) and nothing of it sticks out of its box.
+    expect(cover!.y).toBeLessThan(2);
+    expect(cover!.y + cover!.height).toBeLessThan(LETTER_CONTENT_HEIGHT_PX);
+    expect(note!.y + note!.height).toBeLessThanOrEqual(cover!.y + cover!.height + 1);
+  });
+
+  test("prints dark ink on white paper even when the dark theme is on screen", async ({ page }) => {
+    await page.goto(`/u/${OWNER}`);
+    await expect(page.getByRole("tab", { name: /AI Yorumu/ })).toBeVisible();
+    await page.evaluate(() => document.documentElement.setAttribute("data-theme", "dark"));
+    await page.emulateMedia({ media: "print", colorScheme: "dark" });
+
+    const colors = await page.evaluate(() => {
+      const rgb = (value: string) => value.match(/\d+(\.\d+)?/g)!.slice(0, 3).map(Number);
+      const heading = document.querySelector("#portfolio-dashboard") as HTMLElement;
+      return { text: rgb(getComputedStyle(heading).color), page: rgb(getComputedStyle(document.body).backgroundColor) };
+    });
+
+    const brightness = ([r, g, b]: number[]) => (r + g + b) / 3;
+    expect(brightness(colors.page)).toBeGreaterThan(240);
+    expect(brightness(colors.text)).toBeLessThan(90);
+  });
+
+  test("leaves interactive controls out of the report but keeps what they edit", async ({ page }) => {
+    await signInAs(page);
+    await page.goto(`/u/${OWNER}`);
+    await page.getByRole("tab", { name: /Aksiyonlar/ }).click();
+    await page.getByPlaceholder("ör. README kullanım bölümünü geliştir").fill("Raporda görünecek görev");
+    await page.getByRole("button", { name: "Görev ekle" }).click();
+    await expect(page.getByLabel("Görev başlığı").first()).toHaveValue("Raporda görünecek görev");
+    await page.getByRole("button", { name: "Öneri oluştur" }).click();
+    await expect(page.getByText("Temel kanıt: CI iş akışı")).toBeVisible();
+
+    await page.emulateMedia({ media: "print" });
+
+    for (const control of [
+      page.getByRole("button", { name: "Öneri oluştur" }),
+      page.getByRole("button", { name: "Yeniden oluştur" }),
+      page.getByRole("button", { name: "Plana ekle" }),
+      page.getByRole("button", { name: "Görev ekle" }),
+      page.getByRole("button", { name: "Sil" }),
+      page.getByRole("button", { name: "Tekrar analiz et" }),
+      page.getByRole("group", { name: "Repository listesi sıralama ve filtreleme" }),
+    ]) {
+      await expect(control).toBeHidden();
+    }
+    // The content they manage is still printed.
+    await expect(page.getByLabel("Görev başlığı").first()).toBeVisible();
+    await expect(page.getByText("Temel kanıt: CI iş akışı")).toBeVisible();
+
+    // The mock API keeps its tasks for the whole run; leave nothing behind for the other tests.
+    await page.emulateMedia({ media: "screen" });
+    await page.getByRole("button", { name: "Sil" }).click();
+    await expect(page.getByLabel("Görev başlığı")).toHaveCount(0);
+  });
+
   test("the screen layout does not show the cover or section titles", async ({ page }) => {
     await page.goto(`/u/${OWNER}`);
     await expect(page.getByRole("tab", { name: /AI Yorumu/ })).toBeVisible();
