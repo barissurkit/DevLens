@@ -49,3 +49,7 @@ Thumbs.db
 # Playwright
 frontend/test-results/
 frontend/playwright-report/
+
+# Model comparison output
+backend/compare-out/
+compare-out/
