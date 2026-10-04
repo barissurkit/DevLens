@@ -34,7 +34,7 @@ export const PortfolioHeader = forwardRef<HTMLHeadingElement, PortfolioHeaderPro
             {user.bio && <p className="mt-1 line-clamp-2 break-words text-sm text-slate-500">{user.bio}</p>}
           </div>
         </div>
-        <div className="flex min-w-0 shrink-0 flex-col gap-4 sm:items-end sm:gap-3">
+        <div className="flex min-w-0 shrink-0 flex-col gap-4 sm:max-w-[30rem] sm:items-end sm:gap-3">
           <dl className="flex gap-5 text-sm">
             <Meta label="Repository" value={user.public_repos} />
             <Meta label="Takipçi" value={user.followers} />

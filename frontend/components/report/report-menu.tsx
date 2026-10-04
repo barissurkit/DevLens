@@ -56,7 +56,7 @@ export function ReportMenu({ username }: { username: string }) {
         <svg aria-hidden="true" viewBox="0 0 24 24" className={`h-4 w-4 transition ${open ? "rotate-180" : ""}`} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9l6 6 6-6" /></svg>
       </button>
       {open && (
-        <div ref={barRef} id={barId} role="group" aria-label="Rapor türü" className="!flex-none basis-full w-0 min-w-full rounded-xl border border-indigo-200 bg-indigo-50/60 p-2">
+        <div ref={barRef} id={barId} role="group" aria-label="Rapor türü" className="order-last !flex-none basis-full w-0 min-w-full rounded-xl border border-indigo-200 bg-indigo-50/60 p-2">
           <p className="px-2 pb-1.5 pt-1 text-xs font-medium text-slate-600">Hangi raporu oluşturalım? Rapor sayfasında yazdırabilir veya PDF olarak kaydedebilirsiniz.</p>
           <ul className="grid gap-2 sm:grid-cols-2">
             {REPORT_MODES.map((item) => (

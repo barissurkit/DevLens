@@ -49,9 +49,10 @@ test.describe("report: the menu on the result page", () => {
     await expect(button).toHaveAttribute("aria-expanded", "true");
     const bar = page.getByRole("group", { name: "Rapor türü" });
     await expect(bar).toBeVisible();
-    // The bar must not squeeze the profile name next to the buttons.
+    // The bar must not squeeze the profile name next to the buttons (font metrics differ between machines, so the
+    // limit is generous: the name has hundreds of pixels when nothing is wrong and collapses to zero when it is).
     const nameBox = await page.getByRole("heading", { level: 2, name: /portföyü$/ }).boundingBox();
-    expect(nameBox!.width).toBeGreaterThan(150);
+    expect(nameBox!.width).toBeGreaterThan(250);
     await expect(bar.getByRole("link", { name: /Özet rapor/ })).toHaveAttribute("href", `/u/${OWNER}/rapor?tur=ozet`);
     await expect(bar.getByRole("link", { name: /Ayrıntılı rapor/ })).toHaveAttribute("href", `/u/${OWNER}/rapor?tur=detay`);
 
