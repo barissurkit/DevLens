@@ -33,10 +33,11 @@ describe("comparePortfolios", () => {
 
   it("orders dimensions the way the result page does and keeps unknown ones last", () => {
     const hygiene = dimension("repository_hygiene_consistency", 50, []);
+    const maintenance = dimension("maintenance_visibility", 50, []);
     const extra = dimension("zzz_new", 10, []);
-    const result = comparePortfolios(analysis(10, [extra, hygiene, tests(1, 0), docs(1, 0)]), analysis(10, []));
+    const result = comparePortfolios(analysis(10, [extra, maintenance, hygiene, tests(1, 0), docs(1, 0)]), analysis(10, []));
 
-    expect(result.dimensions.map((item) => item.key)).toEqual(["documentation_consistency", "testing_automation_adoption", "repository_hygiene_consistency", "zzz_new"]);
+    expect(result.dimensions.map((item) => item.key)).toEqual(["documentation_consistency", "testing_automation_adoption", "repository_hygiene_consistency", "maintenance_visibility", "zzz_new"]);
   });
 
   it("compares rules by the share of analyzed repositories, not by raw counts", () => {
