@@ -1,0 +1,2326 @@
+{
+ "analysis": {
+  "user": {
+   "github_user_id": 188594607,
+   "username": "barissurkit",
+   "name": "Barış Sürkit",
+   "avatar_url": "https://avatars.githubusercontent.com/u/188594607?v=4",
+   "bio": null,
+   "public_repos": 8,
+   "followers": 21,
+   "following": 17,
+   "html_url": "https://github.com/barissurkit",
+   "created_at": "2024-11-15T14:52:35Z"
+  },
+  "selection": {
+   "version": "v1",
+   "selected": [
+    {
+     "name": "ai-search-engine",
+     "description": "Source-grounded AI search with live web retrieval, RAG citations, SSE streaming, Qdrant, and Ollama.",
+     "html_url": "https://github.com/barissurkit/ai-search-engine",
+     "primary_language": "Python",
+     "stars": 3,
+     "forks": 0,
+     "topics": [],
+     "created_at": "2026-08-18T09:51:19Z",
+     "updated_at": "2026-08-28T20:57:33Z",
+     "archived": false,
+     "fork": false,
+     "default_branch": "main"
+    },
+    {
+     "name": "barissurkit",
+     "description": "GitHub profile README for Barış Sürkit.",
+     "html_url": "https://github.com/barissurkit/barissurkit",
+     "primary_language": null,
+     "stars": 3,
+     "forks": 0,
+     "topics": [],
+     "created_at": "2026-08-02T10:34:36Z",
+     "updated_at": "2026-08-26T16:43:08Z",
+     "archived": false,
+     "fork": false,
+     "default_branch": "main"
+    },
+    {
+     "name": "barissurkit.com",
+     "description": "Personal portfolio website for Barış Sürkit — software, AI, data, and selected engineering projects.",
+     "html_url": "https://github.com/barissurkit/barissurkit.com",
+     "primary_language": "HTML",
+     "stars": 5,
+     "forks": 0,
+     "topics": [
+      "accessibility",
+      "computer-engineering",
+      "css",
+      "html",
+      "javascript",
+      "personal-website",
+      "portfolio",
+      "responsive-design",
+      "software-engineer"
+     ],
+     "created_at": "2025-12-11T03:25:56Z",
+     "updated_at": "2026-09-23T00:29:40Z",
+     "archived": false,
+     "fork": false,
+     "default_branch": "main"
+    },
+    {
+     "name": "butcedostum",
+     "description": "butce-dostum",
+     "html_url": "https://github.com/barissurkit/butcedostum",
+     "primary_language": "TypeScript",
+     "stars": 5,
+     "forks": 0,
+     "topics": [],
+     "created_at": "2025-12-12T18:48:49Z",
+     "updated_at": "2026-08-11T22:48:50Z",
+     "archived": false,
+     "fork": false,
+     "default_branch": "main"
+    },
+    {
+     "name": "customer-churn-analysis",
+     "description": "Customer churn prediction bootcamp project using exploratory data analysis and Logistic Regression.",
+     "html_url": "https://github.com/barissurkit/customer-churn-analysis",
+     "primary_language": "Jupyter Notebook",
+     "stars": 3,
+     "forks": 0,
+     "topics": [],
+     "created_at": "2026-08-13T16:37:22Z",
+     "updated_at": "2026-08-26T16:43:07Z",
+     "archived": false,
+     "fork": false,
+     "default_branch": "main"
+    },
+    {
+     "name": "DevLens",
+     "description": "Deterministic GitHub portfolio analysis with explainable repository scoring and optional Gemini interpretation.",
+     "html_url": "https://github.com/barissurkit/DevLens",
+     "primary_language": "Python",
+     "stars": 2,
+     "forks": 0,
+     "topics": [
+      "developer-tools",
+      "fastapi",
+      "full-stack",
+      "gemini",
+      "github-api",
+      "nextjs",
+      "portfolio-analysis",
+      "postgresql",
+      "python",
+      "typescript"
+     ],
+     "created_at": "2026-08-12T06:54:06Z",
+     "updated_at": "2026-09-30T13:15:10Z",
+     "archived": false,
+     "fork": false,
+     "default_branch": "main"
+    },
+    {
+     "name": "impostra",
+     "description": "OOP school project",
+     "html_url": "https://github.com/barissurkit/impostra",
+     "primary_language": "Java",
+     "stars": 4,
+     "forks": 0,
+     "topics": [],
+     "created_at": "2026-03-15T14:23:35Z",
+     "updated_at": "2026-08-11T22:48:49Z",
+     "archived": false,
+     "fork": false,
+     "default_branch": "main"
+    },
+    {
+     "name": "machine-learning-midterm",
+     "description": "Machine Learning Midterm Project - Customer Churn Prediction",
+     "html_url": "https://github.com/barissurkit/machine-learning-midterm",
+     "primary_language": "Python",
+     "stars": 3,
+     "forks": 0,
+     "topics": [],
+     "created_at": "2026-08-10T16:09:45Z",
+     "updated_at": "2026-08-26T16:43:09Z",
+     "archived": false,
+     "fork": false,
+     "default_branch": "main"
+    }
+   ],
+   "excluded": []
+  },
+  "repository_analysis": {
+   "selection_version": "v1",
+   "repositories": [
+    {
+     "repository": {
+      "name": "ai-search-engine",
+      "description": "Source-grounded AI search with live web retrieval, RAG citations, SSE streaming, Qdrant, and Ollama.",
+      "html_url": "https://github.com/barissurkit/ai-search-engine",
+      "primary_language": "Python",
+      "stars": 3,
+      "forks": 0,
+      "topics": [],
+      "created_at": "2026-08-18T09:51:19Z",
+      "updated_at": "2026-08-28T20:57:33Z",
+      "archived": false,
+      "fork": false,
+      "default_branch": "main"
+     },
+     "analysis": {
+      "repository": {
+       "name": "ai-search-engine",
+       "description": "Source-grounded AI search with live web retrieval, RAG citations, SSE streaming, Qdrant, and Ollama.",
+       "html_url": "https://github.com/barissurkit/ai-search-engine",
+       "primary_language": "Python",
+       "stars": 3,
+       "forks": 0,
+       "topics": [],
+       "created_at": "2026-08-18T09:51:19Z",
+       "updated_at": "2026-08-28T20:57:33Z",
+       "archived": false,
+       "fork": false,
+       "default_branch": "main"
+      },
+      "readme": {
+       "exists": true,
+       "content_length": 4978,
+       "has_title": true,
+       "has_description": true,
+       "has_installation": false,
+       "has_usage": false,
+       "has_technologies": true,
+       "has_requirements": false,
+       "has_images": true,
+       "has_demo_link": true
+      },
+      "structure": {
+       "has_tests": true,
+       "has_ci": false,
+       "has_dockerfile": false,
+       "has_compose": true,
+       "has_env_example": true,
+       "has_license": true,
+       "has_gitignore": true,
+       "has_contributing": false
+      },
+      "tree_truncated": false,
+      "technologies": {
+       "dependencies": [],
+       "technologies": []
+      },
+      "classification": {
+       "categories": [
+        {
+         "category": "Other",
+         "evidence_score": 0,
+         "evidence": [
+          "Anlamlı bir sınıflandırma kanıtı bulunamadı."
+         ]
+        }
+       ],
+       "primary_category": "Other"
+      }
+     },
+     "score": {
+      "version": "v1",
+      "overall_score": 60,
+      "dimensions": [
+       {
+        "key": "documentation",
+        "label": "Dokümantasyon",
+        "points_earned": 27,
+        "points_possible": 50,
+        "score": 54,
+        "rules": [
+         {
+          "key": "readme_exists",
+          "label": "README mevcut",
+          "passed": true,
+          "points_earned": 8,
+          "points_possible": 8,
+          "evidence": "Kök README.md içeriği kullanılabilir durumdaydı."
+         },
+         {
+          "key": "readme_title",
+          "label": "Başlık",
+          "passed": true,
+          "points_earned": 5,
+          "points_possible": 5,
+          "evidence": "Birinci seviye README başlığı sinyali tespit edildi."
+         },
+         {
+          "key": "readme_description",
+          "label": "Açıklama",
+          "passed": true,
+          "points_earned": 8,
+          "points_possible": 8,
+          "evidence": "Anlamlı bir README giriş sinyali tespit edildi."
+         },
+         {
+          "key": "readme_installation",
+          "label": "Kurulum",
+          "passed": false,
+          "points_earned": 0,
+          "points_possible": 9,
+          "evidence": "Tanınan bir README kurulum bölümü başlığı tespit edilmedi."
+         },
+         {
+          "key": "readme_usage",
+          "label": "Kullanım",
+          "passed": false,
+          "points_earned": 0,
+          "points_possible": 9,
+          "evidence": "Tanınan bir README kullanım bölümü başlığı tespit edilmedi."
+         },
+         {
+          "key": "readme_technologies",
+          "label": "Teknolojiler",
+          "passed": true,
+          "points_earned": 6,
+          "points_possible": 6,
+          "evidence": "Tanınan bir README teknolojiler bölümü başlığı tespit edildi."
+         },
+         {
+          "key": "readme_requirements",
+          "label": "Gereksinimler",
+          "passed": false,
+          "points_earned": 0,
+          "points_possible": 5,
+          "evidence": "Tanınan bir README gereksinimleri bölümü başlığı tespit edilmedi."
+         }
+        ]
+       },
+       {
+        "key": "testing_automation",
+        "label": "Test ve Otomasyon",
+        "points_earned": 18,
+        "points_possible": 30,
+        "score": 60,
+        "rules": [
+         {
+          "key": "tests_structure",
+          "label": "Test Yapısı",
+          "passed": true,
+          "points_earned": 18,
+          "points_possible": 18,
+          "evidence": "Test dizini yapısı sinyali tespit edildi."
+         },
+         {
+          "key": "ci_workflow",
+          "label": "CI İş Akışı",
+          "passed": false,
+          "points_earned": 0,
+          "points_possible": 12,
+          "evidence": "GitHub Actions iş akışı dosyası sinyali tespit edilmedi."
+         }
+        ]
+       },
+       {
+        "key": "repository_hygiene",
+        "label": "Repository Hijyeni",
+        "points_earned": 15,
+        "points_possible": 20,
+        "score": 75,
+        "rules": [
+         {
+          "key": "gitignore",
+          "label": ".gitignore",
+          "passed": true,
+          "points_earned": 8,
+          "points_possible": 8,
+          "evidence": ".gitignore dosyası sinyali tespit edildi."
+         },
+         {
+          "key": "license",
+          "label": "LICENSE",
+          "passed": true,
+          "points_earned": 7,
+          "points_possible": 7,
+          "evidence": "Desteklenen bir lisans dosyası adı sinyali tespit edildi."
+         },
+         {
+          "key": "contributing",
+          "label": "CONTRIBUTING",
+          "passed": false,
+          "points_earned": 0,
+          "points_possible": 5,
+          "evidence": "CONTRIBUTING.md dosyası sinyali tespit edilmedi."
+         }
+        ]
+       }
+      ],
+      "is_partial": false,
+      "limitations": []
+     }
+    },
+    {
+     "repository": {
+      "name": "barissurkit",
+      "description": "GitHub profile README for Barış Sürkit.",
+      "html_url": "https://github.com/barissurkit/barissurkit",
+      "primary_language": null,
+      "stars": 3,
+      "forks": 0,
+      "topics": [],
+      "created_at": "2026-08-02T10:34:36Z",
+      "updated_at": "2026-08-26T16:43:08Z",
+      "archived": false,
+      "fork": false,
+      "default_branch": "main"
+     },
+     "analysis": {
+      "repository": {
+       "name": "barissurkit",
+       "description": "GitHub profile README for Barış Sürkit.",
+       "html_url": "https://github.com/barissurkit/barissurkit",
+       "primary_language": null,
+       "stars": 3,
+       "forks": 0,
+       "topics": [],
+       "created_at": "2026-08-02T10:34:36Z",
+       "updated_at": "2026-08-26T16:43:08Z",
+       "archived": false,
+       "fork": false,
+       "default_branch": "main"
+      },
+      "readme": {
+       "exists": true,
+       "content_length": 509,
+       "has_title": true,
+       "has_description": false,
+       "has_installation": false,
+       "has_usage": false,
+       "has_technologies": false,
+       "has_requirements": false,
+       "has_images": true,
+       "has_demo_link": false
+      },
+      "structure": {
+       "has_tests": false,
+       "has_ci": false,
+       "has_dockerfile": false,
+       "has_compose": false,
+       "has_env_example": false,
+       "has_license": false,
+       "has_gitignore": false,
+       "has_contributing": false
+      },
+      "tree_truncated": false,
+      "technologies": {
+       "dependencies": [],
+       "technologies": []
+      },
+      "classification": {
+       "categories": [
+        {
+         "category": "Other",
+         "evidence_score": 0,
+         "evidence": [
+          "Anlamlı bir sınıflandırma kanıtı bulunamadı."
+         ]
+        }
+       ],
+       "primary_category": "Other"
+      }
+     },
+     "score": {
+      "version": "v1",
+      "overall_score": 13,
+      "dimensions": [
+       {
+        "key": "documentation",
+        "label": "Dokümantasyon",
+        "points_earned": 13,
+        "points_possible": 50,
+        "score": 26,
+        "rules": [
+         {
+          "key": "readme_exists",
+          "label": "README mevcut",
+          "passed": true,
+          "points_earned": 8,
+          "points_possible": 8,
+          "evidence": "Kök README.md içeriği kullanılabilir durumdaydı."
+         },
+         {
+          "key": "readme_title",
+          "label": "Başlık",
+          "passed": true,
+          "points_earned": 5,
+          "points_possible": 5,
+          "evidence": "Birinci seviye README başlığı sinyali tespit edildi."
+         },
+         {
+          "key": "readme_description",
+          "label": "Açıklama",
+          "passed": false,
+          "points_earned": 0,
+          "points_possible": 8,
+          "evidence": "Anlamlı bir README giriş sinyali tespit edilmedi."
+         },
+         {
+          "key": "readme_installation",
+          "label": "Kurulum",
+          "passed": false,
+          "points_earned": 0,
+          "points_possible": 9,
+          "evidence": "Tanınan bir README kurulum bölümü başlığı tespit edilmedi."
+         },
+         {
+          "key": "readme_usage",
+          "label": "Kullanım",
+          "passed": false,
+          "points_earned": 0,
+          "points_possible": 9,
+          "evidence": "Tanınan bir README kullanım bölümü başlığı tespit edilmedi."
+         },
+         {
+          "key": "readme_technologies",
+          "label": "Teknolojiler",
+          "passed": false,
+          "points_earned": 0,
+          "points_possible": 6,
+          "evidence": "Tanınan bir README teknolojiler bölümü başlığı tespit edilmedi."
+         },
+         {
+          "key": "readme_requirements",
+          "label": "Gereksinimler",
+          "passed": false,
+          "points_earned": 0,
+          "points_possible": 5,
+          "evidence": "Tanınan bir README gereksinimleri bölümü başlığı tespit edilmedi."
+         }
+        ]
+       },
+       {
+        "key": "testing_automation",
+        "label": "Test ve Otomasyon",
+        "points_earned": 0,
+        "points_possible": 30,
+        "score": 0,
+        "rules": [
+         {
+          "key": "tests_structure",
+          "label": "Test Yapısı",
+          "passed": false,
+          "points_earned": 0,
+          "points_possible": 18,
+          "evidence": "Test dizini yapısı sinyali tespit edilmedi."
+         },
+         {
+          "key": "ci_workflow",
+          "label": "CI İş Akışı",
+          "passed": false,
+          "points_earned": 0,
+          "points_possible": 12,
+          "evidence": "GitHub Actions iş akışı dosyası sinyali tespit edilmedi."
+         }
+        ]
+       },
+       {
+        "key": "repository_hygiene",
+        "label": "Repository Hijyeni",
+        "points_earned": 0,
+        "points_possible": 20,
+        "score": 0,
+        "rules": [
+         {
+          "key": "gitignore",
+          "label": ".gitignore",
+          "passed": false,
+          "points_earned": 0,
+          "points_possible": 8,
+          "evidence": ".gitignore dosyası sinyali tespit edilmedi."
+         },
+         {
+          "key": "license",
+          "label": "LICENSE",
+          "passed": false,
+          "points_earned": 0,
+          "points_possible": 7,
+          "evidence": "Desteklenen lisans dosyası adı sinyali tespit edilmedi."
+         },
+         {
+          "key": "contributing",
+          "label": "CONTRIBUTING",
+          "passed": false,
+          "points_earned": 0,
+          "points_possible": 5,
+          "evidence": "CONTRIBUTING.md dosyası sinyali tespit edilmedi."
+         }
+        ]
+       }
+      ],
+      "is_partial": false,
+      "limitations": []
+     }
+    },
+    {
+     "repository": {
+      "name": "barissurkit.com",
+      "description": "Personal portfolio website for Barış Sürkit — software, AI, data, and selected engineering projects.",
+      "html_url": "https://github.com/barissurkit/barissurkit.com",
+      "primary_language": "HTML",
+      "stars": 5,
+      "forks": 0,
+      "topics": [
+       "accessibility",
+       "computer-engineering",
+       "css",
+       "html",
+       "javascript",
+       "personal-website",
+       "portfolio",
+       "responsive-design",
+       "software-engineer"
+      ],
+      "created_at": "2025-12-11T03:25:56Z",
+      "updated_at": "2026-09-23T00:29:40Z",
+      "archived": false,
+      "fork": false,
+      "default_branch": "main"
+     },
+     "analysis": {
+      "repository": {
+       "name": "barissurkit.com",
+       "description": "Personal portfolio website for Barış Sürkit — software, AI, data, and selected engineering projects.",
+       "html_url": "https://github.com/barissurkit/barissurkit.com",
+       "primary_language": "HTML",
+       "stars": 5,
+       "forks": 0,
+       "topics": [
+        "accessibility",
+        "computer-engineering",
+        "css",
+        "html",
+        "javascript",
+        "personal-website",
+        "portfolio",
+        "responsive-design",
+        "software-engineer"
+       ],
+       "created_at": "2025-12-11T03:25:56Z",
+       "updated_at": "2026-09-23T00:29:40Z",
+       "archived": false,
+       "fork": false,
+       "default_branch": "main"
+      },
+      "readme": {
+       "exists": true,
+       "content_length": 2514,
+       "has_title": true,
+       "has_description": true,
+       "has_installation": false,
+       "has_usage": false,
+       "has_technologies": true,
+       "has_requirements": false,
+       "has_images": false,
+       "has_demo_link": false
+      },
+      "structure": {
+       "has_tests": false,
+       "has_ci": false,
+       "has_dockerfile": false,
+       "has_compose": false,
+       "has_env_example": false,
+       "has_license": false,
+       "has_gitignore": true,
+       "has_contributing": false
+      },
+      "tree_truncated": false,
+      "technologies": {
+       "dependencies": [],
+       "technologies": []
+      },
+      "classification": {
+       "categories": [
+        {
+         "category": "Other",
+         "evidence_score": 0,
+         "evidence": [
+          "Anlamlı bir sınıflandırma kanıtı bulunamadı."
+         ]
+        }
+       ],
+       "primary_category": "Other"
+      }
+     },
+     "score": {
+      "version": "v1",
+      "overall_score": 35,
+      "dimensions": [
+       {
+        "key": "documentation",
+        "label": "Dokümantasyon",
+        "points_earned": 27,
+        "points_possible": 50,
+        "score": 54,
+        "rules": [
+         {
+          "key": "readme_exists",
+          "label": "README mevcut",
+          "passed": true,
+          "points_earned": 8,
+          "points_possible": 8,
+          "evidence": "Kök README.md içeriği kullanılabilir durumdaydı."
+         },
+         {
+          "key": "readme_title",
+          "label": "Başlık",
+          "passed": true,
+          "points_earned": 5,
+          "points_possible": 5,
+          "evidence": "Birinci seviye README başlığı sinyali tespit edildi."
+         },
+         {
+          "key": "readme_description",
+          "label": "Açıklama",
+          "passed": true,
+          "points_earned": 8,
+          "points_possible": 8,
+          "evidence": "Anlamlı bir README giriş sinyali tespit edildi."
+         },
+         {
+          "key": "readme_installation",
+          "label": "Kurulum",
+          "passed": false,
+          "points_earned": 0,
+          "points_possible": 9,
+          "evidence": "Tanınan bir README kurulum bölümü başlığı tespit edilmedi."
+         },
+         {
+          "key": "readme_usage",
+          "label": "Kullanım",
+          "passed": false,
+          "points_earned": 0,
+          "points_possible": 9,
+          "evidence": "Tanınan bir README kullanım bölümü başlığı tespit edilmedi."
+         },
+         {
+          "key": "readme_technologies",
+          "label": "Teknolojiler",
+          "passed": true,
+          "points_earned": 6,
+          "points_possible": 6,
+          "evidence": "Tanınan bir README teknolojiler bölümü başlığı tespit edildi."
+         },
+         {
+          "key": "readme_requirements",
+          "label": "Gereksinimler",
+          "passed": false,
+          "points_earned": 0,
+          "points_possible": 5,
+          "evidence": "Tanınan bir README gereksinimleri bölümü başlığı tespit edilmedi."
+         }
+        ]
+       },
+       {
+        "key": "testing_automation",
+        "label": "Test ve Otomasyon",
+        "points_earned": 0,
+        "points_possible": 30,
+        "score": 0,
+        "rules": [
+         {
+          "key": "tests_structure",
+          "label": "Test Yapısı",
+          "passed": false,
+          "points_earned": 0,
+          "points_possible": 18,
+          "evidence": "Test dizini yapısı sinyali tespit edilmedi."
+         },
+         {
+          "key": "ci_workflow",
+          "label": "CI İş Akışı",
+          "passed": false,
+          "points_earned": 0,
+          "points_possible": 12,
+          "evidence": "GitHub Actions iş akışı dosyası sinyali tespit edilmedi."
+         }
+        ]
+       },
+       {
+        "key": "repository_hygiene",
+        "label": "Repository Hijyeni",
+        "points_earned": 8,
+        "points_possible": 20,
+        "score": 40,
+        "rules": [
+         {
+          "key": "gitignore",
+          "label": ".gitignore",
+          "passed": true,
+          "points_earned": 8,
+          "points_possible": 8,
+          "evidence": ".gitignore dosyası sinyali tespit edildi."
+         },
+         {
+          "key": "license",
+          "label": "LICENSE",
+          "passed": false,
+          "points_earned": 0,
+          "points_possible": 7,
+          "evidence": "Desteklenen lisans dosyası adı sinyali tespit edilmedi."
+         },
+         {
+          "key": "contributing",
+          "label": "CONTRIBUTING",
+          "passed": false,
+          "points_earned": 0,
+          "points_possible": 5,
+          "evidence": "CONTRIBUTING.md dosyası sinyali tespit edilmedi."
+         }
+        ]
+       }
+      ],
+      "is_partial": false,
+      "limitations": []
+     }
+    },
+    {
+     "repository": {
+      "name": "butcedostum",
+      "description": "butce-dostum",
+      "html_url": "https://github.com/barissurkit/butcedostum",
+      "primary_language": "TypeScript",
+      "stars": 5,
+      "forks": 0,
+      "topics": [],
+      "created_at": "2025-12-12T18:48:49Z",
+      "updated_at": "2026-08-11T22:48:50Z",
+      "archived": false,
+      "fork": false,
+      "default_branch": "main"
+     },
+     "analysis": {
+      "repository": {
+       "name": "butcedostum",
+       "description": "butce-dostum",
+       "html_url": "https://github.com/barissurkit/butcedostum",
+       "primary_language": "TypeScript",
+       "stars": 5,
+       "forks": 0,
+       "topics": [],
+       "created_at": "2025-12-12T18:48:49Z",
+       "updated_at": "2026-08-11T22:48:50Z",
+       "archived": false,
+       "fork": false,
+       "default_branch": "main"
+      },
+      "readme": {
+       "exists": true,
+       "content_length": 390,
+       "has_title": true,
+       "has_description": true,
+       "has_installation": true,
+       "has_usage": false,
+       "has_technologies": true,
+       "has_requirements": false,
+       "has_images": false,
+       "has_demo_link": false
+      },
+      "structure": {
+       "has_tests": false,
+       "has_ci": false,
+       "has_dockerfile": false,
+       "has_compose": false,
+       "has_env_example": true,
+       "has_license": false,
+       "has_gitignore": true,
+       "has_contributing": false
+      },
+      "tree_truncated": false,
+      "technologies": {
+       "dependencies": [
+        "@prisma/client",
+        "@types/bcryptjs",
+        "@types/jsonwebtoken",
+        "@types/react",
+        "bcryptjs",
+        "jose",
+        "jsonwebtoken",
+        "next",
+        "prisma",
+        "react",
+        "react-dom",
+        "typescript"
+       ],
+       "technologies": [
+        {
+         "name": "Next.js",
+         "category": "Frontend",
+         "source_dependency": "next"
+        },
+        {
+         "name": "React",
+         "category": "Frontend",
+         "source_dependency": "react"
+        }
+       ]
+      },
+      "classification": {
+       "categories": [
+        {
+         "category": "Frontend",
+         "evidence_score": 8,
+         "evidence": [
+          "Tespit edilen teknoloji: Next.js",
+          "Tespit edilen teknoloji: React"
+         ]
+        }
+       ],
+       "primary_category": "Frontend"
+      }
+     },
+     "score": {
+      "version": "v1",
+      "overall_score": 44,
+      "dimensions": [
+       {
+        "key": "documentation",
+        "label": "Dokümantasyon",
+        "points_earned": 36,
+        "points_possible": 50,
+        "score": 72,
+        "rules": [
+         {
+          "key": "readme_exists",
+          "label": "README mevcut",
+          "passed": true,
+          "points_earned": 8,
+          "points_possible": 8,
+          "evidence": "Kök README.md içeriği kullanılabilir durumdaydı."
+         },
+         {
+          "key": "readme_title",
+          "label": "Başlık",
+          "passed": true,
+          "points_earned": 5,
+          "points_possible": 5,
+          "evidence": "Birinci seviye README başlığı sinyali tespit edildi."
+         },
+         {
+          "key": "readme_description",
+          "label": "Açıklama",
+          "passed": true,
+          "points_earned": 8,
+          "points_possible": 8,
+          "evidence": "Anlamlı bir README giriş sinyali tespit edildi."
+         },
+         {
+          "key": "readme_installation",
+          "label": "Kurulum",
+          "passed": true,
+          "points_earned": 9,
+          "points_possible": 9,
+          "evidence": "Tanınan bir README kurulum bölümü başlığı tespit edildi."
+         },
+         {
+          "key": "readme_usage",
+          "label": "Kullanım",
+          "passed": false,
+          "points_earned": 0,
+          "points_possible": 9,
+          "evidence": "Tanınan bir README kullanım bölümü başlığı tespit edilmedi."
+         },
+         {
+          "key": "readme_technologies",
+          "label": "Teknolojiler",
+          "passed": true,
+          "points_earned": 6,
+          "points_possible": 6,
+          "evidence": "Tanınan bir README teknolojiler bölümü başlığı tespit edildi."
+         },
+         {
+          "key": "readme_requirements",
+          "label": "Gereksinimler",
+          "passed": false,
+          "points_earned": 0,
+          "points_possible": 5,
+          "evidence": "Tanınan bir README gereksinimleri bölümü başlığı tespit edilmedi."
+         }
+        ]
+       },
+       {
+        "key": "testing_automation",
+        "label": "Test ve Otomasyon",
+        "points_earned": 0,
+        "points_possible": 30,
+        "score": 0,
+        "rules": [
+         {
+          "key": "tests_structure",
+          "label": "Test Yapısı",
+          "passed": false,
+          "points_earned": 0,
+          "points_possible": 18,
+          "evidence": "Test dizini yapısı sinyali tespit edilmedi."
+         },
+         {
+          "key": "ci_workflow",
+          "label": "CI İş Akışı",
+          "passed": false,
+          "points_earned": 0,
+          "points_possible": 12,
+          "evidence": "GitHub Actions iş akışı dosyası sinyali tespit edilmedi."
+         }
+        ]
+       },
+       {
+        "key": "repository_hygiene",
+        "label": "Repository Hijyeni",
+        "points_earned": 8,
+        "points_possible": 20,
+        "score": 40,
+        "rules": [
+         {
+          "key": "gitignore",
+          "label": ".gitignore",
+          "passed": true,
+          "points_earned": 8,
+          "points_possible": 8,
+          "evidence": ".gitignore dosyası sinyali tespit edildi."
+         },
+         {
+          "key": "license",
+          "label": "LICENSE",
+          "passed": false,
+          "points_earned": 0,
+          "points_possible": 7,
+          "evidence": "Desteklenen lisans dosyası adı sinyali tespit edilmedi."
+         },
+         {
+          "key": "contributing",
+          "label": "CONTRIBUTING",
+          "passed": false,
+          "points_earned": 0,
+          "points_possible": 5,
+          "evidence": "CONTRIBUTING.md dosyası sinyali tespit edilmedi."
+         }
+        ]
+       }
+      ],
+      "is_partial": false,
+      "limitations": []
+     }
+    },
+    {
+     "repository": {
+      "name": "customer-churn-analysis",
+      "description": "Customer churn prediction bootcamp project using exploratory data analysis and Logistic Regression.",
+      "html_url": "https://github.com/barissurkit/customer-churn-analysis",
+      "primary_language": "Jupyter Notebook",
+      "stars": 3,
+      "forks": 0,
+      "topics": [],
+      "created_at": "2026-08-13T16:37:22Z",
+      "updated_at": "2026-08-26T16:43:07Z",
+      "archived": false,
+      "fork": false,
+      "default_branch": "main"
+     },
+     "analysis": {
+      "repository": {
+       "name": "customer-churn-analysis",
+       "description": "Customer churn prediction bootcamp project using exploratory data analysis and Logistic Regression.",
+       "html_url": "https://github.com/barissurkit/customer-churn-analysis",
+       "primary_language": "Jupyter Notebook",
+       "stars": 3,
+       "forks": 0,
+       "topics": [],
+       "created_at": "2026-08-13T16:37:22Z",
+       "updated_at": "2026-08-26T16:43:07Z",
+       "archived": false,
+       "fork": false,
+       "default_branch": "main"
+      },
+      "readme": {
+       "exists": true,
+       "content_length": 3274,
+       "has_title": true,
+       "has_description": true,
+       "has_installation": false,
+       "has_usage": false,
+       "has_technologies": false,
+       "has_requirements": false,
+       "has_images": true,
+       "has_demo_link": false
+      },
+      "structure": {
+       "has_tests": false,
+       "has_ci": false,
+       "has_dockerfile": false,
+       "has_compose": false,
+       "has_env_example": false,
+       "has_license": false,
+       "has_gitignore": true,
+       "has_contributing": false
+      },
+      "tree_truncated": false,
+      "technologies": {
+       "dependencies": [
+        "jupyter",
+        "matplotlib",
+        "numpy",
+        "pandas",
+        "scikit-learn",
+        "seaborn"
+       ],
+       "technologies": [
+        {
+         "name": "Matplotlib",
+         "category": "Data & ML",
+         "source_dependency": "matplotlib"
+        },
+        {
+         "name": "NumPy",
+         "category": "Data & ML",
+         "source_dependency": "numpy"
+        },
+        {
+         "name": "Pandas",
+         "category": "Data & ML",
+         "source_dependency": "pandas"
+        },
+        {
+         "name": "Scikit-learn",
+         "category": "Data & ML",
+         "source_dependency": "scikit-learn"
+        },
+        {
+         "name": "Seaborn",
+         "category": "Data & ML",
+         "source_dependency": "seaborn"
+        }
+       ]
+      },
+      "classification": {
+       "categories": [
+        {
+         "category": "Data Science",
+         "evidence_score": 23,
+         "evidence": [
+          "Tespit edilen teknoloji: Matplotlib",
+          "Tespit edilen teknoloji: NumPy",
+          "Tespit edilen teknoloji: Pandas",
+          "Tespit edilen teknoloji: Seaborn",
+          "Açıklama ifadesi: \"data analysis\"",
+          "README ifadesi: \"data analysis\"",
+          "README ifadesi: \"data visualization\""
+         ]
+        },
+        {
+         "category": "Machine Learning",
+         "evidence_score": 6,
+         "evidence": [
+          "Tespit edilen teknoloji: Scikit-learn",
+          "README ifadesi: \"regression model\""
+         ]
+        },
+        {
+         "category": "Learning / Experiment",
+         "evidence_score": 5,
+         "evidence": [
+          "Açıklama ifadesi: \"bootcamp\"",
+          "README ifadesi: \"bootcamp\""
+         ]
+        }
+       ],
+       "primary_category": "Data Science"
+      }
+     },
+     "score": {
+      "version": "v1",
+      "overall_score": 29,
+      "dimensions": [
+       {
+        "key": "documentation",
+        "label": "Dokümantasyon",
+        "points_earned": 21,
+        "points_possible": 50,
+        "score": 42,
+        "rules": [
+         {
+          "key": "readme_exists",
+          "label": "README mevcut",
+          "passed": true,
+          "points_earned": 8,
+          "points_possible": 8,
+          "evidence": "Kök README.md içeriği kullanılabilir durumdaydı."
+         },
+         {
+          "key": "readme_title",
+          "label": "Başlık",
+          "passed": true,
+          "points_earned": 5,
+          "points_possible": 5,
+          "evidence": "Birinci seviye README başlığı sinyali tespit edildi."
+         },
+         {
+          "key": "readme_description",
+          "label": "Açıklama",
+          "passed": true,
+          "points_earned": 8,
+          "points_possible": 8,
+          "evidence": "Anlamlı bir README giriş sinyali tespit edildi."
+         },
+         {
+          "key": "readme_installation",
+          "label": "Kurulum",
+          "passed": false,
+          "points_earned": 0,
+          "points_possible": 9,
+          "evidence": "Tanınan bir README kurulum bölümü başlığı tespit edilmedi."
+         },
+         {
+          "key": "readme_usage",
+          "label": "Kullanım",
+          "passed": false,
+          "points_earned": 0,
+          "points_possible": 9,
+          "evidence": "Tanınan bir README kullanım bölümü başlığı tespit edilmedi."
+         },
+         {
+          "key": "readme_technologies",
+          "label": "Teknolojiler",
+          "passed": false,
+          "points_earned": 0,
+          "points_possible": 6,
+          "evidence": "Tanınan bir README teknolojiler bölümü başlığı tespit edilmedi."
+         },
+         {
+          "key": "readme_requirements",
+          "label": "Gereksinimler",
+          "passed": false,
+          "points_earned": 0,
+          "points_possible": 5,
+          "evidence": "Tanınan bir README gereksinimleri bölümü başlığı tespit edilmedi."
+         }
+        ]
+       },
+       {
+        "key": "testing_automation",
+        "label": "Test ve Otomasyon",
+        "points_earned": 0,
+        "points_possible": 30,
+        "score": 0,
+        "rules": [
+         {
+          "key": "tests_structure",
+          "label": "Test Yapısı",
+          "passed": false,
+          "points_earned": 0,
+          "points_possible": 18,
+          "evidence": "Test dizini yapısı sinyali tespit edilmedi."
+         },
+         {
+          "key": "ci_workflow",
+          "label": "CI İş Akışı",
+          "passed": false,
+          "points_earned": 0,
+          "points_possible": 12,
+          "evidence": "GitHub Actions iş akışı dosyası sinyali tespit edilmedi."
+         }
+        ]
+       },
+       {
+        "key": "repository_hygiene",
+        "label": "Repository Hijyeni",
+        "points_earned": 8,
+        "points_possible": 20,
+        "score": 40,
+        "rules": [
+         {
+          "key": "gitignore",
+          "label": ".gitignore",
+          "passed": true,
+          "points_earned": 8,
+          "points_possible": 8,
+          "evidence": ".gitignore dosyası sinyali tespit edildi."
+         },
+         {
+          "key": "license",
+          "label": "LICENSE",
+          "passed": false,
+          "points_earned": 0,
+          "points_possible": 7,
+          "evidence": "Desteklenen lisans dosyası adı sinyali tespit edilmedi."
+         },
+         {
+          "key": "contributing",
+          "label": "CONTRIBUTING",
+          "passed": false,
+          "points_earned": 0,
+          "points_possible": 5,
+          "evidence": "CONTRIBUTING.md dosyası sinyali tespit edilmedi."
+         }
+        ]
+       }
+      ],
+      "is_partial": false,
+      "limitations": []
+     }
+    },
+    {
+     "repository": {
+      "name": "DevLens",
+      "description": "Deterministic GitHub portfolio analysis with explainable repository scoring and optional Gemini interpretation.",
+      "html_url": "https://github.com/barissurkit/DevLens",
+      "primary_language": "Python",
+      "stars": 2,
+      "forks": 0,
+      "topics": [
+       "developer-tools",
+       "fastapi",
+       "full-stack",
+       "gemini",
+       "github-api",
+       "nextjs",
+       "portfolio-analysis",
+       "postgresql",
+       "python",
+       "typescript"
+      ],
+      "created_at": "2026-08-12T06:54:06Z",
+      "updated_at": "2026-09-30T13:15:10Z",
+      "archived": false,
+      "fork": false,
+      "default_branch": "main"
+     },
+     "analysis": {
+      "repository": {
+       "name": "DevLens",
+       "description": "Deterministic GitHub portfolio analysis with explainable repository scoring and optional Gemini interpretation.",
+       "html_url": "https://github.com/barissurkit/DevLens",
+       "primary_language": "Python",
+       "stars": 2,
+       "forks": 0,
+       "topics": [
+        "developer-tools",
+        "fastapi",
+        "full-stack",
+        "gemini",
+        "github-api",
+        "nextjs",
+        "portfolio-analysis",
+        "postgresql",
+        "python",
+        "typescript"
+       ],
+       "created_at": "2026-08-12T06:54:06Z",
+       "updated_at": "2026-09-30T13:15:10Z",
+       "archived": false,
+       "fork": false,
+       "default_branch": "main"
+      },
+      "readme": {
+       "exists": true,
+       "content_length": 10915,
+       "has_title": true,
+       "has_description": true,
+       "has_installation": false,
+       "has_usage": false,
+       "has_technologies": true,
+       "has_requirements": false,
+       "has_images": true,
+       "has_demo_link": true
+      },
+      "structure": {
+       "has_tests": true,
+       "has_ci": true,
+       "has_dockerfile": true,
+       "has_compose": true,
+       "has_env_example": true,
+       "has_license": false,
+       "has_gitignore": true,
+       "has_contributing": false
+      },
+      "tree_truncated": false,
+      "technologies": {
+       "dependencies": [],
+       "technologies": []
+      },
+      "classification": {
+       "categories": [
+        {
+         "category": "Full Stack",
+         "evidence_score": 14,
+         "evidence": [
+          "Türetilen kategori: Backend ve Frontend kanıt eşiğini birlikte karşıladı."
+         ]
+        },
+        {
+         "category": "Backend",
+         "evidence_score": 7,
+         "evidence": [
+          "GitHub konusu: fastapi",
+          "README ifadesi: \"server side\""
+         ]
+        },
+        {
+         "category": "Frontend",
+         "evidence_score": 7,
+         "evidence": [
+          "GitHub konusu: nextjs",
+          "README ifadesi: \"frontend\""
+         ]
+        }
+       ],
+       "primary_category": "Full Stack"
+      }
+     },
+     "score": {
+      "version": "v1",
+      "overall_score": 65,
+      "dimensions": [
+       {
+        "key": "documentation",
+        "label": "Dokümantasyon",
+        "points_earned": 27,
+        "points_possible": 50,
+        "score": 54,
+        "rules": [
+         {
+          "key": "readme_exists",
+          "label": "README mevcut",
+          "passed": true,
+          "points_earned": 8,
+          "points_possible": 8,
+          "evidence": "Kök README.md içeriği kullanılabilir durumdaydı."
+         },
+         {
+          "key": "readme_title",
+          "label": "Başlık",
+          "passed": true,
+          "points_earned": 5,
+          "points_possible": 5,
+          "evidence": "Birinci seviye README başlığı sinyali tespit edildi."
+         },
+         {
+          "key": "readme_description",
+          "label": "Açıklama",
+          "passed": true,
+          "points_earned": 8,
+          "points_possible": 8,
+          "evidence": "Anlamlı bir README giriş sinyali tespit edildi."
+         },
+         {
+          "key": "readme_installation",
+          "label": "Kurulum",
+          "passed": false,
+          "points_earned": 0,
+          "points_possible": 9,
+          "evidence": "Tanınan bir README kurulum bölümü başlığı tespit edilmedi."
+         },
+         {
+          "key": "readme_usage",
+          "label": "Kullanım",
+          "passed": false,
+          "points_earned": 0,
+          "points_possible": 9,
+          "evidence": "Tanınan bir README kullanım bölümü başlığı tespit edilmedi."
+         },
+         {
+          "key": "readme_technologies",
+          "label": "Teknolojiler",
+          "passed": true,
+          "points_earned": 6,
+          "points_possible": 6,
+          "evidence": "Tanınan bir README teknolojiler bölümü başlığı tespit edildi."
+         },
+         {
+          "key": "readme_requirements",
+          "label": "Gereksinimler",
+          "passed": false,
+          "points_earned": 0,
+          "points_possible": 5,
+          "evidence": "Tanınan bir README gereksinimleri bölümü başlığı tespit edilmedi."
+         }
+        ]
+       },
+       {
+        "key": "testing_automation",
+        "label": "Test ve Otomasyon",
+        "points_earned": 30,
+        "points_possible": 30,
+        "score": 100,
+        "rules": [
+         {
+          "key": "tests_structure",
+          "label": "Test Yapısı",
+          "passed": true,
+          "points_earned": 18,
+          "points_possible": 18,
+          "evidence": "Test dizini yapısı sinyali tespit edildi."
+         },
+         {
+          "key": "ci_workflow",
+          "label": "CI İş Akışı",
+          "passed": true,
+          "points_earned": 12,
+          "points_possible": 12,
+          "evidence": "Bir GitHub Actions iş akışı dosyası sinyali tespit edildi."
+         }
+        ]
+       },
+       {
+        "key": "repository_hygiene",
+        "label": "Repository Hijyeni",
+        "points_earned": 8,
+        "points_possible": 20,
+        "score": 40,
+        "rules": [
+         {
+          "key": "gitignore",
+          "label": ".gitignore",
+          "passed": true,
+          "points_earned": 8,
+          "points_possible": 8,
+          "evidence": ".gitignore dosyası sinyali tespit edildi."
+         },
+         {
+          "key": "license",
+          "label": "LICENSE",
+          "passed": false,
+          "points_earned": 0,
+          "points_possible": 7,
+          "evidence": "Desteklenen lisans dosyası adı sinyali tespit edilmedi."
+         },
+         {
+          "key": "contributing",
+          "label": "CONTRIBUTING",
+          "passed": false,
+          "points_earned": 0,
+          "points_possible": 5,
+          "evidence": "CONTRIBUTING.md dosyası sinyali tespit edilmedi."
+         }
+        ]
+       }
+      ],
+      "is_partial": false,
+      "limitations": []
+     }
+    },
+    {
+     "repository": {
+      "name": "impostra",
+      "description": "OOP school project",
+      "html_url": "https://github.com/barissurkit/impostra",
+      "primary_language": "Java",
+      "stars": 4,
+      "forks": 0,
+      "topics": [],
+      "created_at": "2026-03-15T14:23:35Z",
+      "updated_at": "2026-08-11T22:48:49Z",
+      "archived": false,
+      "fork": false,
+      "default_branch": "main"
+     },
+     "analysis": {
+      "repository": {
+       "name": "impostra",
+       "description": "OOP school project",
+       "html_url": "https://github.com/barissurkit/impostra",
+       "primary_language": "Java",
+       "stars": 4,
+       "forks": 0,
+       "topics": [],
+       "created_at": "2026-03-15T14:23:35Z",
+       "updated_at": "2026-08-11T22:48:49Z",
+       "archived": false,
+       "fork": false,
+       "default_branch": "main"
+      },
+      "readme": {
+       "exists": false,
+       "content_length": 0,
+       "has_title": false,
+       "has_description": false,
+       "has_installation": false,
+       "has_usage": false,
+       "has_technologies": false,
+       "has_requirements": false,
+       "has_images": false,
+       "has_demo_link": false
+      },
+      "structure": {
+       "has_tests": false,
+       "has_ci": false,
+       "has_dockerfile": false,
+       "has_compose": false,
+       "has_env_example": false,
+       "has_license": false,
+       "has_gitignore": true,
+       "has_contributing": false
+      },
+      "tree_truncated": false,
+      "technologies": {
+       "dependencies": [],
+       "technologies": []
+      },
+      "classification": {
+       "categories": [
+        {
+         "category": "Other",
+         "evidence_score": 0,
+         "evidence": [
+          "Anlamlı bir sınıflandırma kanıtı bulunamadı."
+         ]
+        }
+       ],
+       "primary_category": "Other"
+      }
+     },
+     "score": {
+      "version": "v1",
+      "overall_score": 8,
+      "dimensions": [
+       {
+        "key": "documentation",
+        "label": "Dokümantasyon",
+        "points_earned": 0,
+        "points_possible": 50,
+        "score": 0,
+        "rules": [
+         {
+          "key": "readme_exists",
+          "label": "README mevcut",
+          "passed": false,
+          "points_earned": 0,
+          "points_possible": 8,
+          "evidence": "Kök README.md içeriği kullanılabilir değildi."
+         },
+         {
+          "key": "readme_title",
+          "label": "Başlık",
+          "passed": false,
+          "points_earned": 0,
+          "points_possible": 5,
+          "evidence": "Birinci seviye README başlığı sinyali tespit edilmedi."
+         },
+         {
+          "key": "readme_description",
+          "label": "Açıklama",
+          "passed": false,
+          "points_earned": 0,
+          "points_possible": 8,
+          "evidence": "Anlamlı bir README giriş sinyali tespit edilmedi."
+         },
+         {
+          "key": "readme_installation",
+          "label": "Kurulum",
+          "passed": false,
+          "points_earned": 0,
+          "points_possible": 9,
+          "evidence": "Tanınan bir README kurulum bölümü başlığı tespit edilmedi."
+         },
+         {
+          "key": "readme_usage",
+          "label": "Kullanım",
+          "passed": false,
+          "points_earned": 0,
+          "points_possible": 9,
+          "evidence": "Tanınan bir README kullanım bölümü başlığı tespit edilmedi."
+         },
+         {
+          "key": "readme_technologies",
+          "label": "Teknolojiler",
+          "passed": false,
+          "points_earned": 0,
+          "points_possible": 6,
+          "evidence": "Tanınan bir README teknolojiler bölümü başlığı tespit edilmedi."
+         },
+         {
+          "key": "readme_requirements",
+          "label": "Gereksinimler",
+          "passed": false,
+          "points_earned": 0,
+          "points_possible": 5,
+          "evidence": "Tanınan bir README gereksinimleri bölümü başlığı tespit edilmedi."
+         }
+        ]
+       },
+       {
+        "key": "testing_automation",
+        "label": "Test ve Otomasyon",
+        "points_earned": 0,
+        "points_possible": 30,
+        "score": 0,
+        "rules": [
+         {
+          "key": "tests_structure",
+          "label": "Test Yapısı",
+          "passed": false,
+          "points_earned": 0,
+          "points_possible": 18,
+          "evidence": "Test dizini yapısı sinyali tespit edilmedi."
+         },
+         {
+          "key": "ci_workflow",
+          "label": "CI İş Akışı",
+          "passed": false,
+          "points_earned": 0,
+          "points_possible": 12,
+          "evidence": "GitHub Actions iş akışı dosyası sinyali tespit edilmedi."
+         }
+        ]
+       },
+       {
+        "key": "repository_hygiene",
+        "label": "Repository Hijyeni",
+        "points_earned": 8,
+        "points_possible": 20,
+        "score": 40,
+        "rules": [
+         {
+          "key": "gitignore",
+          "label": ".gitignore",
+          "passed": true,
+          "points_earned": 8,
+          "points_possible": 8,
+          "evidence": ".gitignore dosyası sinyali tespit edildi."
+         },
+         {
+          "key": "license",
+          "label": "LICENSE",
+          "passed": false,
+          "points_earned": 0,
+          "points_possible": 7,
+          "evidence": "Desteklenen lisans dosyası adı sinyali tespit edilmedi."
+         },
+         {
+          "key": "contributing",
+          "label": "CONTRIBUTING",
+          "passed": false,
+          "points_earned": 0,
+          "points_possible": 5,
+          "evidence": "CONTRIBUTING.md dosyası sinyali tespit edilmedi."
+         }
+        ]
+       }
+      ],
+      "is_partial": false,
+      "limitations": []
+     }
+    },
+    {
+     "repository": {
+      "name": "machine-learning-midterm",
+      "description": "Machine Learning Midterm Project - Customer Churn Prediction",
+      "html_url": "https://github.com/barissurkit/machine-learning-midterm",
+      "primary_language": "Python",
+      "stars": 3,
+      "forks": 0,
+      "topics": [],
+      "created_at": "2026-08-10T16:09:45Z",
+      "updated_at": "2026-08-26T16:43:09Z",
+      "archived": false,
+      "fork": false,
+      "default_branch": "main"
+     },
+     "analysis": {
+      "repository": {
+       "name": "machine-learning-midterm",
+       "description": "Machine Learning Midterm Project - Customer Churn Prediction",
+       "html_url": "https://github.com/barissurkit/machine-learning-midterm",
+       "primary_language": "Python",
+       "stars": 3,
+       "forks": 0,
+       "topics": [],
+       "created_at": "2026-08-10T16:09:45Z",
+       "updated_at": "2026-08-26T16:43:09Z",
+       "archived": false,
+       "fork": false,
+       "default_branch": "main"
+      },
+      "readme": {
+       "exists": true,
+       "content_length": 2250,
+       "has_title": true,
+       "has_description": true,
+       "has_installation": false,
+       "has_usage": false,
+       "has_technologies": false,
+       "has_requirements": false,
+       "has_images": false,
+       "has_demo_link": false
+      },
+      "structure": {
+       "has_tests": false,
+       "has_ci": false,
+       "has_dockerfile": false,
+       "has_compose": false,
+       "has_env_example": false,
+       "has_license": false,
+       "has_gitignore": true,
+       "has_contributing": false
+      },
+      "tree_truncated": false,
+      "technologies": {
+       "dependencies": [
+        "pandas",
+        "scikit-learn"
+       ],
+       "technologies": [
+        {
+         "name": "Pandas",
+         "category": "Data & ML",
+         "source_dependency": "pandas"
+        },
+        {
+         "name": "Scikit-learn",
+         "category": "Data & ML",
+         "source_dependency": "scikit-learn"
+        }
+       ]
+      },
+      "classification": {
+       "categories": [
+        {
+         "category": "Machine Learning",
+         "evidence_score": 9,
+         "evidence": [
+          "Tespit edilen teknoloji: Scikit-learn",
+          "Açıklama ifadesi: \"machine learning\"",
+          "README ifadesi: \"machine learning\""
+         ]
+        },
+        {
+         "category": "Data Science",
+         "evidence_score": 4,
+         "evidence": [
+          "Tespit edilen teknoloji: Pandas"
+         ]
+        }
+       ],
+       "primary_category": "Machine Learning"
+      }
+     },
+     "score": {
+      "version": "v1",
+      "overall_score": 29,
+      "dimensions": [
+       {
+        "key": "documentation",
+        "label": "Dokümantasyon",
+        "points_earned": 21,
+        "points_possible": 50,
+        "score": 42,
+        "rules": [
+         {
+          "key": "readme_exists",
+          "label": "README mevcut",
+          "passed": true,
+          "points_earned": 8,
+          "points_possible": 8,
+          "evidence": "Kök README.md içeriği kullanılabilir durumdaydı."
+         },
+         {
+          "key": "readme_title",
+          "label": "Başlık",
+          "passed": true,
+          "points_earned": 5,
+          "points_possible": 5,
+          "evidence": "Birinci seviye README başlığı sinyali tespit edildi."
+         },
+         {
+          "key": "readme_description",
+          "label": "Açıklama",
+          "passed": true,
+          "points_earned": 8,
+          "points_possible": 8,
+          "evidence": "Anlamlı bir README giriş sinyali tespit edildi."
+         },
+         {
+          "key": "readme_installation",
+          "label": "Kurulum",
+          "passed": false,
+          "points_earned": 0,
+          "points_possible": 9,
+          "evidence": "Tanınan bir README kurulum bölümü başlığı tespit edilmedi."
+         },
+         {
+          "key": "readme_usage",
+          "label": "Kullanım",
+          "passed": false,
+          "points_earned": 0,
+          "points_possible": 9,
+          "evidence": "Tanınan bir README kullanım bölümü başlığı tespit edilmedi."
+         },
+         {
+          "key": "readme_technologies",
+          "label": "Teknolojiler",
+          "passed": false,
+          "points_earned": 0,
+          "points_possible": 6,
+          "evidence": "Tanınan bir README teknolojiler bölümü başlığı tespit edilmedi."
+         },
+         {
+          "key": "readme_requirements",
+          "label": "Gereksinimler",
+          "passed": false,
+          "points_earned": 0,
+          "points_possible": 5,
+          "evidence": "Tanınan bir README gereksinimleri bölümü başlığı tespit edilmedi."
+         }
+        ]
+       },
+       {
+        "key": "testing_automation",
+        "label": "Test ve Otomasyon",
+        "points_earned": 0,
+        "points_possible": 30,
+        "score": 0,
+        "rules": [
+         {
+          "key": "tests_structure",
+          "label": "Test Yapısı",
+          "passed": false,
+          "points_earned": 0,
+          "points_possible": 18,
+          "evidence": "Test dizini yapısı sinyali tespit edilmedi."
+         },
+         {
+          "key": "ci_workflow",
+          "label": "CI İş Akışı",
+          "passed": false,
+          "points_earned": 0,
+          "points_possible": 12,
+          "evidence": "GitHub Actions iş akışı dosyası sinyali tespit edilmedi."
+         }
+        ]
+       },
+       {
+        "key": "repository_hygiene",
+        "label": "Repository Hijyeni",
+        "points_earned": 8,
+        "points_possible": 20,
+        "score": 40,
+        "rules": [
+         {
+          "key": "gitignore",
+          "label": ".gitignore",
+          "passed": true,
+          "points_earned": 8,
+          "points_possible": 8,
+          "evidence": ".gitignore dosyası sinyali tespit edildi."
+         },
+         {
+          "key": "license",
+          "label": "LICENSE",
+          "passed": false,
+          "points_earned": 0,
+          "points_possible": 7,
+          "evidence": "Desteklenen lisans dosyası adı sinyali tespit edilmedi."
+         },
+         {
+          "key": "contributing",
+          "label": "CONTRIBUTING",
+          "passed": false,
+          "points_earned": 0,
+          "points_possible": 5,
+          "evidence": "CONTRIBUTING.md dosyası sinyali tespit edilmedi."
+         }
+        ]
+       }
+      ],
+      "is_partial": false,
+      "limitations": []
+     }
+    }
+   ],
+   "failures": [],
+   "has_failures": false
+  },
+  "aggregation": {
+   "selection_version": "v1",
+   "selected_repository_count": 8,
+   "successful_repository_count": 8,
+   "failed_repository_count": 0,
+   "has_failures": false,
+   "partial_evidence_repository_count": 0,
+   "technology_distribution": [
+    {
+     "technology": "Matplotlib",
+     "repository_count": 1
+    },
+    {
+     "technology": "Next.js",
+     "repository_count": 1
+    },
+    {
+     "technology": "NumPy",
+     "repository_count": 1
+    },
+    {
+     "technology": "Pandas",
+     "repository_count": 2
+    },
+    {
+     "technology": "React",
+     "repository_count": 1
+    },
+    {
+     "technology": "Scikit-learn",
+     "repository_count": 2
+    },
+    {
+     "technology": "Seaborn",
+     "repository_count": 1
+    }
+   ],
+   "category_distribution": [
+    {
+     "category": "Machine Learning",
+     "repository_count": 2
+    },
+    {
+     "category": "Data Science",
+     "repository_count": 2
+    },
+    {
+     "category": "Backend",
+     "repository_count": 1
+    },
+    {
+     "category": "Frontend",
+     "repository_count": 2
+    },
+    {
+     "category": "Full Stack",
+     "repository_count": 1
+    },
+    {
+     "category": "Learning / Experiment",
+     "repository_count": 1
+    },
+    {
+     "category": "Other",
+     "repository_count": 4
+    }
+   ],
+   "primary_category_distribution": [
+    {
+     "category": "Machine Learning",
+     "repository_count": 1
+    },
+    {
+     "category": "Data Science",
+     "repository_count": 1
+    },
+    {
+     "category": "Frontend",
+     "repository_count": 1
+    },
+    {
+     "category": "Full Stack",
+     "repository_count": 1
+    },
+    {
+     "category": "Other",
+     "repository_count": 4
+    }
+   ],
+   "portfolio_signals": [
+    {
+     "key": "readme_exists",
+     "label": "README mevcut",
+     "detected_repository_count": 7
+    },
+    {
+     "key": "readme_title",
+     "label": "README başlığı",
+     "detected_repository_count": 7
+    },
+    {
+     "key": "readme_description",
+     "label": "README açıklaması",
+     "detected_repository_count": 6
+    },
+    {
+     "key": "readme_installation",
+     "label": "README kurulumu",
+     "detected_repository_count": 1
+    },
+    {
+     "key": "readme_usage",
+     "label": "README kullanımı",
+     "detected_repository_count": 0
+    },
+    {
+     "key": "readme_technologies",
+     "label": "README teknolojileri",
+     "detected_repository_count": 4
+    },
+    {
+     "key": "readme_requirements",
+     "label": "README gereksinimleri",
+     "detected_repository_count": 0
+    },
+    {
+     "key": "tests_structure",
+     "label": "Test Yapısı",
+     "detected_repository_count": 2
+    },
+    {
+     "key": "ci_workflow",
+     "label": "CI İş Akışı",
+     "detected_repository_count": 1
+    },
+    {
+     "key": "gitignore",
+     "label": ".gitignore",
+     "detected_repository_count": 7
+    },
+    {
+     "key": "license",
+     "label": "LICENSE",
+     "detected_repository_count": 1
+    },
+    {
+     "key": "contributing",
+     "label": "CONTRIBUTING",
+     "detected_repository_count": 0
+    }
+   ],
+   "repository_score_distribution": [
+    {
+     "min_score": 0,
+     "max_score": 24,
+     "repository_count": 2
+    },
+    {
+     "min_score": 25,
+     "max_score": 49,
+     "repository_count": 4
+    },
+    {
+     "min_score": 50,
+     "max_score": 74,
+     "repository_count": 2
+    },
+    {
+     "min_score": 75,
+     "max_score": 100,
+     "repository_count": 0
+    }
+   ]
+  },
+  "intelligence": {
+   "version": "v1",
+   "strength_signals": [
+    {
+     "key": "readme_exists",
+     "message": "README içeriği sinyalleri, başarıyla analiz edilen birden fazla herkese açık repository'de tespit edildi.",
+     "detected_repository_count": 7,
+     "analyzed_repository_count": 8
+    },
+    {
+     "key": "readme_title",
+     "message": "README başlığı sinyalleri, başarıyla analiz edilen birden fazla herkese açık repository'de tespit edildi.",
+     "detected_repository_count": 7,
+     "analyzed_repository_count": 8
+    },
+    {
+     "key": "readme_description",
+     "message": "README açıklaması sinyalleri, başarıyla analiz edilen birden fazla herkese açık repository'de tespit edildi.",
+     "detected_repository_count": 6,
+     "analyzed_repository_count": 8
+    },
+    {
+     "key": "readme_technologies",
+     "message": "README teknoloji bölümü sinyalleri, başarıyla analiz edilen birden fazla herkese açık repository'de tespit edildi.",
+     "detected_repository_count": 4,
+     "analyzed_repository_count": 8
+    },
+    {
+     "key": "gitignore",
+     "message": ".gitignore dosyası sinyalleri, başarıyla analiz edilen birden fazla herkese açık repository'de tespit edildi.",
+     "detected_repository_count": 7,
+     "analyzed_repository_count": 8
+    }
+   ],
+   "improvement_signals": [
+    {
+     "key": "readme_installation",
+     "message": "README kurulum bölümü sinyalleri, başarıyla analiz edilen herkese açık repository'lerin yalnızca sınırlı bir bölümünde tespit edildi.",
+     "detected_repository_count": 1,
+     "analyzed_repository_count": 8
+    },
+    {
+     "key": "readme_usage",
+     "message": "Başarıyla analiz edilen herkese açık repository'lerin hiçbirinde README kullanım bölümü sinyali tespit edilmedi.",
+     "detected_repository_count": 0,
+     "analyzed_repository_count": 8
+    },
+    {
+     "key": "readme_requirements",
+     "message": "Başarıyla analiz edilen herkese açık repository'lerin hiçbirinde README gereksinimleri bölümü sinyali tespit edilmedi.",
+     "detected_repository_count": 0,
+     "analyzed_repository_count": 8
+    },
+    {
+     "key": "tests_structure",
+     "message": "Test dizini yapısı sinyalleri, başarıyla analiz edilen herkese açık repository'lerin yalnızca sınırlı bir bölümünde tespit edildi.",
+     "detected_repository_count": 2,
+     "analyzed_repository_count": 8
+    },
+    {
+     "key": "ci_workflow",
+     "message": "GitHub Actions iş akışı sinyalleri, başarıyla analiz edilen herkese açık repository'lerin yalnızca sınırlı bir bölümünde tespit edildi.",
+     "detected_repository_count": 1,
+     "analyzed_repository_count": 8
+    },
+    {
+     "key": "license",
+     "message": "Desteklenen lisans dosyası adı sinyalleri, başarıyla analiz edilen herkese açık repository'lerin yalnızca sınırlı bir bölümünde tespit edildi.",
+     "detected_repository_count": 1,
+     "analyzed_repository_count": 8
+    }
+   ],
+   "recurring_technologies": [
+    {
+     "technology": "Pandas",
+     "repository_count": 2
+    },
+    {
+     "technology": "Scikit-learn",
+     "repository_count": 2
+    }
+   ],
+   "dominant_areas": [],
+   "limitations": []
+  },
+  "score": {
+   "version": "v2",
+   "is_available": true,
+   "overall_score": 36,
+   "scored_repository_count": 8,
+   "dimensions": [
+    {
+     "key": "documentation_consistency",
+     "label": "Dokümantasyon Tutarlılığı",
+     "points_earned": 22,
+     "points_possible": 50,
+     "score": 44,
+     "rules": [
+      {
+       "key": "readme_exists",
+       "label": "README mevcut",
+       "weight": 8,
+       "detected_repository_count": 7,
+       "analyzed_repository_count": 8
+      },
+      {
+       "key": "readme_title",
+       "label": "README başlığı",
+       "weight": 5,
+       "detected_repository_count": 7,
+       "analyzed_repository_count": 8
+      },
+      {
+       "key": "readme_description",
+       "label": "README açıklaması",
+       "weight": 8,
+       "detected_repository_count": 6,
+       "analyzed_repository_count": 8
+      },
+      {
+       "key": "readme_installation",
+       "label": "README kurulumu",
+       "weight": 9,
+       "detected_repository_count": 1,
+       "analyzed_repository_count": 8
+      },
+      {
+       "key": "readme_usage",
+       "label": "README kullanımı",
+       "weight": 9,
+       "detected_repository_count": 0,
+       "analyzed_repository_count": 8
+      },
+      {
+       "key": "readme_technologies",
+       "label": "README teknolojileri",
+       "weight": 6,
+       "detected_repository_count": 4,
+       "analyzed_repository_count": 8
+      },
+      {
+       "key": "readme_requirements",
+       "label": "README gereksinimleri",
+       "weight": 5,
+       "detected_repository_count": 0,
+       "analyzed_repository_count": 8
+      }
+     ]
+    },
+    {
+     "key": "testing_automation_adoption",
+     "label": "Test ve Otomasyon Kullanımı",
+     "points_earned": 6,
+     "points_possible": 30,
+     "score": 20,
+     "rules": [
+      {
+       "key": "tests_structure",
+       "label": "Test Yapısı",
+       "weight": 18,
+       "detected_repository_count": 2,
+       "analyzed_repository_count": 8
+      },
+      {
+       "key": "ci_workflow",
+       "label": "CI İş Akışı",
+       "weight": 12,
+       "detected_repository_count": 1,
+       "analyzed_repository_count": 8
+      }
+     ]
+    },
+    {
+     "key": "repository_hygiene_consistency",
+     "label": "Repository Hijyeni Tutarlılığı",
+     "points_earned": 8,
+     "points_possible": 20,
+     "score": 40,
+     "rules": [
+      {
+       "key": "gitignore",
+       "label": ".gitignore",
+       "weight": 8,
+       "detected_repository_count": 7,
+       "analyzed_repository_count": 8
+      },
+      {
+       "key": "license",
+       "label": "LICENSE",
+       "weight": 7,
+       "detected_repository_count": 1,
+       "analyzed_repository_count": 8
+      },
+      {
+       "key": "contributing",
+       "label": "CONTRIBUTING",
+       "weight": 5,
+       "detected_repository_count": 0,
+       "analyzed_repository_count": 8
+      }
+     ]
+    }
+   ],
+   "is_partial": false,
+   "limitations": []
+  }
+ },
+ "viewer_context": {
+  "is_owner": false,
+  "mode": "explore"
+ },
+ "guided_improvements": [],
+ "analysis_generated_at": "2026-09-30T13:35:45.255519Z",
+ "cached": true
+}

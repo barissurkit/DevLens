@@ -87,6 +87,7 @@ Pull requests targeting `main` and pushes to `main` run GitHub Actions. Protecte
 - PostgreSQL/Alembic migration and integration validation
 - Frontend lint, type-check, production build, and high-severity production dependency audit
 - Docker production-stack build, startup, health, migration, and non-root runtime smoke checks
+- Browser tests (Playwright, desktop and phone viewports) that drive a production build against a mock API: `cd frontend && NEXT_PUBLIC_API_BASE_URL=http://localhost:8100 npm run build && npm run test:e2e` (uses the installed Chrome)
 - The aggregate `Required quality gates` check
 
 Test counts are intentionally not hardcoded here because they change as the suite evolves. CI does not use production provider secrets or deploy the application.
