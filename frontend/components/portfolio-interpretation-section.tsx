@@ -45,7 +45,7 @@ export function PortfolioInterpretationSection({ analysis, interpretation, onRet
           <p className="mt-1 text-amber-900">{UNAVAILABLE_COPY[interpretation.reason]}</p>
           <p className="mt-3 text-amber-900">Portföy skoru ve repository analizleri yine de kullanılabilir.</p>
           {onRetry && RETRYABLE_REASONS.has(interpretation.reason) && (
-            <div className="mt-4 flex flex-wrap items-center gap-3">
+            <div className="print:hidden mt-4 flex flex-wrap items-center gap-3">
               <button
                 type="button"
                 onClick={onRetry}

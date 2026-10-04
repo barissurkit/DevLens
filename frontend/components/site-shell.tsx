@@ -43,7 +43,7 @@ export function SiteShell({ children }: { children: ReactNode }) {
       </header>
       <AuthNotice />
 
-      <main id="main-content" tabIndex={-1} className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 focus:outline-none sm:px-6 sm:py-12 lg:px-8">{children}</main>
+      <main id="main-content" tabIndex={-1} className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 focus:outline-none print:max-w-none print:p-0 sm:px-6 sm:py-12 lg:px-8">{children}</main>
 
       <footer className="border-t border-slate-200 bg-card print:hidden">
         <div className="mx-auto grid w-full max-w-6xl gap-8 px-4 py-10 text-sm sm:px-6 md:grid-cols-[1.4fr_1fr_1fr] lg:px-8">

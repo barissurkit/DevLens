@@ -122,7 +122,7 @@ interface RepositoryControlsProps {
 function RepositoryControls({ sort, onSortChange, onlyPartial, onOnlyPartialChange, onlyLowScore, onOnlyLowScoreChange, visibleCount, totalCount }: RepositoryControlsProps) {
   const checkboxClass = "h-4 w-4 rounded border-slate-300 text-slate-950 focus:ring-2 focus:ring-indigo-600";
   return (
-    <div role="group" aria-label="Repository listesi sıralama ve filtreleme" className="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-card p-4 shadow-card sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:p-5">
+    <div role="group" aria-label="Repository listesi sıralama ve filtreleme" className="print:hidden flex flex-col gap-4 rounded-2xl border border-slate-200 bg-card p-4 shadow-card sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:p-5">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-5">
         <label className="flex items-center gap-2 text-sm text-slate-700">
           <span className="font-medium text-slate-900">Sırala</span>

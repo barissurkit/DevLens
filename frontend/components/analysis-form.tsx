@@ -99,7 +99,7 @@ export function AnalysisForm({ hero, preview, features, initialUsername }: Analy
 
   return (
     <div className={compact ? "space-y-6" : "space-y-24"}>
-      <div className={compact ? "" : "hero-backdrop grid items-center gap-10 py-4 lg:grid-cols-[1.2fr_1fr] lg:gap-14 lg:py-10"}>
+      <div className={compact ? "print:hidden" : "hero-backdrop grid items-center gap-10 py-4 lg:grid-cols-[1.2fr_1fr] lg:gap-14 lg:py-10"}>
         <div className="min-w-0">
           {!compact && hero}
           <form onSubmit={handleSubmit} noValidate aria-busy={isLoading} className={`print:hidden rounded-2xl border border-slate-200 bg-card ${compact ? "p-3 shadow-card sm:p-4" : "p-5 shadow-raised sm:p-6"}`}>

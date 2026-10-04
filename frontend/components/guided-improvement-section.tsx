@@ -16,7 +16,7 @@ export function GuidedImprovementSection({ improvements, onReanalyze }: GuidedIm
         <h3 id="guided-improvement-heading" className="mt-2 text-2xl font-semibold tracking-tight text-slate-950">Yönlendirmeli İyileştirme</h3>
         <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">Aşağıdaki adımları repository&apos;lerinde manuel olarak uyguladıktan sonra sonucu tekrar analiz edebilirsin.</p>
       </div>
-      <button type="button" onClick={onReanalyze} className="min-h-11 shrink-0 rounded-xl bg-indigo-600 px-4 text-sm font-medium text-white transition hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2">Tekrar analiz et</button>
+      <button type="button" onClick={onReanalyze} className="print:hidden min-h-11 shrink-0 rounded-xl bg-indigo-600 px-4 text-sm font-medium text-white transition hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2">Tekrar analiz et</button>
     </div>
     <div className="mt-6 space-y-4">{improvements.map((item) => <GuidedImprovementCard key={item.rule_key} item={item} />)}</div>
   </section>;
