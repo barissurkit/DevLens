@@ -153,3 +153,32 @@ test.describe("signed-in owner", () => {
     await expect(page.getByLabel("Görev başlığı")).toHaveCount(0);
   });
 });
+
+test.describe("comparison", () => {
+  test("compares two portfolios from the form and shows who is ahead", async ({ page }) => {
+    await page.goto("/karsilastir");
+    await page.getByLabel("Birinci kullanıcı").fill(OWNER);
+    await page.getByLabel("İkinci kullanıcı").fill("rakip-kullanici");
+    await page.getByRole("button", { name: "Karşılaştır" }).click();
+
+    await expect(page).toHaveURL(new RegExp(`/karsilastir/${OWNER}/rakip-kullanici$`));
+    await expect(page.getByText(/portföyünden 20 puan önde/)).toBeVisible();
+    await expect(page.getByRole("table")).toBeVisible();
+    await expect(page.getByRole("heading", { name: "@rakip-kullanici için fırsatlar" })).toBeVisible();
+    await expectNoHorizontalOverflow(page);
+  });
+
+  test("reports which user does not exist", async ({ page }) => {
+    await page.goto(`/karsilastir/${OWNER}/ghost`);
+
+    await expect(pageAlert(page)).toContainText("@ghost: GitHub kullanıcısı bulunamadı.");
+  });
+
+  test("the result page links to the comparison", async ({ page }) => {
+    await page.goto(`/u/${OWNER}`);
+    await page.getByRole("link", { name: "Karşılaştır" }).click();
+
+    await expect(page).toHaveURL(new RegExp(`/karsilastir/${OWNER}$`));
+    await expect(page.getByLabel("Birinci kullanıcı")).toHaveValue(OWNER);
+  });
+});

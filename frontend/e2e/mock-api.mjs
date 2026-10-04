@@ -58,6 +58,16 @@ function resultFor(request) {
   };
 }
 
+// Any other login gets the same portfolio with a lower score, so comparisons have a clear leader.
+function analysisFor(username) {
+  if (username === OWNER) return base.analysis;
+  return {
+    ...base.analysis,
+    user: { ...base.analysis.user, username, name: null },
+    score: { ...base.analysis.score, overall_score: Math.max(0, (base.analysis.score.overall_score ?? 40) - 20) },
+  };
+}
+
 const record = (daysAgo, score) => ({
   id: String(daysAgo),
   github_user_id: 1,
@@ -110,6 +120,11 @@ http
     if (path === "/api/v1/client-errors") {
       response.writeHead(204, cors);
       return response.end();
+    }
+    if (path === "/api/v1/analysis") {
+      if (body.username === "ghost") return json(404, { detail: { code: "github_user_not_found", message: "GitHub kullanıcısı bulunamadı." } });
+      const { analysis, viewer_context, guided_improvements } = resultFor(request);
+      return json(200, { ...analysisFor(body.username), viewer_context, guided_improvements: analysis ? guided_improvements : [] });
     }
     if (path === "/api/v1/interpretation" || path === "/api/v1/interpretation/stream") {
       if (body.username === "ghost") return json(404, { detail: { code: "github_user_not_found", message: "GitHub kullanıcısı bulunamadı." } });
