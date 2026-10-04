@@ -2,6 +2,9 @@ import type { PortfolioRepositoryResult } from "./types";
 
 type SignalReader = (repository: PortfolioRepositoryResult) => boolean;
 
+/** Same twelve-month window as the backend's recent-activity signal. */
+const RECENT_ACTIVITY_MS = 365 * 24 * 60 * 60 * 1000;
+
 const SIGNAL_READERS: Record<string, SignalReader> = {
   readme_exists: (r) => r.analysis.readme.exists,
   readme_title: (r) => r.analysis.readme.has_title,
@@ -15,6 +18,9 @@ const SIGNAL_READERS: Record<string, SignalReader> = {
   gitignore: (r) => r.analysis.structure.has_gitignore,
   license: (r) => r.analysis.structure.has_license,
   contributing: (r) => r.analysis.structure.has_contributing,
+  repo_description: (r) => Boolean(r.repository.description?.trim()),
+  repo_topics: (r) => r.repository.topics.length > 0,
+  recent_activity: (r) => Date.now() - Date.parse(r.repository.updated_at) <= RECENT_ACTIVITY_MS,
 };
 
 /** Signals derived from the repository file tree; a truncated tree can hide them. */
@@ -63,6 +69,9 @@ const SIGNAL_LABELS: Record<string, string> = {
   gitignore: ".gitignore",
   license: "Lisans dosyası",
   contributing: "Katkı rehberi",
+  repo_description: "Repository açıklaması",
+  repo_topics: "Konu etiketleri",
+  recent_activity: "Son 12 ayda güncelleme",
 };
 
 /** A readable Turkish name for a signal key; unknown keys are shown as they are. */

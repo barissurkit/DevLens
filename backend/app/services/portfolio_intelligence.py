@@ -29,6 +29,9 @@ _SIGNAL_LABELS = {
     "ci_workflow": "GitHub Actions iş akışı",
     "gitignore": ".gitignore dosyası",
     "license": "desteklenen lisans dosyası adı",
+    "repo_description": "GitHub repository açıklaması",
+    "repo_topics": "GitHub konu etiketi",
+    "recent_activity": "son 12 ayda güncelleme",
 }
 
 
@@ -73,6 +76,9 @@ PORTFOLIO_INSIGHT_RULES: tuple[PortfolioInsightRule, ...] = (
     PortfolioInsightRule("license", suppress_improvement_with_partial_evidence=True),
     # Only part of the score; it never produces an insight of its own.
     PortfolioInsightRule("contributing", strength=False, improvement=False),
+    PortfolioInsightRule("repo_description"),
+    PortfolioInsightRule("repo_topics", improvement=False),
+    PortfolioInsightRule("recent_activity"),
 )
 
 

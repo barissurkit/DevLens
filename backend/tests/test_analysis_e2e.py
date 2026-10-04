@@ -248,7 +248,9 @@ def test_analysis_e2e_runs_real_pipeline_for_multi_repository_portfolio() -> Non
     ]
     assert payload["score"]["is_available"] is True
     assert payload["score"]["is_partial"] is True
-    assert payload["score"]["overall_score"] == 95
+    # 76 of 80 points from documentation, tests and hygiene, plus 12 for repository descriptions and topics;
+    # the fixtures are older than twelve months, so the recent-activity signal is absent.
+    assert payload["score"]["overall_score"] == 88
     assert payload["intelligence"]["recurring_technologies"] == [
         {"technology": "FastAPI", "repository_count": 2},
         {"technology": "pytest", "repository_count": 2},

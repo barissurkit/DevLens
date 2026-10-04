@@ -1,11 +1,13 @@
 from collections import Counter
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import datetime, timedelta, timezone
 
 from app.schemas.analysis import (
     PortfolioAggregation,
     PortfolioCategoryUsage,
     PortfolioRepositoryAnalysis,
+    PortfolioRepositoryResult,
     PortfolioSignalCount,
     PortfolioTechnologyUsage,
     RepositoryAnalysis,
@@ -18,69 +20,100 @@ from app.schemas.analysis import (
 class PortfolioSignalDefinition:
     key: str
     label: str
-    detect: Callable[[RepositoryAnalysis], bool]
+    detect: Callable[[PortfolioRepositoryResult, datetime], bool]
+
+
+RECENT_ACTIVITY_WINDOW = timedelta(days=365)
+
+
+def _from_analysis(
+    detect: Callable[[RepositoryAnalysis], bool],
+) -> Callable[[PortfolioRepositoryResult, datetime], bool]:
+    return lambda result, _now: detect(result.analysis)
+
+
+def _was_recently_updated(result: PortfolioRepositoryResult, now: datetime) -> bool:
+    updated_at = result.repository.updated_at
+    if updated_at.tzinfo is None:
+        updated_at = updated_at.replace(tzinfo=timezone.utc)
+    return now - updated_at <= RECENT_ACTIVITY_WINDOW
 
 
 PORTFOLIO_SIGNAL_DEFINITIONS: tuple[PortfolioSignalDefinition, ...] = (
     PortfolioSignalDefinition(
         key="readme_exists",
         label="README mevcut",
-        detect=lambda analysis: analysis.readme.exists,
+        detect=_from_analysis(lambda analysis: analysis.readme.exists),
     ),
     PortfolioSignalDefinition(
         key="readme_title",
         label="README başlığı",
-        detect=lambda analysis: analysis.readme.has_title,
+        detect=_from_analysis(lambda analysis: analysis.readme.has_title),
     ),
     PortfolioSignalDefinition(
         key="readme_description",
         label="README açıklaması",
-        detect=lambda analysis: analysis.readme.has_description,
+        detect=_from_analysis(lambda analysis: analysis.readme.has_description),
     ),
     PortfolioSignalDefinition(
         key="readme_installation",
         label="README kurulumu",
-        detect=lambda analysis: analysis.readme.has_installation,
+        detect=_from_analysis(lambda analysis: analysis.readme.has_installation),
     ),
     PortfolioSignalDefinition(
         key="readme_usage",
         label="README kullanımı",
-        detect=lambda analysis: analysis.readme.has_usage,
+        detect=_from_analysis(lambda analysis: analysis.readme.has_usage),
     ),
     PortfolioSignalDefinition(
         key="readme_technologies",
         label="README teknolojileri",
-        detect=lambda analysis: analysis.readme.has_technologies,
+        detect=_from_analysis(lambda analysis: analysis.readme.has_technologies),
     ),
     PortfolioSignalDefinition(
         key="readme_requirements",
         label="README gereksinimleri",
-        detect=lambda analysis: analysis.readme.has_requirements,
+        detect=_from_analysis(lambda analysis: analysis.readme.has_requirements),
     ),
     PortfolioSignalDefinition(
         key="tests_structure",
         label="Test Yapısı",
-        detect=lambda analysis: analysis.structure.has_tests,
+        detect=_from_analysis(lambda analysis: analysis.structure.has_tests),
     ),
     PortfolioSignalDefinition(
         key="ci_workflow",
         label="CI İş Akışı",
-        detect=lambda analysis: analysis.structure.has_ci,
+        detect=_from_analysis(lambda analysis: analysis.structure.has_ci),
     ),
     PortfolioSignalDefinition(
         key="gitignore",
         label=".gitignore",
-        detect=lambda analysis: analysis.structure.has_gitignore,
+        detect=_from_analysis(lambda analysis: analysis.structure.has_gitignore),
     ),
     PortfolioSignalDefinition(
         key="license",
         label="LICENSE",
-        detect=lambda analysis: analysis.structure.has_license,
+        detect=_from_analysis(lambda analysis: analysis.structure.has_license),
     ),
     PortfolioSignalDefinition(
         key="contributing",
         label="CONTRIBUTING",
-        detect=lambda analysis: analysis.structure.has_contributing,
+        detect=_from_analysis(lambda analysis: analysis.structure.has_contributing),
+    ),
+    PortfolioSignalDefinition(
+        key="repo_description",
+        label="Repository açıklaması",
+        detect=lambda result, _now: bool(result.repository.description and result.repository.description.strip()),
+    ),
+    PortfolioSignalDefinition(
+        key="repo_topics",
+        label="Konu etiketleri",
+        detect=lambda result, _now: len(result.repository.topics) > 0,
+    ),
+    PortfolioSignalDefinition(
+        key="recent_activity",
+        label="Son 12 ayda güncelleme",
+        detect=_was_recently_updated,
     ),
 )
 
@@ -158,13 +191,14 @@ def _primary_category_distribution(
 
 def _portfolio_signals(
     portfolio_analysis: PortfolioRepositoryAnalysis,
+    now: datetime,
 ) -> list[PortfolioSignalCount]:
     return [
         PortfolioSignalCount(
             key=definition.key,
             label=definition.label,
             detected_repository_count=sum(
-                definition.detect(result.analysis)
+                definition.detect(result, now)
                 for result in portfolio_analysis.repositories
             ),
         )
@@ -199,8 +233,14 @@ def _repository_score_distribution(
 
 def aggregate_portfolio(
     portfolio_analysis: PortfolioRepositoryAnalysis,
+    now: datetime | None = None,
 ) -> PortfolioAggregation:
-    """Summarize normalized repository results without additional I/O."""
+    """Summarize normalized repository results without additional I/O.
+
+    ``now`` is the reference time of time-based signals (recent activity); tests pass a fixed value.
+    """
+
+    now = now or datetime.now(timezone.utc)
 
     successful_repository_count = len(portfolio_analysis.repositories)
     failed_repository_count = len(portfolio_analysis.failures)
@@ -226,7 +266,7 @@ def aggregate_portfolio(
         primary_category_distribution=(
             _primary_category_distribution(portfolio_analysis)
         ),
-        portfolio_signals=_portfolio_signals(portfolio_analysis),
+        portfolio_signals=_portfolio_signals(portfolio_analysis, now),
         repository_score_distribution=(
             _repository_score_distribution(portfolio_analysis)
         ),

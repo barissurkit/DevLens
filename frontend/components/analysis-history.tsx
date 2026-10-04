@@ -33,19 +33,22 @@ export function AnalysisHistory({ visible }: { visible: boolean }) {
   const data = state.data;
   if (!data || !data.latest) return <HistoryCard title="İlerleme"><p className="text-sm leading-6 text-slate-600">Henüz bir geçmiş analiz kaydı yok. Bu analiz başlangıç noktası olarak kullanılacak.</p></HistoryCard>;
   const delta = data.comparison;
+  // Scores from another scoring version use a different scale, so the trend line only joins records of the current one.
+  const comparableHistory = data.history.filter((item) => item.analysis_version === data.latest?.analysis_version);
   return <HistoryCard title="İlerleme">
     <div className="grid gap-3 sm:grid-cols-3">
       <Metric label="Güncel skor" value={data.latest.portfolio_score === null ? "—" : String(data.latest.portfolio_score)} />
       <Metric label="Önceki skor" value={data.previous?.portfolio_score === null || data.previous?.portfolio_score === undefined ? "—" : String(data.previous.portfolio_score)} />
       <Metric label="Değişim" value={!delta || !delta.comparable || delta.portfolio_score === null ? "—" : formatDelta(delta.portfolio_score)} />
     </div>
-    <ScoreTrend history={data.history} />
+    <ScoreTrend history={comparableHistory} />
+    {comparableHistory.length < data.history.length && <p className="mt-3 text-xs text-slate-500">Daha eski bir puanlama sürümüyle hesaplanan {data.history.length - comparableHistory.length} kayıt, puan ölçeği farklı olduğu için grafiğe dahil edilmedi.</p>}
     {delta?.comparable && <CheckChanges passing={delta.newly_passing_checks} failing={delta.newly_failing_checks} />}
     {!data.previous && <p className="mt-4 text-sm text-slate-600">Bu analiz mevcut başlangıç noktanız. Değişimi görmek için daha sonra yeniden analiz edin.</p>}
     {delta?.note && <p className="mt-4 text-sm text-amber-800">{delta.note}</p>}
     {delta?.comparable && delta.category_scores.length > 0 && <ul className="mt-4 flex flex-wrap gap-2">{delta.category_scores.map((item) => <li key={item.key} className="rounded-full bg-slate-50 px-3 py-1.5 text-sm text-slate-700">{item.label}: {formatDelta(item.delta)}</li>)}</ul>}
     <h4 className="mt-6 text-sm font-medium text-slate-900">Geçmiş</h4>
-    <ol className="mt-3 space-y-2">{data.history.map((item) => <li key={item.id} className="flex justify-between gap-4 border-b border-slate-100 py-2 text-sm"><time dateTime={item.captured_at} className="text-slate-600">{formatDate(item.captured_at)}</time><span className="font-medium text-slate-900">{item.portfolio_score === null ? "—" : item.portfolio_score}</span></li>)}</ol>
+    <ol className="mt-3 space-y-2">{data.history.map((item) => <li key={item.id} className="flex justify-between gap-4 border-b border-slate-100 py-2 text-sm"><time dateTime={item.captured_at} className="text-slate-600">{formatDate(item.captured_at)}</time><span className="font-medium text-slate-900">{item.portfolio_score === null ? "—" : item.portfolio_score}{item.analysis_version !== data.latest?.analysis_version && <span className="ml-2 text-xs font-normal text-slate-500">(eski puanlama)</span>}</span></li>)}</ol>
     <p className="mt-4 text-xs text-slate-500">Değişimler, DevLens deterministik portföy kriterlerine göredir.</p>
   </HistoryCard>;
 }
