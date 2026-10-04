@@ -6,6 +6,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 from app.api.analysis import router as analysis_router
+from app.api.badge import router as badge_router
+from app.api.client_errors import router as client_errors_router
 from app.api.github import router as github_router
 from app.api.interpretation import router as interpretation_router
 from app.api.auth import router as auth_router
@@ -93,6 +95,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     application.include_router(action_plan_router)
     application.include_router(ai_suggestions_router)
     application.include_router(history_router)
+    application.include_router(badge_router)
+    application.include_router(client_errors_router)
 
     def health() -> HealthResponse:
         return health_check(application_settings)

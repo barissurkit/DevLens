@@ -35,6 +35,17 @@ export function AnalysisForm({ hero, preview, features, initialUsername }: Analy
     void submit(initialUsername);
   }, [initialUsername, authStatus, submit]);
 
+  // A link to a GitHub user that does not exist must not be indexed as a real page.
+  const notFound = state.status === "error" && state.error.code === "github_user_not_found";
+  useEffect(() => {
+    if (!notFound) return;
+    const meta = document.createElement("meta");
+    meta.name = "robots";
+    meta.content = "noindex";
+    document.head.appendChild(meta);
+    return () => meta.remove();
+  }, [notFound]);
+
   // "/" jumps to the search field, like on most developer sites (unless the user is already typing somewhere).
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
