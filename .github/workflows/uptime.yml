@@ -1,0 +1,28 @@
+name: Uptime
+
+# Pings the live services every 15 minutes. A failed run emails the repository owner, and the traffic also
+# keeps the free Render instances from going to sleep, so the first visitor does not wait for a cold start.
+on:
+  schedule:
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  ping:
+    name: Ping production
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Backend health
+        run: |
+          curl --fail --silent --show-error --retry 3 --retry-delay 20 --retry-all-errors --max-time 90 \
+            https://api.devlens.barissurkit.com/health
+          echo
+      - name: Frontend version
+        run: |
+          curl --fail --silent --show-error --retry 3 --retry-delay 20 --retry-all-errors --max-time 90 \
+            https://devlens.barissurkit.com/version
+          echo

@@ -26,7 +26,7 @@ def test_health_requests_receive_distinct_server_generated_request_ids(
     UUID(first_id)
     UUID(second_id)
     assert first_id != second_id
-    assert first.json() == {"status": "ok"}
+    assert first.json()["status"] == "ok"
 
     events = [
         record

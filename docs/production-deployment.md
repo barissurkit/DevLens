@@ -91,8 +91,12 @@ Development-only localhost HTTP examples are not valid production configuration.
 `GET /health` is a fast non-sensitive liveness endpoint returning:
 
 ```json
-{"status":"ok"}
+{"status":"ok","github_token_configured":true,"ai_configured":true,"database_configured":true}
 ```
+
+The flags only say whether an integration is configured, never its value. `github_token_configured: false` means GitHub is called anonymously (60 requests per hour per server IP), which makes analyses slow and easy to rate-limit; set `GITHUB_TOKEN` on the backend service.
+
+Scheduled workflows watch production: `uptime.yml` pings `/health` and `/version` every 15 minutes (a failed run emails the owner and keeps the free instances warm), and `audit.yml` runs `npm audit` and `pip-audit` daily so a new advisory is found before it blocks a pull request. Dependabot opens weekly update pull requests.
 
 The frontend serves `GET /version` (`{"commit":"<sha>","builtAt":"<time>","runningCommit":"<sha>"}`; `commit` is Render's `RENDER_GIT_COMMIT` captured at build time through a Docker build arg, `runningCommit` is the value at runtime, so they differ when old files are served). After a merge, `scripts/check-deploy.sh` compares it with `origin/main`. Once the deploy has finished, a mismatch means Render served a stale build: run Manual Deploy -> "Clear build cache & deploy" on the frontend service (this fixed the one stale deploy seen so far; the root cause is unknown).
 
