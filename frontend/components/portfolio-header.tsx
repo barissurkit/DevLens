@@ -3,7 +3,7 @@ import type { GitHubUser, ViewerContext } from "../lib/types";
 import { portfolioModeLabel } from "../lib/presentation";
 import { BadgeButton } from "./badge-button";
 import { CopyLinkButton } from "./copy-link-button";
-import { PrintButton } from "./print-button";
+import { ReportMenu } from "./report/report-menu";
 import { comparePath } from "../lib/share";
 import { FreshnessNote } from "./freshness-note";
 
@@ -42,7 +42,7 @@ export const PortfolioHeader = forwardRef<HTMLHeadingElement, PortfolioHeaderPro
           <div className="flex flex-wrap items-center gap-2 print:hidden sm:justify-end [&>*]:flex-auto sm:[&>*]:flex-none">
             <CopyLinkButton username={user.username} />
             <BadgeButton username={user.username} />
-            <PrintButton />
+            <ReportMenu username={user.username} />
             <a href={comparePath(user.username)} className="inline-flex min-h-10 items-center justify-center whitespace-nowrap rounded-lg border border-slate-300 bg-card px-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600 focus-visible:ring-offset-2">
               Karşılaştır
             </a>

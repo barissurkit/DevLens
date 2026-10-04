@@ -305,3 +305,93 @@ html, body {
     [role="tabpanel"][hidden]:not(.print\:hidden) { display: block !important; }
   }
 }
+
+/* Report template (/u/<login>/rapor): fixed A4 sheets that are filled by measuring the content, see lib/paginate.ts.
+   The named page removes the margins, which also removes the browser's own header and footer; the report draws
+   its own. */
+@page report {
+  size: A4;
+  margin: 0;
+}
+
+.report-root {
+  page: report;
+  color: #0f172a;
+}
+
+.report-measure {
+  position: absolute;
+  top: 0;
+  left: -99999px;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.report-sheets {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  padding: 20px 0 48px;
+}
+
+.report-sheet {
+  position: relative;
+  box-sizing: border-box;
+  width: 210mm;
+  height: 297mm;
+  overflow: hidden;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.12), 0 8px 28px rgba(15, 23, 42, 0.12);
+  zoom: var(--report-zoom, 1);
+}
+
+.report-flow {
+  position: absolute;
+  top: 21mm;
+  left: 16mm;
+}
+
+.report-page-header,
+.report-page-footer {
+  position: absolute;
+  left: 16mm;
+  right: 16mm;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.report-page-header {
+  top: 8mm;
+  padding-bottom: 2mm;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.report-page-footer {
+  bottom: 7mm;
+  padding-top: 2mm;
+  border-top: 1px solid #e2e8f0;
+  font-size: 8.5pt;
+  color: #64748b;
+}
+
+@media print {
+  .report-toolbar { display: none !important; }
+  .report-sheets { display: block; padding: 0; }
+  .report-sheet {
+    zoom: 1 !important;
+    box-shadow: none;
+    break-after: page;
+  }
+  .report-sheet:last-child { break-after: auto; }
+}
+
+.report-continued {
+  display: flex;
+  align-items: flex-start;
+  padding-top: 1mm;
+  border-bottom: 1px solid #e2e8f0;
+  /* Its whole height (the inline `height`) is what the pagination reserved for it, so no margin here. */
+  box-sizing: border-box;
+}
