@@ -31,7 +31,7 @@ export function AuthNotice() {
 
   if (!message) return null;
   return (
-    <div role="alert" className="border-b border-amber-300 bg-amber-50 text-amber-950">
+    <div role="alert" className="print:hidden border-b border-amber-300 bg-amber-50 text-amber-950">
       <div className="mx-auto flex w-full max-w-6xl items-start justify-between gap-4 px-4 py-3 text-sm sm:px-6 lg:px-8">
         <p>{message}</p>
         <button
