@@ -48,9 +48,10 @@ describe("landing content", () => {
     expect(screen.getByRole("heading", { name: "Sık sorulan sorular" })).toBeInTheDocument();
     // The section anchors that the header and footer link to.
     for (const id of ["nasil-calisir", "puanlama", "sss"]) expect(document.getElementById(id)).not.toBeNull();
-    // Scoring weights shown on the page match the backend's 50/30/20 split.
-    expect(screen.getByText("50 puan")).toBeInTheDocument();
-    expect(screen.getByText("30 puan")).toBeInTheDocument();
+    // Scoring weights shown on the page match the backend's 40/25/15/20 split.
+    expect(screen.getByText("40 puan")).toBeInTheDocument();
+    expect(screen.getByText("25 puan")).toBeInTheDocument();
+    expect(screen.getByText("15 puan")).toBeInTheDocument();
     expect(screen.getByText("20 puan")).toBeInTheDocument();
   });
 

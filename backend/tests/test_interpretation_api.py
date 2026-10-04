@@ -302,14 +302,14 @@ def test_public_endpoint_runs_real_analysis_and_interpretation_composition() -> 
 
     assert response.status_code == 200
     body = response.json()
-    assert body["analysis"]["score"]["overall_score"] == 95
+    assert body["analysis"]["score"]["overall_score"] == 88
     assert body["interpretation"]["status"] == "available"
     assert body["interpretation"]["interpretation"]["summary"] == (
         "Grounded portfolio interpretation."
     )
     assert len(fake_gemini.calls) == 1
     assert fake_gemini.calls[0].username == "synthetic-user"
-    assert fake_gemini.calls[0].score.overall_score == 95
+    assert fake_gemini.calls[0].score.overall_score == 88
     assert "raw README" not in response.text
     assert "Authorization" not in response.text
 
