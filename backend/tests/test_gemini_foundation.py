@@ -109,7 +109,7 @@ def test_prompt_is_deterministic_and_excludes_raw_payload_fields() -> None:
     assert "Do not omit any" in SYSTEM_INSTRUCTION
     assert "alternate keys such as" in SYSTEM_INSTRUCTION
     assert "must each be either a JSON string or JSON null" in SYSTEM_INSTRUCTION
-    assert GEMINI_INTERPRETATION_PROMPT_VERSION == "v3"
+    assert GEMINI_INTERPRETATION_PROMPT_VERSION == "v4"
 
 
 def test_gemini_response_schema_removes_unsupported_constraint_keywords() -> None:

@@ -21,6 +21,7 @@ Enter a GitHub username to inspect public profile and repository evidence. DevLe
 - Cached results reuse their stored AI interpretation; a struggling AI provider is retried after a short cooldown
 - Light and dark themes, tabbed results, and an accessibility-checked interface
 - Printable reports (summary and detailed) built from a fixed A4 template whose pages are filled by measuring the content, so no paragraph or card is ever split between pages (see [docs/report-template.md](docs/report-template.md))
+- A selectable AI provider (Gemini or OpenRouter with fallback models and a daily call cap; see [docs/ai-provider.md](docs/ai-provider.md))
 - A blind model-comparison tool for the AI interpretation (OpenRouter; see [docs/model-comparison.md](docs/model-comparison.md))
 - README score badge (`/api/v1/badge/<username>.svg`) built from stored snapshots only, plus browser error reports in the structured log
 

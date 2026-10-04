@@ -19,6 +19,16 @@ class Settings(BaseSettings):
     github_api_base_url: str = "https://api.github.com"
     gemini_api_key: str | None = None
     gemini_model: str = "gemini-3.6-flash"
+    # Which provider writes the AI interpretation and suggestions; the deterministic analysis never depends on it.
+    ai_provider: Literal["gemini", "openrouter"] = "gemini"
+    openrouter_api_key: str | None = None
+    openrouter_model: str = "z-ai/glm-5.3-flash"
+    # Comma separated, tried in order when the primary model fails or returns an unusable answer.
+    openrouter_fallback_models: str = "openai/gpt-6-luna"
+    openrouter_max_tokens: int = Field(default=6000, ge=500, le=32000)
+    openrouter_timeout_seconds: float = Field(default=60.0, gt=0, le=300)
+    # Hard stop on provider calls per UTC day (every model attempt counts); 0 turns the cap off.
+    ai_daily_call_limit: int = Field(default=500, ge=0)
     database_url: str | None = None
     analysis_cache_ttl_seconds: int = Field(default=900, ge=0)
     cors_allowed_origins: str = DEFAULT_CORS_ALLOWED_ORIGINS
@@ -34,6 +44,7 @@ class Settings(BaseSettings):
         "github_app_callback_url",
         "auth_state_encryption_key",
         "frontend_origin",
+        "openrouter_api_key",
         mode="before",
     )
     @classmethod
@@ -139,6 +150,20 @@ class Settings(BaseSettings):
             ):
                 raise ValueError(f"Invalid CORS origin: {origin}")
         return origins
+
+    @property
+    def ai_configured(self) -> bool:
+        key = self.openrouter_api_key if self.ai_provider == "openrouter" else self.gemini_api_key
+        return bool(key)
+
+    @property
+    def openrouter_models(self) -> list[str]:
+        names = [self.openrouter_model.strip(), *self.openrouter_fallback_models.split(",")]
+        ordered: list[str] = []
+        for name in (item.strip() for item in names):
+            if name and name not in ordered:
+                ordered.append(name)
+        return ordered
 
     @property
     def cors_origins(self) -> list[str]:

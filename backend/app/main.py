@@ -37,7 +37,7 @@ def health_check(settings: Settings | None = None) -> HealthResponse:
     return HealthResponse(
         status="ok",
         github_token_configured=bool(settings.github_token),
-        ai_configured=bool(settings.gemini_api_key),
+        ai_configured=settings.ai_configured,
         database_configured=bool(settings.database_url),
     )
 

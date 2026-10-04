@@ -188,6 +188,7 @@ jobs:
       ANALYSIS_CACHE_TTL_SECONDS: '900'
       GITHUB_TOKEN: ''
       GEMINI_API_KEY: ''
+      OPENROUTER_API_KEY: ''
     steps:
       - name: Checkout
         uses: actions/checkout@v7
