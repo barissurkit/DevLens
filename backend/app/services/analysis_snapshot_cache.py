@@ -44,7 +44,14 @@ class AnalysisSnapshotCacheService:
         self._settings = settings or get_settings()
         self._session_factory_provider = session_factory_provider
 
-    async def get_fresh_analysis(self, *, username: str, request_kind: str) -> CachedAnalysis | None:
+    async def get_fresh_analysis(
+        self,
+        *,
+        username: str,
+        request_kind: str,
+        max_age: timedelta | None = None,
+    ) -> CachedAnalysis | None:
+        """The newest compatible snapshot that is younger than the cache TTL, or than ``max_age`` when given."""
         if not self._settings.database_url or self._settings.analysis_cache_ttl_seconds == 0:
             emit_event(
                 logger,
@@ -54,8 +61,8 @@ class AnalysisSnapshotCacheService:
             )
             return None
 
-        fresh_after = datetime.now(timezone.utc) - timedelta(
-            seconds=self._settings.analysis_cache_ttl_seconds
+        fresh_after = datetime.now(timezone.utc) - (
+            max_age if max_age is not None else timedelta(seconds=self._settings.analysis_cache_ttl_seconds)
         )
         started_at = time.monotonic()
         try:

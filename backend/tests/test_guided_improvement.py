@@ -47,7 +47,7 @@ def owner_context() -> ViewerContext:
 
 def test_registry_matches_canonical_scoring_rules_exactly() -> None:
     assert set(GUIDED_IMPROVEMENT_REGISTRY) == canonical_guided_rule_keys()
-    assert len(GUIDED_IMPROVEMENT_REGISTRY) == 12
+    assert len(GUIDED_IMPROVEMENT_REGISTRY) == 15
 
 
 def test_registry_entries_are_complete_and_non_empty() -> None:

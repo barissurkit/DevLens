@@ -20,6 +20,7 @@ Enter a GitHub username to inspect public profile and repository evidence. DevLe
 - Shareable result links (`/u/<username>`) with a social preview image
 - Cached results reuse their stored AI interpretation; a struggling AI provider is retried after a short cooldown
 - Light and dark themes, tabbed results, and an accessibility-checked interface
+- README score badge (`/api/v1/badge/<username>.svg`) built from stored snapshots only, plus browser error reports in the structured log
 
 ## How It Works
 
@@ -86,6 +87,7 @@ Pull requests targeting `main` and pushes to `main` run GitHub Actions. Protecte
 - PostgreSQL/Alembic migration and integration validation
 - Frontend lint, type-check, production build, and high-severity production dependency audit
 - Docker production-stack build, startup, health, migration, and non-root runtime smoke checks
+- Browser tests (Playwright, desktop and phone viewports) that drive a production build against a mock API: `cd frontend && NEXT_PUBLIC_API_BASE_URL=http://localhost:8100 npm run build && npm run test:e2e` (uses the installed Chrome)
 - The aggregate `Required quality gates` check
 
 Test counts are intentionally not hardcoded here because they change as the suite evolves. CI does not use production provider secrets or deploy the application.
@@ -181,7 +183,9 @@ Local examples use `ENVIRONMENT=development` and disabled authentication with lo
 
 ## API Surface
 
-- `GET /health`
+- `GET /health` (liveness plus booleans for the configured integrations)
+- `GET /api/v1/badge/<username>.svg` (score badge for a README; stored snapshots only, never calls GitHub or the AI provider)
+- `POST /api/v1/client-errors` (browser error reports, rate limited, logged as `client.error`)
 - `POST /api/v1/analysis`
 - `POST /api/v1/interpretation`
 - `POST /api/v1/interpretation/stream` (same analysis as newline-delimited JSON: `progress` events with stage/completed/total, then `result` or `error`)

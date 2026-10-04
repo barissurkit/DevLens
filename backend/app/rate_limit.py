@@ -41,6 +41,7 @@ POLICIES: dict[str, RateLimitPolicy] = {
     "ai_suggestions": RateLimitPolicy(2, 1 / 120),
     "auth_login": RateLimitPolicy(3, 1 / 60),
     "github_lookup": RateLimitPolicy(5, 1 / 20),
+    "client_errors": RateLimitPolicy(5, 1 / 30),
 }
 
 

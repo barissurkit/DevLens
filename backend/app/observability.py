@@ -46,6 +46,10 @@ _SAFE_FIELDS = {
     "thoughts_token_count",
     "total_token_count",
     "finish_reason",
+    "client_error_kind",
+    "client_error_message",
+    "client_error_stack",
+    "client_error_path",
 }
 
 

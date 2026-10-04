@@ -17,6 +17,9 @@ SIGNAL_LABELS: tuple[tuple[str, str], ...] = (
     ("gitignore", ".gitignore"),
     ("license", "LICENSE"),
     ("contributing", "CONTRIBUTING"),
+    ("repo_description", "Repository açıklaması"),
+    ("repo_topics", "Konu etiketleri"),
+    ("recent_activity", "Son 12 ayda güncelleme"),
 )
 
 
@@ -492,13 +495,16 @@ def test_rule_registry_preserves_candidate_exclusions_and_order() -> None:
         "ci_workflow",
         "gitignore",
         "license",
+        "repo_description",
+        "repo_topics",
+        "recent_activity",
     ]
     assert all(
         (item.detected_repository_count, item.analyzed_repository_count) == (3, 6)
         for item in strength_result.strength_signals
     )
 
-    # Title, technologies, .gitignore and CONTRIBUTING are never reported as improvements.
+    # Title, technologies, .gitignore, CONTRIBUTING and topics are never reported as improvements.
     assert [item.key for item in improvement_result.improvement_signals] == [
         "readme_exists",
         "readme_description",
@@ -508,6 +514,8 @@ def test_rule_registry_preserves_candidate_exclusions_and_order() -> None:
         "tests_structure",
         "ci_workflow",
         "license",
+        "repo_description",
+        "recent_activity",
     ]
     assert all(
         (item.detected_repository_count, item.analyzed_repository_count) == (0, 6)
@@ -533,7 +541,7 @@ def test_missing_required_signal_key_is_rejected() -> None:
         build_portfolio_intelligence(aggregation)
 
     assert str(error.value) == (
-        "Portfolio aggregation is missing required signal keys: contributing"
+        "Portfolio aggregation is missing required signal keys: recent_activity"
     )
 
 

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { AuthProvider } from "../components/auth-provider";
+import { ErrorReporter } from "../components/error-reporter";
 import { SITE_URL } from "../lib/share";
 import { THEME_STORAGE_KEY } from "../lib/theme";
 
@@ -24,7 +25,7 @@ export default function RootLayout({
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
       </head>
-      <body><AuthProvider>{children}</AuthProvider></body>
+      <body><AuthProvider>{children}</AuthProvider><ErrorReporter /></body>
     </html>
   );
 }
