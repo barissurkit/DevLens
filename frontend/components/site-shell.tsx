@@ -2,7 +2,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { AuthControls } from "./auth-controls";
 import { AuthNotice } from "./auth-notice";
-import { BrandMark } from "./brand-mark";
+import { BrandMark, BrandWordmark } from "./brand-mark";
 import { ThemeToggle } from "./theme-toggle";
 
 const NAV_LINKS: Array<{ href: string; label: string }> = [
@@ -20,12 +20,12 @@ export function SiteShell({ children }: { children: ReactNode }) {
       <a href="#main-content" className="sr-only rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50">
         Ana içeriğe geç
       </a>
-      <header className="sticky top-0 z-30 border-b border-slate-200/80 bg-card/85 backdrop-blur-md">
+      <header className="sticky top-0 z-30 print:hidden border-b border-slate-200/80 bg-card/85 backdrop-blur-md">
         <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-3 px-4 py-2.5 sm:px-6 lg:px-8">
           <div className="flex items-center gap-8">
             <Link href="/" className={`flex items-center gap-2.5 rounded-lg ${focusRing}`}>
-              <BrandMark className="h-8 w-8" />
-              <span className="text-lg font-semibold tracking-tight text-slate-950">DevLens</span>
+              <BrandMark className="h-9 w-9" idPrefix="header" />
+              <BrandWordmark className="text-xl" />
             </Link>
             <nav aria-label="Ana gezinme" className="hidden items-center gap-1 md:flex">
               {NAV_LINKS.map((link) => (
@@ -45,12 +45,12 @@ export function SiteShell({ children }: { children: ReactNode }) {
 
       <main id="main-content" tabIndex={-1} className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 focus:outline-none sm:px-6 sm:py-12 lg:px-8">{children}</main>
 
-      <footer className="border-t border-slate-200 bg-card">
+      <footer className="border-t border-slate-200 bg-card print:hidden">
         <div className="mx-auto grid w-full max-w-6xl gap-8 px-4 py-10 text-sm sm:px-6 md:grid-cols-[1.4fr_1fr_1fr] lg:px-8">
           <div>
             <div className="flex items-center gap-2.5">
-              <BrandMark className="h-7 w-7" />
-              <span className="font-semibold tracking-tight text-slate-950">DevLens</span>
+              <BrandMark className="h-8 w-8" idPrefix="footer" />
+              <BrandWordmark className="text-lg" />
             </div>
             <div className="mt-4 sm:hidden"><ThemeToggle /></div>
             <p className="mt-3 max-w-sm leading-6 text-slate-600">

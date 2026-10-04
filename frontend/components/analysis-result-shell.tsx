@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { userPath } from "../lib/share";
 import type { GitHubPortfolioInterpretationResponse } from "../lib/types";
 import { ActionsLockedPanel } from "./actions-locked-panel";
 import { PortfolioInterpretationSection } from "./portfolio-interpretation-section";
@@ -11,6 +12,7 @@ import { RepositoryAnalysisSection } from "./repository-analysis-section";
 import { GuidedImprovementSection } from "./guided-improvement-section";
 import { PortfolioHeader } from "./portfolio-header";
 import { PortfolioOverview } from "./portfolio-overview";
+import { PrintCover } from "./print-cover";
 import { panelElementId, ResultTabs, tabElementId, type ResultTab } from "./result-tabs";
 
 interface AnalysisResultShellProps {
@@ -65,6 +67,7 @@ export function AnalysisResultShell({ result, onReanalyze, onRetryInterpretation
 
   return (
     <section aria-labelledby="portfolio-dashboard" className="space-y-6">
+      <PrintCover analysis={analysis} generatedAt={result.analysis_generated_at} url={typeof window === "undefined" ? userPath(user.username) : `${window.location.origin}${userPath(user.username)}`} />
       <h1 className="sr-only">@{user.username} portföy analizi</h1>
       <PortfolioHeader
         ref={dashboardHeadingRef}
@@ -79,19 +82,19 @@ export function AnalysisResultShell({ result, onReanalyze, onRetryInterpretation
       <div ref={tabsRegionRef}>
         <ResultTabs tabs={tabs} activeId={activeTab} onChange={selectTab} idPrefix={ID_PREFIX} />
 
-        <TabPanel id="overview" activeId={activeTab}>
+        <TabPanel id="overview" activeId={activeTab} title="Genel Bakış">
           <PortfolioOverview analysis={analysis} />
         </TabPanel>
 
-        <TabPanel id="repositories" activeId={activeTab}>
+        <TabPanel id="repositories" activeId={activeTab} title="Repository'ler">
           <RepositoryAnalysisSection repositories={repositories} failures={analysis.repository_analysis.failures} excluded={selection.excluded} />
         </TabPanel>
 
-        <TabPanel id="ai" activeId={activeTab}>
+        <TabPanel id="ai" activeId={activeTab} title="AI Yorumu">
           <PortfolioInterpretationSection analysis={analysis} interpretation={interpretation} onRetry={onRetryInterpretation} />
         </TabPanel>
 
-        <TabPanel id="actions" activeId={activeTab}>
+        <TabPanel id="actions" activeId={activeTab} title="Aksiyonlar" hideInPrint={!hasActions}>
           {hasActions ? (
             <>
               {viewer_context.is_owner && <GuidedImprovementSection improvements={result.guided_improvements} onReanalyze={onReanalyze} />}
@@ -111,7 +114,11 @@ export function AnalysisResultShell({ result, onReanalyze, onRetryInterpretation
   );
 }
 
-function TabPanel({ id, activeId, children }: { id: string; activeId: string; children: React.ReactNode }) {
+/**
+ * One result section. On screen only the active one shows; a printed report shows all of them in order,
+ * each under its own title, and leaves out a section that only invites visitors to sign in.
+ */
+function TabPanel({ id, activeId, title, hideInPrint = false, children }: { id: string; activeId: string; title: string; hideInPrint?: boolean; children: React.ReactNode }) {
   return (
     <div
       role="tabpanel"
@@ -119,8 +126,9 @@ function TabPanel({ id, activeId, children }: { id: string; activeId: string; ch
       aria-labelledby={tabElementId(ID_PREFIX, id)}
       hidden={id !== activeId}
       tabIndex={0}
-      className="space-y-6 pt-6 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600 focus-visible:ring-offset-2"
+      className={`space-y-6 pt-6 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600 focus-visible:ring-offset-2 ${hideInPrint ? "print:hidden" : ""}`}
     >
+      <h2 className="print-section-title hidden print:block">{title}</h2>
       {children}
     </div>
   );

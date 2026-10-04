@@ -1,4 +1,5 @@
 import { ImageResponse } from "next/og";
+import { BRAND_SVG_DATA_URI } from "../../../lib/brand-svg";
 import { usernameFromRouteParam } from "../../../lib/share";
 
 export const alt = "DevLens portföy analizi";
@@ -13,8 +14,12 @@ export default async function OpengraphImage({ params }: { params: Promise<{ use
     (
       <div style={{ width: "100%", height: "100%", display: "flex", flexDirection: "column", justifyContent: "space-between", padding: 72, background: "linear-gradient(135deg, #eef2ff 0%, #ffffff 55%, #f1f5f9 100%)", color: "#0f172a" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
-          <div style={{ width: 64, height: 64, borderRadius: 16, background: "#4f46e5", color: "#ffffff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 38, fontWeight: 700 }}>D</div>
-          <div style={{ fontSize: 40, fontWeight: 700 }}>DevLens</div>
+          {/* eslint-disable-next-line @next/next/no-img-element -- rendered to a PNG by ImageResponse */}
+          <img src={BRAND_SVG_DATA_URI} width={72} height={72} alt="" />
+          <div style={{ display: "flex", fontSize: 44, fontWeight: 700 }}>
+            <span>Dev</span>
+            <span style={{ color: "#4338ca" }}>Lens</span>
+          </div>
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
           <div style={{ fontSize: 30, color: "#4f46e5", letterSpacing: 4 }}>PORTFÖY ANALİZİ</div>

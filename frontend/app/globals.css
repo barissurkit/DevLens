@@ -240,21 +240,62 @@ h1, h2, h3 {
   }
 }
 
-@media print {
-  header, footer, [role="tablist"] { display: none !important; }
-  [role="tabpanel"][hidden] { display: block !important; }
-}
 
 /* The decorative hero backdrop extends beyond the viewport; never let it create a horizontal scrollbar. */
 html, body {
   overflow-x: clip;
 }
 
-/* Printed report: plain white page, cards without shadows, no sticky bars. */
+/* Printed report (Print / Save as PDF): a cover page, then every result section in order.
+   Site chrome and controls carry `print:hidden` in their markup. */
+@page {
+  size: A4;
+  margin: 14mm 12mm;
+}
+
 @media print {
-  body { background: #fff; }
-  header[class*="sticky"], .sticky { position: static !important; }
+  html, body {
+    background: #fff !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* The tab bar is replaced by a title above each section; hidden sections are printed too. */
+  [role="tablist"] { display: none !important; }
+  .sticky { position: static !important; }
   [class*="shadow-"] { box-shadow: none !important; }
-  section, article { break-inside: avoid; }
-  a[href^="http"]::after { content: none; }
+
+  /* Small units stay whole; large containers must be allowed to split, otherwise the browser pushes the whole
+     result onto the second page and leaves the first one empty. */
+  article, li, tr, details { break-inside: avoid; }
+  h2, h3, h4 { break-after: avoid; }
+
+  .print-cover {
+    display: flex !important;
+    flex-direction: column;
+    /* The content area of an A4 page is 269 mm high; a little less keeps the cover from spilling onto a second page. */
+    height: 262mm;
+    overflow: hidden;
+    break-after: page;
+    padding: 6mm 4mm;
+  }
+
+  .print-section-title {
+    margin: 0;
+    padding-top: 2mm;
+    border-bottom: 1px solid #cbd5e1;
+    padding-bottom: 2mm;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #0f172a;
+  }
+}
+
+/* Inactive result sections carry the `hidden` attribute. Tailwind's reset hides `[hidden]` with an important
+   rule in the base layer, and important declarations in a layer beat unlayered ones, so this override has to
+   live in the same layer (where its higher specificity wins) for the printed report to include every section. */
+@layer base {
+  @media print {
+    [role="tabpanel"][hidden]:not(.print\:hidden) { display: block !important; }
+  }
 }

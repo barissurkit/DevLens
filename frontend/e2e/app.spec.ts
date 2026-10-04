@@ -187,3 +187,49 @@ test.describe("comparison", () => {
     await expect(page.getByLabel("Birinci kullanıcı")).toHaveValue(OWNER);
   });
 });
+
+test.describe("printed report", () => {
+  test.skip(({ isMobile }) => isMobile, "Printing is checked once, in the desktop project");
+
+  test("starts with a cover page and then prints every section without the site chrome", async ({ page }) => {
+    await page.goto(`/u/${OWNER}`);
+    await expect(page.getByRole("tab", { name: /AI Yorumu/ })).toBeVisible();
+    await page.emulateMedia({ media: "print" });
+
+    const cover = page.locator(".print-cover");
+    await expect(cover).toBeVisible();
+    await expect(cover).toContainText("Portföy Analiz Raporu");
+    await expect(cover).toContainText(`@${OWNER}`);
+    await expect(cover).toContainText("Oluşturulma:");
+
+    // Site chrome, controls and the sign-in-only section stay out of the report.
+    await expect(page.locator("header.sticky")).toBeHidden();
+    await expect(page.locator("footer")).toBeHidden();
+    await expect(page.getByRole("tablist")).toBeHidden();
+    await expect(page.getByRole("button", { name: "Yenile" })).toBeHidden();
+    await expect(page.locator("#result-panel-actions")).toBeHidden();
+
+    // All other sections are shown, each under its own title, although only one tab is active on screen.
+    for (const title of ["Genel Bakış", "Repository'ler", "AI Yorumu"]) {
+      await expect(page.locator(".print-section-title", { hasText: title })).toBeVisible();
+    }
+
+    // The cover fills a page of its own: the next block starts below it, not beside or above it.
+    const coverBox = await cover.boundingBox();
+    const firstSection = await page.locator(".print-section-title").first().boundingBox();
+    expect(coverBox).not.toBeNull();
+    expect(firstSection!.y).toBeGreaterThanOrEqual(coverBox!.y + coverBox!.height - 1);
+
+    if (process.env.PRINT_PDF_OUT) {
+      await page.pdf({ path: process.env.PRINT_PDF_OUT, format: "A4", printBackground: true, preferCSSPageSize: true });
+    }
+  });
+
+  test("the screen layout does not show the cover or section titles", async ({ page }) => {
+    await page.goto(`/u/${OWNER}`);
+    await expect(page.getByRole("tab", { name: /AI Yorumu/ })).toBeVisible();
+
+    await expect(page.locator(".print-cover")).toBeHidden();
+    await expect(page.locator(".print-section-title").first()).toBeHidden();
+  });
+});
