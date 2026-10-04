@@ -190,6 +190,15 @@ def price_per_token(entry: dict | None) -> tuple[float, float]:
         return 0.0, 0.0
 
 
+RETRY_FACTOR = 2.5
+RETRY_CAP = 12000
+
+
+def retry_limit(max_tokens: int) -> int:
+    """The larger output limit for the one retry after an answer was cut off (thinking tokens count against it)."""
+    return min(max(int(max_tokens * RETRY_FACTOR), max_tokens), max(RETRY_CAP, max_tokens))
+
+
 async def run_model(
     client: httpx.AsyncClient,
     api_key: str,
@@ -201,6 +210,7 @@ async def run_model(
     max_tokens: int,
     reasoning: str,
     timeout: float,
+    retry_on_length: bool = True,
 ) -> RunResult:
     headers = {
         "Authorization": f"Bearer {api_key}",
@@ -250,6 +260,15 @@ async def run_model(
     result.evaluation = evaluate(text, context)
     if not text.strip():
         result.evaluation.issues.append("Boş yanıt.")
+    larger = retry_limit(max_tokens)
+    if retry_on_length and result.finish_reason == "length" and not result.usable and larger > max_tokens:
+        # Cut off before a usable answer (typically a thinking model): ask once more with more room, and keep both costs.
+        retry = await run_model(client, api_key, model, messages, context, catalog_entry,
+                                max_tokens=larger, reasoning=reasoning, timeout=timeout, retry_on_length=False)
+        retry.notes = [*result.notes, f"İlk deneme {max_tokens} token sınırında kesildi; {larger} sınırıyla yeniden denendi.", *retry.notes]
+        retry.cost_usd = round((result.cost_usd or 0.0) + (retry.cost_usd or 0.0), 6) if (result.cost_usd is not None or retry.cost_usd is not None) else None
+        retry.latency_seconds = round(result.latency_seconds + retry.latency_seconds, 2)
+        return retry
     return result
 
 
@@ -441,7 +460,8 @@ async def main_async(args: argparse.Namespace, transport: httpx.AsyncBaseTranspo
         for model in models:
             entry = catalog.get(model)
             price_in, price_out = price_per_token(entry)
-            worst = input_tokens * price_in + args.max_tokens * price_out
+            # One retry with a larger limit is possible after an answer is cut off, so the guard budgets for it.
+            worst = 2 * input_tokens * price_in + (args.max_tokens + retry_limit(args.max_tokens)) * price_out
             worst_case += worst if entry else 0.0
             state = "bulundu" if entry else "KATALOGDA YOK (atlanacak)"
             print(f"  {model:42s} ${price_in * 1e6:6.2f} / ${price_out * 1e6:6.2f} per 1M  en kötü durum ${worst:.4f}  {state}")
