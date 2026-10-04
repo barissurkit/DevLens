@@ -198,6 +198,27 @@ test.describe("report: page", () => {
     await expect(page.getByRole("button", { name: /Yazdır \/ PDF olarak kaydet/ })).toBeVisible();
   });
 
+  test("switching between the two reports in the toolbar works in both directions without errors", async ({ page }) => {
+    const errors: string[] = [];
+    page.on("pageerror", (error) => errors.push(error.message));
+    await openReport(page, OWNER, "detay");
+    const detailPages = await pageCount(page);
+    const nav = page.getByRole("navigation", { name: "Rapor türü" });
+
+    // The detailed report has more blocks than the short one: the pages planned for it must not outlive the switch.
+    await nav.getByRole("link", { name: /Özet rapor/ }).click();
+    await expect(page).toHaveURL(/tur=ozet/);
+    await expect.poll(() => pageCount(page)).toBeLessThan(detailPages);
+    expect(await layoutProblems(page)).toEqual([]);
+
+    await nav.getByRole("link", { name: /Ayrıntılı rapor/ }).click();
+    await expect(page).toHaveURL(/tur=detay/);
+    await expect.poll(() => pageCount(page)).toBe(detailPages);
+    expect(await layoutProblems(page)).toEqual([]);
+
+    expect(errors).toEqual([]);
+  });
+
   test("the report is always light, even when the dark theme is chosen", async ({ page }) => {
     await page.addInitScript((key) => window.localStorage.setItem(key, "dark"), THEME_STORAGE_KEY);
     await page.goto(`/u/${OWNER}`);
