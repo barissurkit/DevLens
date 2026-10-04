@@ -1,6 +1,7 @@
 import { forwardRef } from "react";
 import type { GitHubUser, ViewerContext } from "../lib/types";
 import { portfolioModeLabel } from "../lib/presentation";
+import { BadgeButton } from "./badge-button";
 import { CopyLinkButton } from "./copy-link-button";
 import { FreshnessNote } from "./freshness-note";
 
@@ -38,6 +39,7 @@ export const PortfolioHeader = forwardRef<HTMLHeadingElement, PortfolioHeaderPro
           </dl>
           <div className="flex flex-wrap items-center gap-2 sm:justify-end [&>*]:flex-auto sm:[&>*]:flex-none">
             <CopyLinkButton username={user.username} />
+            <BadgeButton username={user.username} />
             <a href={user.html_url} target="_blank" rel="noreferrer" className="inline-flex min-h-10 items-center justify-center whitespace-nowrap rounded-lg border border-slate-300 bg-card px-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600 focus-visible:ring-offset-2">
               GitHub profilini aç
             </a>

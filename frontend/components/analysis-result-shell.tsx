@@ -37,7 +37,7 @@ export function AnalysisResultShell({ result, onReanalyze, onRetryInterpretation
     const list: ResultTab[] = [
       { id: "overview", label: "Genel Bakış" },
       { id: "repositories", label: "Repository'ler", badge: repositories.length },
-      { id: "ai", label: "AI Yorumu" },
+      { id: "ai", label: "AI Yorumu", warning: interpretation.status === "unavailable" ? "şu anda kullanılamıyor" : undefined },
     ];
     list.push({
       id: "actions",
@@ -46,7 +46,7 @@ export function AnalysisResultShell({ result, onReanalyze, onRetryInterpretation
       badge: viewer_context.is_owner && result.guided_improvements.length > 0 ? result.guided_improvements.length : undefined,
     });
     return list;
-  }, [hasActions, repositories.length, result.guided_improvements.length, viewer_context.is_owner]);
+  }, [hasActions, interpretation.status, repositories.length, result.guided_improvements.length, viewer_context.is_owner]);
 
   useEffect(() => {
     dashboardHeadingRef.current?.focus();

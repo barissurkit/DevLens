@@ -11,7 +11,11 @@ const mockedUseAuth = vi.hoisted(() => vi.fn());
 vi.mock("../lib/api", () => ({
   analyzePortfolioWithInterpretation: mockedAnalyze,
   getAuthStartUrl: () => "http://localhost:8000/api/v1/auth/github",
-  ApiError: class ApiError extends Error {},
+  ApiError: class ApiError extends Error {
+    constructor(message: string, readonly status: number, readonly code: string) {
+      super(message);
+    }
+  },
 }));
 vi.mock("../components/auth-provider", () => ({ useAuth: mockedUseAuth }));
 
@@ -138,5 +142,27 @@ describe("signal labels", () => {
     expect(signalLabel("ci_workflow")).toBe("CI iş akışı");
     expect(signalLabel("readme_usage")).toBe("README kullanım bölümü");
     expect(signalLabel("something_new")).toBe("something_new");
+  });
+});
+
+describe("unknown GitHub users", () => {
+  it("are marked noindex while the not-found error is shown", async () => {
+    const { ApiError } = await import("../lib/api");
+    mockedAnalyze.mockRejectedValue(new ApiError("yok", 404, "github_user_not_found"));
+    const { unmount } = render(<AnalysisForm initialUsername="ghost" />);
+
+    await waitFor(() => expect(document.querySelector('meta[name="robots"][content="noindex"]')).not.toBeNull());
+    unmount();
+    expect(document.querySelector('meta[name="robots"]')).toBeNull();
+  });
+});
+
+describe("result tab warning", () => {
+  it("marks a tab that currently has nothing to show", async () => {
+    const { ResultTabs } = await import("../components/result-tabs");
+    render(<ResultTabs idPrefix="t" activeId="a" onChange={() => undefined} tabs={[{ id: "a", label: "Bir" }, { id: "ai", label: "AI Yorumu", warning: "şu anda kullanılamıyor" }]} />);
+
+    expect(screen.getByRole("tab", { name: /AI Yorumu/ })).toHaveTextContent("(şu anda kullanılamıyor)");
+    expect(screen.getByRole("tab", { name: "Bir" })).not.toHaveTextContent("(");
   });
 });

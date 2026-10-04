@@ -2,10 +2,12 @@
 
 import { useEffect } from "react";
 import { SiteShell } from "../components/site-shell";
+import { reportClientError } from "../lib/report-error";
 
 export default function ErrorPage({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
   useEffect(() => {
     console.error(error);
+    reportClientError("render", error);
   }, [error]);
 
   return (

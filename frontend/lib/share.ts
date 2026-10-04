@@ -59,3 +59,16 @@ export async function copyText(text: string): Promise<boolean> {
     field.remove();
   }
 }
+
+/** URL of the score badge image served by the API for a GitHub login, or null when the API is not configured. */
+export function badgeImageUrl(username: string): string | null {
+  const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL?.trim();
+  if (!baseUrl) return null;
+  return `${baseUrl.replace(/\/+$/, "")}/api/v1/badge/${encodeURIComponent(username)}.svg`;
+}
+
+/** Markdown for a README: the badge, linking to the shareable result page. */
+export function badgeMarkdown(username: string, siteUrl: string): string | null {
+  const image = badgeImageUrl(username);
+  return image ? `[![DevLens portföy skoru](${image})](${siteUrl}${userPath(username)})` : null;
+}
