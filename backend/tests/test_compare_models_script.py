@@ -226,3 +226,48 @@ def test_a_run_that_could_cost_too_much_is_refused_before_any_request(tmp_path, 
     assert exit_code == 3
     assert [request.method for request in calls] == ["GET"]
     assert not (tmp_path / "index.html").exists()
+
+
+def test_an_answer_cut_off_by_the_token_limit_is_retried_once_with_more_room(tmp_path, monkeypatch, context) -> None:
+    inner = compare.canned_transport(context)
+    limits: list[int] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        if request.method == "GET":
+            return httpx.Response(200, json={"data": [{"id": "a/thinker", "pricing": {"prompt": "0.0000001", "completion": "0.0000005"}}]})
+        body = json.loads(request.content)
+        limits.append(body["max_tokens"])
+        if body["max_tokens"] <= 4000:
+            return httpx.Response(200, json={"choices": [{"message": {"content": ""}, "finish_reason": "length"}], "usage": {"prompt_tokens": 2700, "completion_tokens": 4000, "cost": 0.002}})
+        return inner.handler(request)
+
+    run(["--models", "a/thinker", "--out", str(tmp_path)], transport=httpx.MockTransport(handler), monkeypatch=monkeypatch)
+
+    assert limits == [4000, 10000]
+    result = json.loads((tmp_path / "results.json").read_text(encoding="utf-8"))["results"][0]
+    assert result["evaluation"]["references_valid"] is True
+    assert result["cost_usd"] == pytest.approx(0.0031)  # both attempts are paid for, so both are counted
+    assert any("yeniden denendi" in note for note in result["notes"])
+
+
+def test_a_cut_off_answer_is_retried_only_once(tmp_path, monkeypatch) -> None:
+    calls: list[int] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        if request.method == "GET":
+            return httpx.Response(200, json={"data": [{"id": "a/endless", "pricing": {"prompt": "0.0000001", "completion": "0.0000005"}}]})
+        calls.append(json.loads(request.content)["max_tokens"])
+        return httpx.Response(200, json={"choices": [{"message": {"content": ""}, "finish_reason": "length"}], "usage": {"prompt_tokens": 10, "completion_tokens": 10, "cost": 0.001}})
+
+    run(["--models", "a/endless", "--out", str(tmp_path)], transport=httpx.MockTransport(handler), monkeypatch=monkeypatch)
+
+    assert len(calls) == 2
+    result = json.loads((tmp_path / "results.json").read_text(encoding="utf-8"))["results"][0]
+    assert result["evaluation"]["json_valid"] is False
+    assert result["cost_usd"] == pytest.approx(0.002)
+
+
+def test_the_retry_limit_grows_but_stays_capped() -> None:
+    assert compare.retry_limit(4000) == 10000
+    assert compare.retry_limit(8000) == 12000
+    assert compare.retry_limit(20000) == 20000
