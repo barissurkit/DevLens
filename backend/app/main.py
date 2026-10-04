@@ -22,10 +22,22 @@ logger = logging.getLogger(__name__)
 
 class HealthResponse(BaseModel):
     status: str
+    # Non-sensitive configuration flags so operators can spot a missing integration
+    # (for example an unauthenticated GitHub client limited to 60 requests per hour).
+    github_token_configured: bool | None = None
+    ai_configured: bool | None = None
+    database_configured: bool | None = None
 
 
-def health_check() -> HealthResponse:
-    return HealthResponse(status="ok")
+def health_check(settings: Settings | None = None) -> HealthResponse:
+    if settings is None:
+        return HealthResponse(status="ok")
+    return HealthResponse(
+        status="ok",
+        github_token_configured=bool(settings.github_token),
+        ai_configured=bool(settings.gemini_api_key),
+        database_configured=bool(settings.database_url),
+    )
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:
@@ -81,7 +93,11 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     application.include_router(action_plan_router)
     application.include_router(ai_suggestions_router)
     application.include_router(history_router)
-    application.get("/health", response_model=HealthResponse)(health_check)
+
+    def health() -> HealthResponse:
+        return health_check(application_settings)
+
+    application.get("/health", response_model=HealthResponse)(health)
     return application
 
 
