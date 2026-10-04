@@ -7,6 +7,12 @@ export function userPath(username: string): string {
   return `/u/${encodeURIComponent(username)}`;
 }
 
+/** Path of the comparison page for two GitHub logins. */
+export function comparePath(first: string, second?: string): string {
+  const base = `/karsilastir/${encodeURIComponent(first)}`;
+  return second ? `${base}/${encodeURIComponent(second)}` : base;
+}
+
 /** The login from a `/u/[username]` route segment, or null when it is not a valid GitHub login. */
 export function usernameFromRouteParam(raw: string): string | null {
   let decoded: string;
@@ -58,4 +64,17 @@ export async function copyText(text: string): Promise<boolean> {
   } finally {
     field.remove();
   }
+}
+
+/** URL of the score badge image served by the API for a GitHub login, or null when the API is not configured. */
+export function badgeImageUrl(username: string): string | null {
+  const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL?.trim();
+  if (!baseUrl) return null;
+  return `${baseUrl.replace(/\/+$/, "")}/api/v1/badge/${encodeURIComponent(username)}.svg`;
+}
+
+/** Markdown for a README: the badge, linking to the shareable result page. */
+export function badgeMarkdown(username: string, siteUrl: string): string | null {
+  const image = badgeImageUrl(username);
+  return image ? `[![DevLens portföy skoru](${image})](${siteUrl}${userPath(username)})` : null;
 }

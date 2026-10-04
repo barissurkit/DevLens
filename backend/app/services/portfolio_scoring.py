@@ -7,7 +7,7 @@ from app.schemas.analysis import (
     PortfolioScoreRuleResult,
 )
 
-PORTFOLIO_SCORING_VERSION = "v2"
+PORTFOLIO_SCORING_VERSION = "v3"
 PORTFOLIO_SCORING_MAX_POINTS = 100
 MIN_REPOSITORIES_FOR_PORTFOLIO_SCORE = 2
 
@@ -43,32 +43,32 @@ PORTFOLIO_SCORING_DIMENSIONS: tuple[
             PortfolioScoringRuleDefinition(
                 key="readme_exists",
                 label="README mevcut",
-                weight=8,
+                weight=6,
             ),
             PortfolioScoringRuleDefinition(
                 key="readme_title",
                 label="README başlığı",
-                weight=5,
+                weight=4,
             ),
             PortfolioScoringRuleDefinition(
                 key="readme_description",
                 label="README açıklaması",
-                weight=8,
+                weight=6,
             ),
             PortfolioScoringRuleDefinition(
                 key="readme_installation",
                 label="README kurulumu",
-                weight=9,
+                weight=7,
             ),
             PortfolioScoringRuleDefinition(
                 key="readme_usage",
                 label="README kullanımı",
-                weight=9,
+                weight=7,
             ),
             PortfolioScoringRuleDefinition(
                 key="readme_technologies",
                 label="README teknolojileri",
-                weight=6,
+                weight=5,
             ),
             PortfolioScoringRuleDefinition(
                 key="readme_requirements",
@@ -84,12 +84,12 @@ PORTFOLIO_SCORING_DIMENSIONS: tuple[
             PortfolioScoringRuleDefinition(
                 key="tests_structure",
                 label="Test Yapısı",
-                weight=18,
+                weight=15,
             ),
             PortfolioScoringRuleDefinition(
                 key="ci_workflow",
                 label="CI İş Akışı",
-                weight=12,
+                weight=10,
             ),
         ),
     ),
@@ -100,17 +100,38 @@ PORTFOLIO_SCORING_DIMENSIONS: tuple[
             PortfolioScoringRuleDefinition(
                 key="gitignore",
                 label=".gitignore",
-                weight=8,
+                weight=6,
             ),
             PortfolioScoringRuleDefinition(
                 key="license",
                 label="LICENSE",
-                weight=7,
+                weight=5,
             ),
             PortfolioScoringRuleDefinition(
                 key="contributing",
                 label="CONTRIBUTING",
-                weight=5,
+                weight=4,
+            ),
+        ),
+    ),
+    PortfolioScoringDimensionDefinition(
+        key="maintenance_visibility",
+        label="Bakım ve Görünürlük",
+        rules=(
+            PortfolioScoringRuleDefinition(
+                key="repo_description",
+                label="Repository açıklaması",
+                weight=6,
+            ),
+            PortfolioScoringRuleDefinition(
+                key="repo_topics",
+                label="Konu etiketleri",
+                weight=6,
+            ),
+            PortfolioScoringRuleDefinition(
+                key="recent_activity",
+                label="Son 12 ayda güncelleme",
+                weight=8,
             ),
         ),
     ),
@@ -200,9 +221,9 @@ def _validate_policy() -> None:
         for dimension in PORTFOLIO_SCORING_DIMENSIONS
     ]
 
-    if dimension_points != [50, 30, 20]:
+    if dimension_points != [40, 25, 15, 20]:
         raise RuntimeError(
-            "V1 portfolio scoring dimensions must total 50, 30, and 20 points."
+            "Portfolio scoring dimensions must total 40, 25, 15, and 20 points."
         )
 
     if sum(dimension_points) != PORTFOLIO_SCORING_MAX_POINTS:

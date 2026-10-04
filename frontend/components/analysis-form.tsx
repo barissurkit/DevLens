@@ -35,6 +35,17 @@ export function AnalysisForm({ hero, preview, features, initialUsername }: Analy
     void submit(initialUsername);
   }, [initialUsername, authStatus, submit]);
 
+  // A link to a GitHub user that does not exist must not be indexed as a real page.
+  const notFound = state.status === "error" && state.error.code === "github_user_not_found";
+  useEffect(() => {
+    if (!notFound) return;
+    const meta = document.createElement("meta");
+    meta.name = "robots";
+    meta.content = "noindex";
+    document.head.appendChild(meta);
+    return () => meta.remove();
+  }, [notFound]);
+
   // "/" jumps to the search field, like on most developer sites (unless the user is already typing somewhere).
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
@@ -91,7 +102,7 @@ export function AnalysisForm({ hero, preview, features, initialUsername }: Analy
       <div className={compact ? "" : "hero-backdrop grid items-center gap-10 py-4 lg:grid-cols-[1.2fr_1fr] lg:gap-14 lg:py-10"}>
         <div className="min-w-0">
           {!compact && hero}
-          <form onSubmit={handleSubmit} noValidate aria-busy={isLoading} className={`rounded-2xl border border-slate-200 bg-card ${compact ? "p-3 shadow-card sm:p-4" : "p-5 shadow-raised sm:p-6"}`}>
+          <form onSubmit={handleSubmit} noValidate aria-busy={isLoading} className={`print:hidden rounded-2xl border border-slate-200 bg-card ${compact ? "p-3 shadow-card sm:p-4" : "p-5 shadow-raised sm:p-6"}`}>
         <label htmlFor="github-username" className={compact ? "sr-only" : "block text-sm font-medium text-slate-900"}>GitHub kullanıcı adı</label>
         <div className={`flex flex-col gap-3 sm:flex-row ${compact ? "" : "mt-2"}`}>
           <input
