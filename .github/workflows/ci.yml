@@ -239,6 +239,7 @@ jobs:
       - backend
       - postgres
       - frontend
+      - e2e
       - docker
     runs-on: ubuntu-24.04
     timeout-minutes: 5
@@ -248,12 +249,14 @@ jobs:
           BACKEND_RESULT: ${{ needs.backend.result }}
           POSTGRES_RESULT: ${{ needs.postgres.result }}
           FRONTEND_RESULT: ${{ needs.frontend.result }}
+          E2E_RESULT: ${{ needs.e2e.result }}
           DOCKER_RESULT: ${{ needs.docker.result }}
         run: |
           set -euo pipefail
-          printf 'backend=%s postgres=%s frontend=%s docker=%s\n' \
-            "$BACKEND_RESULT" "$POSTGRES_RESULT" "$FRONTEND_RESULT" "$DOCKER_RESULT"
+          printf 'backend=%s postgres=%s frontend=%s e2e=%s docker=%s\n' \
+            "$BACKEND_RESULT" "$POSTGRES_RESULT" "$FRONTEND_RESULT" "$E2E_RESULT" "$DOCKER_RESULT"
           test "$BACKEND_RESULT" = success
           test "$POSTGRES_RESULT" = success
           test "$FRONTEND_RESULT" = success
+          test "$E2E_RESULT" = success
           test "$DOCKER_RESULT" = success

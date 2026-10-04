@@ -98,9 +98,14 @@ test.describe("analysis", () => {
   test("the slash key jumps to the search field", async ({ page, isMobile }) => {
     test.skip(isMobile, "There is no physical keyboard on a phone");
     await page.goto("/");
-    await page.keyboard.press("/");
+    const search = page.getByLabel("GitHub kullanıcı adı");
 
-    await expect(page.getByLabel("GitHub kullanıcı adı")).toBeFocused();
+    // The shortcut only exists once React has attached its listener. On a slow runner the page can be
+    // loaded but not yet interactive, so a key pressed too early is simply ignored: press until it works.
+    await expect(async () => {
+      await page.keyboard.press("/");
+      await expect(search).toBeFocused({ timeout: 1_000 });
+    }).toPass({ timeout: 15_000 });
   });
 
   test("a visitor sees the actions tab locked and a sign-in link", async ({ page }) => {
