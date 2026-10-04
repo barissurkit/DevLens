@@ -35,7 +35,7 @@ export interface PortfolioComparison {
   rules: RuleComparison[];
 }
 
-const DIMENSION_ORDER = ["documentation_consistency", "testing_automation_adoption", "repository_hygiene_consistency"];
+const DIMENSION_ORDER = ["documentation_consistency", "testing_automation_adoption", "repository_hygiene_consistency", "maintenance_visibility"];
 
 function leaderOf(a: number | null, b: number | null): Side {
   if (a === null || b === null) return "tie";
