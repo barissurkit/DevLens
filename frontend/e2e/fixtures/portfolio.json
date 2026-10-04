@@ -115,7 +115,7 @@
       "typescript"
      ],
      "created_at": "2026-08-12T06:54:06Z",
-     "updated_at": "2026-09-30T13:15:10Z",
+     "updated_at": "2026-10-04T19:14:00Z",
      "archived": false,
      "fork": false,
      "default_branch": "main"
@@ -1285,7 +1285,7 @@
        "typescript"
       ],
       "created_at": "2026-08-12T06:54:06Z",
-      "updated_at": "2026-09-30T13:15:10Z",
+      "updated_at": "2026-10-04T19:14:00Z",
       "archived": false,
       "fork": false,
       "default_branch": "main"
@@ -1311,14 +1311,14 @@
         "typescript"
        ],
        "created_at": "2026-08-12T06:54:06Z",
-       "updated_at": "2026-09-30T13:15:10Z",
+       "updated_at": "2026-10-04T19:14:00Z",
        "archived": false,
        "fork": false,
        "default_branch": "main"
       },
       "readme": {
        "exists": true,
-       "content_length": 10915,
+       "content_length": 11620,
        "has_title": true,
        "has_description": true,
        "has_installation": false,
@@ -2084,6 +2084,21 @@
      "key": "contributing",
      "label": "CONTRIBUTING",
      "detected_repository_count": 0
+    },
+    {
+     "key": "repo_description",
+     "label": "Repository açıklaması",
+     "detected_repository_count": 8
+    },
+    {
+     "key": "repo_topics",
+     "label": "Konu etiketleri",
+     "detected_repository_count": 2
+    },
+    {
+     "key": "recent_activity",
+     "label": "Son 12 ayda güncelleme",
+     "detected_repository_count": 8
     }
    ],
    "repository_score_distribution": [
@@ -2141,6 +2156,18 @@
      "message": ".gitignore dosyası sinyalleri, başarıyla analiz edilen birden fazla herkese açık repository'de tespit edildi.",
      "detected_repository_count": 7,
      "analyzed_repository_count": 8
+    },
+    {
+     "key": "repo_description",
+     "message": "GitHub repository açıklaması sinyalleri, başarıyla analiz edilen birden fazla herkese açık repository'de tespit edildi.",
+     "detected_repository_count": 8,
+     "analyzed_repository_count": 8
+    },
+    {
+     "key": "recent_activity",
+     "message": "Son 12 ayda güncelleme sinyalleri, başarıyla analiz edilen birden fazla herkese açık repository'de tespit edildi.",
+     "detected_repository_count": 8,
+     "analyzed_repository_count": 8
     }
    ],
    "improvement_signals": [
@@ -2195,57 +2222,57 @@
    "limitations": []
   },
   "score": {
-   "version": "v2",
+   "version": "v3",
    "is_available": true,
-   "overall_score": 36,
+   "overall_score": 44,
    "scored_repository_count": 8,
    "dimensions": [
     {
      "key": "documentation_consistency",
      "label": "Dokümantasyon Tutarlılığı",
-     "points_earned": 22,
-     "points_possible": 50,
-     "score": 44,
+     "points_earned": 17,
+     "points_possible": 40,
+     "score": 43,
      "rules": [
       {
        "key": "readme_exists",
        "label": "README mevcut",
-       "weight": 8,
+       "weight": 6,
        "detected_repository_count": 7,
        "analyzed_repository_count": 8
       },
       {
        "key": "readme_title",
        "label": "README başlığı",
-       "weight": 5,
+       "weight": 4,
        "detected_repository_count": 7,
        "analyzed_repository_count": 8
       },
       {
        "key": "readme_description",
        "label": "README açıklaması",
-       "weight": 8,
+       "weight": 6,
        "detected_repository_count": 6,
        "analyzed_repository_count": 8
       },
       {
        "key": "readme_installation",
        "label": "README kurulumu",
-       "weight": 9,
+       "weight": 7,
        "detected_repository_count": 1,
        "analyzed_repository_count": 8
       },
       {
        "key": "readme_usage",
        "label": "README kullanımı",
-       "weight": 9,
+       "weight": 7,
        "detected_repository_count": 0,
        "analyzed_repository_count": 8
       },
       {
        "key": "readme_technologies",
        "label": "README teknolojileri",
-       "weight": 6,
+       "weight": 5,
        "detected_repository_count": 4,
        "analyzed_repository_count": 8
       },
@@ -2261,21 +2288,21 @@
     {
      "key": "testing_automation_adoption",
      "label": "Test ve Otomasyon Kullanımı",
-     "points_earned": 6,
-     "points_possible": 30,
+     "points_earned": 5,
+     "points_possible": 25,
      "score": 20,
      "rules": [
       {
        "key": "tests_structure",
        "label": "Test Yapısı",
-       "weight": 18,
+       "weight": 15,
        "detected_repository_count": 2,
        "analyzed_repository_count": 8
       },
       {
        "key": "ci_workflow",
        "label": "CI İş Akışı",
-       "weight": 12,
+       "weight": 10,
        "detected_repository_count": 1,
        "analyzed_repository_count": 8
       }
@@ -2284,29 +2311,59 @@
     {
      "key": "repository_hygiene_consistency",
      "label": "Repository Hijyeni Tutarlılığı",
-     "points_earned": 8,
-     "points_possible": 20,
+     "points_earned": 6,
+     "points_possible": 15,
      "score": 40,
      "rules": [
       {
        "key": "gitignore",
        "label": ".gitignore",
-       "weight": 8,
+       "weight": 6,
        "detected_repository_count": 7,
        "analyzed_repository_count": 8
       },
       {
        "key": "license",
        "label": "LICENSE",
-       "weight": 7,
+       "weight": 5,
        "detected_repository_count": 1,
        "analyzed_repository_count": 8
       },
       {
        "key": "contributing",
        "label": "CONTRIBUTING",
-       "weight": 5,
+       "weight": 4,
        "detected_repository_count": 0,
+       "analyzed_repository_count": 8
+      }
+     ]
+    },
+    {
+     "key": "maintenance_visibility",
+     "label": "Bakım ve Görünürlük",
+     "points_earned": 16,
+     "points_possible": 20,
+     "score": 80,
+     "rules": [
+      {
+       "key": "repo_description",
+       "label": "Repository açıklaması",
+       "weight": 6,
+       "detected_repository_count": 8,
+       "analyzed_repository_count": 8
+      },
+      {
+       "key": "repo_topics",
+       "label": "Konu etiketleri",
+       "weight": 6,
+       "detected_repository_count": 2,
+       "analyzed_repository_count": 8
+      },
+      {
+       "key": "recent_activity",
+       "label": "Son 12 ayda güncelleme",
+       "weight": 8,
+       "detected_repository_count": 8,
        "analyzed_repository_count": 8
       }
      ]
@@ -2320,7 +2377,5 @@
   "is_owner": false,
   "mode": "explore"
  },
- "guided_improvements": [],
- "analysis_generated_at": "2026-09-30T13:35:45.255519Z",
- "cached": true
+ "guided_improvements": []
 }

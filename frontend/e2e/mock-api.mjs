@@ -58,12 +58,66 @@ function resultFor(request) {
   };
 }
 
-// Any other login gets the same portfolio with a lower score, so comparisons have a clear leader.
+const LONG_SENTENCE = "Bu repository, çok uzun bir açıklamanın sayfa düzenini bozmadığını denemek için yazılmış, kasıtlı olarak uzatılmış bir metin içerir ve satır sonlarında kelimelerin düzgün sarılmasını bekler.";
+
+/** A copy of the first analyzed repository under another name, with its own score. */
+function cloneRepository(index, overrides = {}) {
+  const [first] = base.analysis.repository_analysis.repositories;
+  const name = overrides.name ?? `proje-${String(index + 1).padStart(2, "0")}`;
+  return {
+    ...first,
+    repository: { ...first.repository, name, html_url: `https://github.com/${OWNER}/${name}`, ...overrides.repository },
+    score: { ...first.score, overall_score: overrides.score ?? ((index * 17) % 101) },
+    analysis: overrides.analysis ?? first.analysis,
+  };
+}
+
+function withRepositories(analysis, repositories, extra = {}) {
+  return {
+    ...analysis,
+    repository_analysis: { ...analysis.repository_analysis, repositories },
+    aggregation: { ...analysis.aggregation, selected_repository_count: repositories.length, successful_repository_count: repositories.length, ...extra.aggregation },
+    ...extra.top,
+  };
+}
+
+// Special logins give the report awkward data: "bos" has no analyzed repository, "buyuk" has thirty and
+// "uzun" has very long names, descriptions and notes. Any other login gets the same portfolio with a lower score,
+// so comparisons have a clear leader.
 function analysisFor(username) {
   if (username === OWNER) return base.analysis;
+  const user = { ...base.analysis.user, username, name: null };
+  if (username === "bos") {
+    return withRepositories({ ...base.analysis, user }, [], {
+      aggregation: { portfolio_signals: [], technology_distribution: [] },
+      top: {
+        score: { ...base.analysis.score, is_available: false, overall_score: null, scored_repository_count: 0, dimensions: [], limitations: ["Portföy skoru için en az iki repository'nin başarıyla analiz edilmesi gerekir."] },
+        intelligence: { ...base.analysis.intelligence, strength_signals: [], improvement_signals: [], recurring_technologies: [], dominant_areas: [] },
+      },
+    });
+  }
+  if (username === "buyuk") {
+    return withRepositories({ ...base.analysis, user }, Array.from({ length: 30 }, (_, index) => cloneRepository(index)));
+  }
+  if (username === "uzun") {
+    const longName = "cok-uzun-bir-repository-adi-ve-daha-da-uzun-bir-devam-bolumu";
+    const analysis = { ...base.analysis, user: { ...user, name: "Çok Uzun İsimli Bir Geliştirici Soyadı Daha Da Uzun" } };
+    const first = base.analysis.repository_analysis.repositories[0];
+    const manyTechnologies = Array.from({ length: 15 }, (_, index) => ({ name: `Teknoloji-${index + 1}`, category: "Backend", source_dependency: `dep-${index}` }));
+    const repositories = base.analysis.repository_analysis.repositories.map((_, index) => cloneRepository(index, {
+      name: index === 0 ? longName : undefined,
+      repository: { description: LONG_SENTENCE.repeat(3) },
+      analysis: { ...first.analysis, technologies: { ...first.analysis.technologies, technologies: manyTechnologies } },
+    }));
+    return {
+      ...withRepositories(analysis, repositories),
+      score: { ...base.analysis.score, limitations: [LONG_SENTENCE.repeat(2), LONG_SENTENCE.repeat(2)] },
+      intelligence: { ...base.analysis.intelligence, limitations: [LONG_SENTENCE.repeat(2)] },
+    };
+  }
   return {
     ...base.analysis,
-    user: { ...base.analysis.user, username, name: null },
+    user,
     score: { ...base.analysis.score, overall_score: Math.max(0, (base.analysis.score.overall_score ?? 40) - 20) },
   };
 }
