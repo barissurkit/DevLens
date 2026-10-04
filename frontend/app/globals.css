@@ -249,3 +249,12 @@ h1, h2, h3 {
 html, body {
   overflow-x: clip;
 }
+
+/* Printed report: plain white page, cards without shadows, no sticky bars. */
+@media print {
+  body { background: #fff; }
+  header[class*="sticky"], .sticky { position: static !important; }
+  [class*="shadow-"] { box-shadow: none !important; }
+  section, article { break-inside: avoid; }
+  a[href^="http"]::after { content: none; }
+}
