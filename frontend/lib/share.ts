@@ -7,6 +7,12 @@ export function userPath(username: string): string {
   return `/u/${encodeURIComponent(username)}`;
 }
 
+/** Path of the comparison page for two GitHub logins. */
+export function comparePath(first: string, second?: string): string {
+  const base = `/karsilastir/${encodeURIComponent(first)}`;
+  return second ? `${base}/${encodeURIComponent(second)}` : base;
+}
+
 /** The login from a `/u/[username]` route segment, or null when it is not a valid GitHub login. */
 export function usernameFromRouteParam(raw: string): string | null {
   let decoded: string;

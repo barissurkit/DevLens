@@ -78,13 +78,14 @@ const STEPS: Array<{ title: string; text: string }> = [
 ];
 
 const dimensionRows: Array<{ label: string; points: number; detail: string }> = [
-  { label: "Dokümantasyon", points: 50, detail: "README başlığı, açıklama, kurulum, kullanım, gereksinimler ve teknolojiler." },
-  { label: "Test ve Otomasyon", points: 30, detail: "Test dizini yapısı ve GitHub Actions CI iş akışı." },
-  { label: "Repository Hijyeni", points: 20, detail: ".gitignore, lisans dosyası ve katkı rehberi." },
+  { label: "Dokümantasyon", points: 40, detail: "README başlığı, açıklama, kurulum, kullanım, gereksinimler ve teknolojiler." },
+  { label: "Test ve Otomasyon", points: 25, detail: "Test dizini yapısı ve GitHub Actions CI iş akışı." },
+  { label: "Repository Hijyeni", points: 15, detail: ".gitignore, lisans dosyası ve katkı rehberi." },
+  { label: "Bakım ve Görünürlük", points: 20, detail: "Repository açıklaması, konu etiketleri ve son 12 ayda güncelleme." },
 ];
 
 const FAQ: Array<{ question: string; answer: string }> = [
-  { question: "Skor nasıl hesaplanıyor?", answer: "Her kural bir ağırlığa sahiptir; kuralın puanı, ağırlığı ile tespit edildiği repository oranının çarpımıdır. Toplam 100 puandır: 50 dokümantasyon, 30 test ve otomasyon, 20 repository hijyeni. Aynı veri her zaman aynı skoru verir." },
+  { question: "Skor nasıl hesaplanıyor?", answer: "Her kural bir ağırlığa sahiptir; kuralın puanı, ağırlığı ile tespit edildiği repository oranının çarpımıdır. Toplam 100 puandır: 40 dokümantasyon, 25 test ve otomasyon, 15 repository hijyeni, 20 bakım ve görünürlük. Aynı veri ve aynı tarih için skor hep aynıdır; yalnızca \"son 12 ayda güncelleme\" kuralı zamanla değişebilir." },
   { question: "AI skoru değiştirir mi?", answer: "Hayır. Gemini yalnızca hesaplanmış bulguları açıklar ve bir sonraki proje için öneri sunar. AI yanıt vermediğinde bile skor ve bulgular eksiksiz görünür." },
   { question: "Özel repository'lerimi görüyor mu?", answer: "Hayır. Yalnızca herkese açık GitHub verileri analiz edilir. Fork'lar ve arşivlenmiş repository'ler kapsam dışı bırakılır." },
   { question: "Neden giriş yapmalıyım?", answer: "Analiz için gerekmez. GitHub ile giriş yaptığında kendi portföyün için skor geçmişini, yönlendirmeli iyileştirmeleri, AI önerilerini ve aksiyon planını kullanabilirsin." },
@@ -115,7 +116,7 @@ export function FeatureStrip() {
             Skorlar, herkese açık repository&apos;lerde ölçülebilen sinyallerden deterministik kurallarla hesaplanır. Eksik veri ve kısmi kanıt açıkça belirtilir; hangi adımın skoru ne kadar artıracağı sonuç ekranında görünür.
           </p>
           <ul className="mt-6 space-y-3 text-sm text-slate-700">
-            {["AI yalnızca yorumlar; skoru veya bulguları değiştirmez.", "Aynı kanıt her zaman aynı skoru üretir.", "AI kullanılamasa bile analiz sonucu eksiksiz görünür."].map((item) => (
+            {["AI yalnızca yorumlar; skoru veya bulguları değiştirmez.", "Aynı kanıt ve aynı tarih için skor hep aynıdır.", "AI kullanılamasa bile analiz sonucu eksiksiz görünür."].map((item) => (
               <li key={item} className="flex gap-2.5">
                 <svg aria-hidden="true" viewBox="0 0 16 16" className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 8.5l3.2 3L13 4.5" /></svg>
                 {item}

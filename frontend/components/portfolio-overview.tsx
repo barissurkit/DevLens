@@ -5,16 +5,18 @@ import { ScoreDimension } from "./score-dimension";
 import { ScoreMethodology } from "./score-methodology";
 import { SignalDetail } from "./signal-detail";
 
-const DIMENSION_ORDER = ["documentation_consistency", "testing_automation_adoption", "repository_hygiene_consistency"];
+const DIMENSION_ORDER = ["documentation_consistency", "testing_automation_adoption", "repository_hygiene_consistency", "maintenance_visibility"];
 const DIMENSION_LABELS: Record<string, string> = {
   documentation_consistency: "Dokümantasyon",
   testing_automation_adoption: "Test ve Otomasyon",
   repository_hygiene_consistency: "Repository Hijyeni",
+  maintenance_visibility: "Bakım ve Görünürlük",
 };
 const DIMENSION_DESCRIPTIONS: Record<string, string> = {
   documentation_consistency: "README dokümantasyon sinyallerinin portföy genelindeki tutarlılığı.",
   testing_automation_adoption: "Test yapısı ve CI iş akışı sinyallerinin portföy genelindeki görünümü.",
   repository_hygiene_consistency: ".gitignore, LICENSE ve CONTRIBUTING gibi repository pratiği sinyallerinin görünümü.",
+  maintenance_visibility: "Repository açıklaması, konu etiketleri ve son 12 aydaki güncellemelerin görünümü.",
 };
 
 const cardClass = "rounded-2xl border border-slate-200 bg-card p-5 shadow-card sm:p-6";

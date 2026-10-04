@@ -50,4 +50,18 @@ describe("Analysis history privacy and progress UI", () => {
     await waitFor(() => expect(screen.getByText("68")).toBeInTheDocument());
     expect(screen.queryByText("99")).not.toBeInTheDocument();
   });
+
+  it("keeps records from an older scoring version out of the trend line and labels them", async () => {
+    const old = { ...record("old", 80, "2026-08-01T00:00:00Z"), analysis_version: "v2" };
+    const oldest = { ...record("older", 82, "2026-07-01T00:00:00Z"), analysis_version: "v2" };
+    const current1 = { ...record("c1", 50, "2026-09-01T00:00:00Z"), analysis_version: "v3" };
+    const current2 = { ...record("c2", 58, "2026-09-10T00:00:00Z"), analysis_version: "v3" };
+    mockedGet.mockResolvedValue({ latest: current2, previous: current1, comparison: null, history: [current2, current1, old, oldest] });
+    render(<AnalysisHistory visible />);
+
+    expect(await screen.findByText(/2 kayıt, puan ölçeği farklı olduğu için grafiğe dahil edilmedi/)).toBeInTheDocument();
+    expect(screen.getAllByText("(eski puanlama)")).toHaveLength(2);
+    // The chart only joins the two current records: 50 then 58.
+    expect(screen.getByRole("img", { name: /50, 58/ })).toBeInTheDocument();
+  });
 });
