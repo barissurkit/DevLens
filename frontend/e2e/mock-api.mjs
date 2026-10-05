@@ -175,8 +175,6 @@ http
     if (openSource) {
       const login = decodeURIComponent(openSource[1]);
       if (login === "ghost") return json(404, { detail: { code: "github_user_not_found", message: "GitHub kullanıcısı bulunamadı." } });
-      if (login === "bos") return json(200, { username: login, total_merged: 0, repository_count: 0, contributions: [], is_truncated: false });
-      if (login === "hatali") return json(503, { detail: { code: "github_unavailable", message: "GitHub'a geçici olarak erişilemiyor." } });
       return json(200, {
         username: login,
         total_merged: 5,
