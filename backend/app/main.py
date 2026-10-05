@@ -15,6 +15,7 @@ from app.api.action_plan import router as action_plan_router
 from app.api.ai_suggestions import router as ai_suggestions_router
 from app.auth.session_cleanup import SessionCleanupCoordinator
 from app.api.history import router as history_router
+from app.api.saved_profiles import router as saved_profiles_router
 from app.config import Settings, get_settings
 from app.observability import REQUEST_ID, configure_logging, emit_event, new_request_id
 from app.rate_limit import RateLimiter
@@ -95,6 +96,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     application.include_router(action_plan_router)
     application.include_router(ai_suggestions_router)
     application.include_router(history_router)
+    application.include_router(saved_profiles_router)
     application.include_router(badge_router)
     application.include_router(client_errors_router)
 
