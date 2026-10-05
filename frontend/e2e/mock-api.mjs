@@ -136,6 +136,7 @@ const record = (daysAgo, score) => ({
 });
 
 let tasks = [];
+let savedProfiles = [];
 
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -236,6 +237,20 @@ http
       }
       tasks = tasks.map((task) => (task.id === match[1] ? { ...task, ...body } : task));
       return json(200, tasks.find((task) => task.id === match[1]));
+    }
+    if (path === "/api/v1/workspace/saved-profiles" && owner) {
+      if (request.method === "GET") return json(200, { profiles: savedProfiles, limit: 50 });
+      const existing = savedProfiles.find((item) => item.username.toLowerCase() === String(body.username).toLowerCase());
+      if (existing) return json(200, existing);
+      const profile = { id: `p${Date.now()}`, username: body.username, saved_at: new Date().toISOString(), latest_score: body.username === OWNER ? 61 : null, latest_analyzed_at: body.username === OWNER ? new Date().toISOString() : null };
+      savedProfiles = [profile, ...savedProfiles];
+      return json(201, profile);
+    }
+    const savedMatch = path.match(/^\/api\/v1\/workspace\/saved-profiles\/(.+)$/);
+    if (savedMatch && owner && request.method === "DELETE") {
+      savedProfiles = savedProfiles.filter((item) => item.id !== savedMatch[1]);
+      response.writeHead(204, cors);
+      return response.end();
     }
     if (path === "/api/v1/workspace/ai-suggestions" && owner) {
       return json(200, { status: "available", suggestions: [{ title: "CI iş akışı ekle", description: "Testleri çalıştıran bir iş akışı ekleyin.", reason: "Birçok repository'de CI yok.", evidence_refs: ["ci_workflow"] }] });

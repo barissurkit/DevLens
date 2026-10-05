@@ -13,6 +13,8 @@ import type {
   AISuggestionsResponse,
   HistoryResponse,
   OpenSourceContributions,
+  SavedProfile,
+  SavedProfilesResponse,
   GuidedImprovement,
 } from "./types";
 
@@ -571,4 +573,49 @@ export async function logout(): Promise<void> {
 
   if (response.status === 204) return;
   throw new ApiError("Oturum kapatılamadı.", response.status, "logout_error");
+}
+
+const SAVED_PROFILES_PATH = "/api/v1/workspace/saved-profiles";
+
+function isSavedProfile(value: unknown): value is SavedProfile {
+  if (typeof value !== "object" || value === null) return false;
+  const item = value as Partial<SavedProfile>;
+  return typeof item.id === "string" && typeof item.username === "string" && typeof item.saved_at === "string"
+    && (item.latest_score === null || item.latest_score === undefined || typeof item.latest_score === "number");
+}
+
+async function savedProfilesRequest(init: RequestInit = {}, suffix = ""): Promise<unknown> {
+  let response: Response;
+  const isMutation = Boolean(init.method && init.method !== "GET");
+  const request: RequestInit = { ...init, credentials: "include" };
+  if (isMutation) request.headers = { "Content-Type": "application/json", ...(init.headers || {}) };
+  try {
+    response = await fetch(getApiUrl(`${SAVED_PROFILES_PATH}${suffix}`), request);
+  } catch {
+    throw new ApiError("Kayıtlı profillere ulaşılamadı.", 0, "network_error");
+  }
+  const payload = await readJson(response);
+  if (!response.ok) {
+    if (isOperationalErrorResponse(payload)) throw new ApiError(payload.detail.message, response.status, payload.detail.code);
+    throw new ApiError("Kayıtlı profil işlemi tamamlanamadı.", response.status, "saved_profiles_error");
+  }
+  return payload;
+}
+
+export async function getSavedProfiles(): Promise<SavedProfilesResponse> {
+  const payload = await savedProfilesRequest();
+  const body = payload as Partial<SavedProfilesResponse> | null;
+  if (body && Array.isArray(body.profiles) && body.profiles.every(isSavedProfile) && typeof body.limit === "number") return body as SavedProfilesResponse;
+  throw new ApiError("Kayıtlı profil servisi geçersiz bir yanıt döndürdü.", 200, "malformed_response");
+}
+
+/** Saves a profile; saving one that is already saved returns it unchanged. */
+export async function saveProfile(username: string): Promise<SavedProfile> {
+  const payload = await savedProfilesRequest({ method: "POST", body: JSON.stringify({ username }) });
+  if (isSavedProfile(payload)) return payload;
+  throw new ApiError("Kayıtlı profil servisi geçersiz bir yanıt döndürdü.", 200, "malformed_response");
+}
+
+export async function removeSavedProfile(id: string): Promise<void> {
+  await savedProfilesRequest({ method: "DELETE" }, `/${encodeURIComponent(id)}`);
 }
