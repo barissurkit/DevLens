@@ -92,66 +92,85 @@ const FAQ: Array<{ question: string; answer: string }> = [
   { question: "Sonuçlar ne kadar güncel?", answer: "Sonuçlar kısa süre önbellekte tutulur ve ne zaman hesaplandığı sonuç sayfasında yazar. \"Yenile\" ile analizi baştan hesaplatabilirsin." },
 ];
 
+/** The sections are shared by the landing page and their own pages; on their own page the heading is the h1. */
+export type HeadingLevel = "h1" | "h2";
+
+export function HowItWorks({ as: Heading = "h2" }: { as?: HeadingLevel }) {
+  return (
+  <section id="nasil-calisir" aria-labelledby="how-heading" className="scroll-mt-24">
+    <Heading id="how-heading" className="text-2xl font-semibold tracking-tight text-slate-950 sm:text-3xl">Nasıl çalışır?</Heading>
+    <p className="mt-2 max-w-2xl text-slate-600">Üç adımda, tahmine değil ölçülebilir kanıta dayanan bir portföy değerlendirmesi.</p>
+    <ol className="mt-8 grid gap-4 md:grid-cols-3">
+      {STEPS.map((step, index) => (
+        <li key={step.title} className="rounded-2xl border border-slate-200 bg-card p-6 shadow-card">
+          <span aria-hidden="true" className="flex h-9 w-9 items-center justify-center rounded-full bg-indigo-50 text-sm font-semibold text-indigo-700">{index + 1}</span>
+          <h3 className="mt-4 text-base font-semibold text-slate-950">{step.title}</h3>
+          <p className="mt-2 text-sm leading-6 text-slate-600">{step.text}</p>
+        </li>
+      ))}
+    </ol>
+  </section>
+  );
+}
+
+export function ScoringOverview({ as: Heading = "h2" }: { as?: HeadingLevel }) {
+  return (
+  <section id="puanlama" aria-labelledby="scoring-heading" className="scroll-mt-24 grid gap-10 lg:grid-cols-[1fr_1.1fr] lg:items-start">
+    <div>
+      <Heading id="scoring-heading" className="text-2xl font-semibold tracking-tight text-slate-950 sm:text-3xl">Şeffaf puanlama</Heading>
+      <p className="mt-3 leading-7 text-slate-600">
+        Skorlar, herkese açık repository&apos;lerde ölçülebilen sinyallerden deterministik kurallarla hesaplanır. Eksik veri ve kısmi kanıt açıkça belirtilir; hangi adımın skoru ne kadar artıracağı sonuç ekranında görünür.
+      </p>
+      <ul className="mt-6 space-y-3 text-sm text-slate-700">
+        {["AI yalnızca yorumlar; skoru veya bulguları değiştirmez.", "Aynı kanıt ve aynı tarih için skor hep aynıdır.", "AI kullanılamasa bile analiz sonucu eksiksiz görünür."].map((item) => (
+          <li key={item} className="flex gap-2.5">
+            <svg aria-hidden="true" viewBox="0 0 16 16" className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 8.5l3.2 3L13 4.5" /></svg>
+            {item}
+          </li>
+        ))}
+      </ul>
+    </div>
+    <ul className="space-y-3">
+      {dimensionRows.map((row) => (
+        <li key={row.label} className="rounded-2xl border border-slate-200 bg-card p-5 shadow-card">
+          <div className="flex items-baseline justify-between gap-3">
+            <h3 className="text-base font-semibold text-slate-950">{row.label}</h3>
+            <span className="text-sm font-semibold text-indigo-700">{row.points} puan</span>
+          </div>
+          <div aria-hidden="true" className="mt-3 h-1.5 overflow-hidden rounded-full bg-slate-100"><div className="h-full rounded-full bg-indigo-500" style={{ width: `${row.points}%` }} /></div>
+          <p className="mt-3 text-sm leading-6 text-slate-600">{row.detail}</p>
+        </li>
+      ))}
+    </ul>
+  </section>
+  );
+}
+
+export function FaqSection({ as: Heading = "h2" }: { as?: HeadingLevel }) {
+  return (
+  <section id="sss" aria-labelledby="faq-heading" className="scroll-mt-24">
+    <Heading id="faq-heading" className="text-2xl font-semibold tracking-tight text-slate-950 sm:text-3xl">Sık sorulan sorular</Heading>
+    <div className="mt-6 divide-y divide-slate-200 overflow-hidden rounded-2xl border border-slate-200 bg-card shadow-card">
+      {FAQ.map((item) => (
+        <details key={item.question} className="group px-5 py-4 sm:px-6">
+          <summary className="flex cursor-pointer list-none items-center justify-between gap-4 rounded-lg text-base font-medium text-slate-950 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600 [&::-webkit-details-marker]:hidden">
+            {item.question}
+            <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5 shrink-0 text-slate-500 transition group-open:rotate-180" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9l6 6 6-6" /></svg>
+          </summary>
+          <p className="mt-3 max-w-3xl text-sm leading-7 text-slate-600">{item.answer}</p>
+        </details>
+      ))}
+    </div>
+  </section>
+  );
+}
+
 export function FeatureStrip() {
   return (
     <div className="space-y-24">
-      <section id="nasil-calisir" aria-labelledby="how-heading" className="scroll-mt-24">
-        <h2 id="how-heading" className="text-2xl font-semibold tracking-tight text-slate-950 sm:text-3xl">Nasıl çalışır?</h2>
-        <p className="mt-2 max-w-2xl text-slate-600">Üç adımda, tahmine değil ölçülebilir kanıta dayanan bir portföy değerlendirmesi.</p>
-        <ol className="mt-8 grid gap-4 md:grid-cols-3">
-          {STEPS.map((step, index) => (
-            <li key={step.title} className="rounded-2xl border border-slate-200 bg-card p-6 shadow-card">
-              <span aria-hidden="true" className="flex h-9 w-9 items-center justify-center rounded-full bg-indigo-50 text-sm font-semibold text-indigo-700">{index + 1}</span>
-              <h3 className="mt-4 text-base font-semibold text-slate-950">{step.title}</h3>
-              <p className="mt-2 text-sm leading-6 text-slate-600">{step.text}</p>
-            </li>
-          ))}
-        </ol>
-      </section>
-
-      <section id="puanlama" aria-labelledby="scoring-heading" className="scroll-mt-24 grid gap-10 lg:grid-cols-[1fr_1.1fr] lg:items-start">
-        <div>
-          <h2 id="scoring-heading" className="text-2xl font-semibold tracking-tight text-slate-950 sm:text-3xl">Şeffaf puanlama</h2>
-          <p className="mt-3 leading-7 text-slate-600">
-            Skorlar, herkese açık repository&apos;lerde ölçülebilen sinyallerden deterministik kurallarla hesaplanır. Eksik veri ve kısmi kanıt açıkça belirtilir; hangi adımın skoru ne kadar artıracağı sonuç ekranında görünür.
-          </p>
-          <ul className="mt-6 space-y-3 text-sm text-slate-700">
-            {["AI yalnızca yorumlar; skoru veya bulguları değiştirmez.", "Aynı kanıt ve aynı tarih için skor hep aynıdır.", "AI kullanılamasa bile analiz sonucu eksiksiz görünür."].map((item) => (
-              <li key={item} className="flex gap-2.5">
-                <svg aria-hidden="true" viewBox="0 0 16 16" className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 8.5l3.2 3L13 4.5" /></svg>
-                {item}
-              </li>
-            ))}
-          </ul>
-        </div>
-        <ul className="space-y-3">
-          {dimensionRows.map((row) => (
-            <li key={row.label} className="rounded-2xl border border-slate-200 bg-card p-5 shadow-card">
-              <div className="flex items-baseline justify-between gap-3">
-                <h3 className="text-base font-semibold text-slate-950">{row.label}</h3>
-                <span className="text-sm font-semibold text-indigo-700">{row.points} puan</span>
-              </div>
-              <div aria-hidden="true" className="mt-3 h-1.5 overflow-hidden rounded-full bg-slate-100"><div className="h-full rounded-full bg-indigo-500" style={{ width: `${row.points}%` }} /></div>
-              <p className="mt-3 text-sm leading-6 text-slate-600">{row.detail}</p>
-            </li>
-          ))}
-        </ul>
-      </section>
-
-      <section id="sss" aria-labelledby="faq-heading" className="scroll-mt-24">
-        <h2 id="faq-heading" className="text-2xl font-semibold tracking-tight text-slate-950 sm:text-3xl">Sık sorulan sorular</h2>
-        <div className="mt-6 divide-y divide-slate-200 overflow-hidden rounded-2xl border border-slate-200 bg-card shadow-card">
-          {FAQ.map((item) => (
-            <details key={item.question} className="group px-5 py-4 sm:px-6">
-              <summary className="flex cursor-pointer list-none items-center justify-between gap-4 rounded-lg text-base font-medium text-slate-950 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600 [&::-webkit-details-marker]:hidden">
-                {item.question}
-                <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5 shrink-0 text-slate-500 transition group-open:rotate-180" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9l6 6 6-6" /></svg>
-              </summary>
-              <p className="mt-3 max-w-3xl text-sm leading-7 text-slate-600">{item.answer}</p>
-            </details>
-          ))}
-        </div>
-      </section>
+      <HowItWorks />
+      <ScoringOverview />
+      <FaqSection />
     </div>
   );
 }

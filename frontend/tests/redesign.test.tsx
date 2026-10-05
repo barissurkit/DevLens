@@ -31,7 +31,7 @@ describe("site chrome", () => {
 
     expect(screen.getByRole("link", { name: "Ana içeriğe geç" })).toHaveAttribute("href", "#main-content");
     const primary = screen.getByRole("navigation", { name: "Ana gezinme" });
-    expect(within(primary).getAllByRole("link").map((link) => link.getAttribute("href"))).toEqual(["/#nasil-calisir", "/#puanlama", "/#sss"]);
+    expect(within(primary).getAllByRole("link").map((link) => link.getAttribute("href"))).toEqual(["/nasil-calisir", "/puanlama", "/sss"]);
     expect(screen.getByRole("navigation", { name: "Ürün" })).toBeInTheDocument();
     expect(screen.getByRole("navigation", { name: "Kaynaklar" })).toBeInTheDocument();
     expect(screen.getByRole("main")).toHaveAttribute("id", "main-content");

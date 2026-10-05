@@ -60,11 +60,15 @@ describe("frontend authentication state", () => {
     });
     renderAuthControls();
 
-    expect(await screen.findByText("Example User")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Çalışma Alanım" })).toHaveAttribute(
-      "href",
-      "/?workspace=1&username=example",
-    );
+    // The signed-in person is one avatar button; the actions sit in its menu.
+    const menuButton = await screen.findByRole("button", { name: "Hesap menüsü: Example User" });
+    expect(screen.queryByRole("link", { name: "Çalışma alanım" })).not.toBeInTheDocument();
+    await userEvent.click(menuButton);
+
+    expect(screen.getByRole("link", { name: "Profilimi analiz et" })).toHaveAttribute("href", "/?workspace=1&username=example");
+    expect(screen.getByRole("link", { name: "Çalışma alanım" })).toHaveAttribute("href", "/calisma-alani");
+    expect(screen.getByRole("link", { name: "GitHub profilim" })).toHaveAttribute("href", "https://github.com/example");
+    expect(screen.getByText("@example")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Çıkış yap" })).toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "GitHub ile giriş yap" })).not.toBeInTheDocument();
   });
@@ -76,7 +80,7 @@ describe("frontend authentication state", () => {
     });
     renderAuthControls();
 
-    await screen.findByText("@example");
+    await userEvent.click(await screen.findByRole("button", { name: "Hesap menüsü: @example" }));
     await userEvent.click(screen.getByRole("button", { name: "Çıkış yap" }));
 
     await waitFor(() => expect(screen.getByRole("link", { name: "GitHub ile giriş yap" })).toBeInTheDocument());
@@ -91,10 +95,10 @@ describe("frontend authentication state", () => {
     mockedLogout.mockRejectedValue(new Error("network"));
     renderAuthControls();
 
-    await screen.findByText("Example User");
+    await userEvent.click(await screen.findByRole("button", { name: "Hesap menüsü: Example User" }));
     await userEvent.click(screen.getByRole("button", { name: "Çıkış yap" }));
 
     expect(await screen.findByText("Oturum kapatılamadı.")).toBeInTheDocument();
-    expect(screen.getByText("Example User")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Hesap menüsü: Example User" })).toBeInTheDocument();
   });
 });

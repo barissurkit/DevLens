@@ -3,13 +3,8 @@ import type { ReactNode } from "react";
 import { AuthControls } from "./auth-controls";
 import { AuthNotice } from "./auth-notice";
 import { BrandMark, BrandWordmark } from "./brand-mark";
+import { NavLinks } from "./nav-links";
 import { ThemeToggle } from "./theme-toggle";
-
-const NAV_LINKS: Array<{ href: string; label: string }> = [
-  { href: "/#nasil-calisir", label: "Nasıl çalışır" },
-  { href: "/#puanlama", label: "Puanlama" },
-  { href: "/#sss", label: "Sık sorulanlar" },
-];
 
 const focusRing = "focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600 focus-visible:ring-offset-2";
 
@@ -28,11 +23,7 @@ export function SiteShell({ children }: { children: ReactNode }) {
               <BrandWordmark className="text-xl" />
             </Link>
             <nav aria-label="Ana gezinme" className="hidden items-center gap-1 md:flex">
-              {NAV_LINKS.map((link) => (
-                <Link key={link.href} href={link.href} className={`rounded-lg px-3 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-100 hover:text-slate-950 ${focusRing}`}>
-                  {link.label}
-                </Link>
-              ))}
+              <NavLinks variant="header" />
             </nav>
           </div>
           <div className="flex items-center justify-end gap-2 sm:gap-3">
@@ -52,7 +43,7 @@ export function SiteShell({ children }: { children: ReactNode }) {
               <BrandMark className="h-8 w-8" idPrefix="footer" />
               <BrandWordmark className="text-lg" />
             </div>
-            <div className="mt-4 sm:hidden"><ThemeToggle /></div>
+            <div className="mt-4 sm:hidden"><ThemeToggle placement="up" /></div>
             <p className="mt-3 max-w-sm leading-6 text-slate-600">
               Herkese açık GitHub verilerinden kanıta dayalı portföy analizi. Skorlar deterministik kurallarla hesaplanır; yapay zekâ yalnızca yorumlar.
             </p>
@@ -60,9 +51,7 @@ export function SiteShell({ children }: { children: ReactNode }) {
           <nav aria-label="Ürün">
             <p className="font-semibold text-slate-950">Ürün</p>
             <ul className="mt-3 space-y-2 text-slate-600">
-              {NAV_LINKS.map((link) => (
-                <li key={link.href}><Link href={link.href} className={`rounded hover:text-slate-950 hover:underline ${focusRing}`}>{link.label}</Link></li>
-              ))}
+              <NavLinks variant="footer" />
             </ul>
           </nav>
           <nav aria-label="Kaynaklar">
