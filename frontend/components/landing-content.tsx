@@ -1,8 +1,8 @@
 export function HeroCopy() {
   return (
     <div className="mb-8 reveal">
-      <p className="mb-5 inline-flex items-center gap-2 rounded-full border border-indigo-200 bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-700">
-        <span aria-hidden="true" className="h-1.5 w-1.5 rounded-full bg-indigo-600" />
+      <p className="mb-5 inline-flex items-center gap-2 rounded-full border border-brand-200 bg-brand-50 px-3 py-1 text-xs font-semibold text-brand-700">
+        <span aria-hidden="true" className="h-1.5 w-1.5 rounded-full bg-brand-600" />
         Geliştirici Portföy Analizi
       </p>
       <h1 id="landing-heading" className="text-4xl font-semibold leading-[1.1] tracking-tight text-slate-950 sm:text-5xl lg:text-5xl xl:text-[3.25rem]">
@@ -35,7 +35,7 @@ export function SamplePreview() {
   const circumference = 2 * Math.PI * radius;
   return (
     <div aria-hidden="true" className="relative mx-auto w-full max-w-md reveal">
-      <div className="absolute -inset-4 -z-10 rounded-[2rem] bg-gradient-to-br from-indigo-100 via-card to-emerald-50 blur-2xl" />
+      <div className="absolute -inset-4 -z-10 rounded-[2rem] bg-gradient-to-br from-brand-100 via-card to-slate-100 blur-2xl" />
       <div className="rounded-2xl border border-slate-200 bg-card p-6 shadow-raised">
         <div className="flex items-center justify-between">
           <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Portföy Kanıt Skoru</p>
@@ -59,7 +59,7 @@ export function SamplePreview() {
           {SAMPLE_BARS.map(([label, value]) => (
             <div key={label}>
               <div className="flex justify-between text-xs"><span className="font-medium text-slate-700">{label}</span><span className="text-slate-500">{value}%</span></div>
-              <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-slate-100"><div className="h-full rounded-full bg-indigo-500" style={{ width: `${value}%` }} /></div>
+              <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-slate-100"><div className="h-full rounded-full bg-brand-500" style={{ width: `${value}%` }} /></div>
             </div>
           ))}
         </div>
@@ -103,7 +103,7 @@ export function HowItWorks({ as: Heading = "h2" }: { as?: HeadingLevel }) {
     <ol className="mt-8 grid gap-4 md:grid-cols-3">
       {STEPS.map((step, index) => (
         <li key={step.title} className="rounded-2xl border border-slate-200 bg-card p-6 shadow-card">
-          <span aria-hidden="true" className="flex h-9 w-9 items-center justify-center rounded-full bg-indigo-50 text-sm font-semibold text-indigo-700">{index + 1}</span>
+          <span aria-hidden="true" className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-50 text-sm font-semibold text-brand-700">{index + 1}</span>
           <h3 className="mt-4 text-base font-semibold text-slate-950">{step.title}</h3>
           <p className="mt-2 text-sm leading-6 text-slate-600">{step.text}</p>
         </li>
@@ -135,9 +135,9 @@ export function ScoringOverview({ as: Heading = "h2" }: { as?: HeadingLevel }) {
         <li key={row.label} className="rounded-2xl border border-slate-200 bg-card p-5 shadow-card">
           <div className="flex items-baseline justify-between gap-3">
             <h3 className="text-base font-semibold text-slate-950">{row.label}</h3>
-            <span className="text-sm font-semibold text-indigo-700">{row.points} puan</span>
+            <span className="text-sm font-semibold text-brand-700">{row.points} puan</span>
           </div>
-          <div aria-hidden="true" className="mt-3 h-1.5 overflow-hidden rounded-full bg-slate-100"><div className="h-full rounded-full bg-indigo-500" style={{ width: `${row.points}%` }} /></div>
+          <div aria-hidden="true" className="mt-3 h-1.5 overflow-hidden rounded-full bg-slate-100"><div className="h-full rounded-full bg-brand-500" style={{ width: `${row.points}%` }} /></div>
           <p className="mt-3 text-sm leading-6 text-slate-600">{row.detail}</p>
         </li>
       ))}
@@ -153,7 +153,7 @@ export function FaqSection({ as: Heading = "h2" }: { as?: HeadingLevel }) {
     <div className="mt-6 divide-y divide-slate-200 overflow-hidden rounded-2xl border border-slate-200 bg-card shadow-card">
       {FAQ.map((item) => (
         <details key={item.question} className="group px-5 py-4 sm:px-6">
-          <summary className="flex cursor-pointer list-none items-center justify-between gap-4 rounded-lg text-base font-medium text-slate-950 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600 [&::-webkit-details-marker]:hidden">
+          <summary className="flex cursor-pointer list-none items-center justify-between gap-4 rounded-lg text-base font-medium text-slate-950 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 [&::-webkit-details-marker]:hidden">
             {item.question}
             <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5 shrink-0 text-slate-500 transition group-open:rotate-180" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9l6 6 6-6" /></svg>
           </summary>

@@ -54,9 +54,9 @@ export function ScoreTrend({ history }: ScoreTrendProps) {
         {[0, 50, 100].map((tick) => (
           <line key={tick} x1={PADDING_X} x2={WIDTH - PADDING_X} y1={y(tick)} y2={y(tick)} strokeWidth="1" strokeDasharray={tick === 50 ? "3 3" : undefined} className="stroke-slate-200" />
         ))}
-        <polyline points={coordinates.join(" ")} fill="none" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="stroke-indigo-600" />
+        <polyline points={coordinates.join(" ")} fill="none" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="stroke-brand-600" />
         {points.map((point, index) => (
-          <circle key={`${point.capturedAt}-${index}`} cx={x(index)} cy={y(point.score)} r={index === points.length - 1 ? 4.5 : 3} className={index === points.length - 1 ? "fill-indigo-600" : "fill-card stroke-indigo-600"} strokeWidth="2" />
+          <circle key={`${point.capturedAt}-${index}`} cx={x(index)} cy={y(point.score)} r={index === points.length - 1 ? 4.5 : 3} className={index === points.length - 1 ? "fill-brand-600" : "fill-card stroke-brand-600"} strokeWidth="2" />
         ))}
       </svg>
       <div aria-hidden="true" className="mt-1 flex justify-between text-xs text-slate-500">

@@ -121,12 +121,12 @@ export function AnalysisForm({ hero, preview, features, initialUsername }: Analy
             disabled={isLoading}
             aria-invalid={hasValidationError}
             aria-describedby={hasValidationError ? "analysis-validation-error" : "username-hint"}
-            className="min-h-12 min-w-0 flex-1 rounded-xl border border-slate-300 px-4 text-slate-950 outline-none transition placeholder:text-slate-400 focus:border-indigo-600 focus:ring-2 focus:ring-indigo-600/20 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-600"
+            className="min-h-12 min-w-0 flex-1 rounded-xl border border-slate-300 px-4 text-slate-950 outline-none transition placeholder:text-slate-400 focus:border-brand-600 focus:ring-2 focus:ring-brand-600/20 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-600"
           />
           <button
             type="submit"
             disabled={isLoading}
-            className="min-h-12 shrink-0 rounded-xl bg-indigo-600 px-5 font-medium text-white transition hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2 disabled:cursor-not-allowed disabled:bg-slate-400 disabled:text-slate-100"
+            className="min-h-12 shrink-0 rounded-xl bg-brand-600 px-5 font-medium text-white transition hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-brand-600 focus:ring-offset-2 disabled:cursor-not-allowed disabled:bg-slate-400 disabled:text-slate-100"
           >
             {isLoading ? "Analiz ediliyor..." : "Analiz et"}
           </button>
@@ -147,7 +147,7 @@ export function AnalysisForm({ hero, preview, features, initialUsername }: Analy
                 key={example}
                 type="button"
                 onClick={() => handleExample(example)}
-                className="inline-flex min-h-9 items-center rounded-full border border-slate-300 bg-card px-3 text-sm font-medium text-slate-700 transition hover:border-indigo-600 hover:text-indigo-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600 focus-visible:ring-offset-2"
+                className="inline-flex min-h-9 items-center rounded-full border border-slate-300 bg-card px-3 text-sm font-medium text-slate-700 transition hover:border-brand-600 hover:text-brand-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2"
               >
                 {example}
               </button>

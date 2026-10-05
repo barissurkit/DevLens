@@ -5,7 +5,7 @@ import { getAuthStartUrl } from "../lib/api";
 import { useAuth } from "./auth-provider";
 import { UserMenu } from "./user-menu";
 
-const controlClassName = "min-h-11 rounded-lg px-3 py-2 text-sm font-medium transition focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2";
+const controlClassName = "min-h-11 rounded-lg px-3 py-2 text-sm font-medium transition focus:outline-none focus:ring-2 focus:ring-brand-600 focus:ring-offset-2";
 
 export function AuthControls() {
   const { status, user, errorMessage, refresh, logout } = useAuth();
@@ -37,7 +37,7 @@ export function AuthControls() {
       <a
         href={getAuthStartUrl()}
         aria-label="GitHub ile giriş yap"
-        className={`${controlClassName} whitespace-nowrap bg-indigo-600 text-white hover:bg-primary-hover`}
+        className={`${controlClassName} whitespace-nowrap bg-brand-600 text-white hover:bg-primary-hover`}
       >
         <span className="sm:hidden" aria-hidden="true">Giriş yap</span>
         <span className="hidden sm:inline" aria-hidden="true">GitHub ile giriş yap</span>

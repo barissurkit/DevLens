@@ -126,7 +126,7 @@ function TabPanel({ id, activeId, title, hideInPrint = false, children }: { id: 
       aria-labelledby={tabElementId(ID_PREFIX, id)}
       hidden={id !== activeId}
       tabIndex={0}
-      className={`space-y-6 pt-6 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600 focus-visible:ring-offset-2 ${hideInPrint ? "print:hidden" : ""}`}
+      className={`space-y-6 pt-6 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2 ${hideInPrint ? "print:hidden" : ""}`}
     >
       <h2 className="print-section-title hidden print:block">{title}</h2>
       {children}

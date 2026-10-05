@@ -17,13 +17,13 @@ export function ImprovementPriorities({ dimensions, overallScore }: ImprovementP
   const totalGain = Math.round(overallScore === null ? rawGain : Math.min(rawGain, 100 - overallScore));
 
   return (
-    <section aria-labelledby="priorities-heading" className="rounded-2xl border border-indigo-200 bg-indigo-50/60 p-5 shadow-card sm:p-6">
+    <section aria-labelledby="priorities-heading" className="rounded-2xl border border-brand-200 bg-brand-50/60 p-5 shadow-card sm:p-6">
       <h3 id="priorities-heading" className="text-base font-semibold tracking-tight text-slate-950">Önce şunu yap</h3>
       <p className="mt-1 text-sm text-slate-600">Skoru en çok artıracak adımlar. Puan, kuralın ağırlığı × eksik repository oranıdır.</p>
       <ol className="mt-4 space-y-2">
         {improvements.map((item, index) => (
           <li key={item.key} className="flex items-center gap-3 rounded-lg bg-card px-4 py-3 ring-1 ring-slate-200">
-            <span aria-hidden="true" className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-indigo-600 text-xs font-semibold text-white">{index + 1}</span>
+            <span aria-hidden="true" className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand-600 text-xs font-semibold text-white">{index + 1}</span>
             <div className="min-w-0 flex-1">
               <p className="break-words text-sm font-medium text-slate-950">{item.label}</p>
               <p className="text-xs text-slate-500">{item.analyzedRepositories} repository&apos;nin {item.missingRepositories} tanesinde eksik</p>

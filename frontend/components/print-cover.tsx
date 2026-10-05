@@ -27,11 +27,11 @@ export function PrintCover({ analysis, generatedAt, url }: PrintCoverProps) {
     <section aria-hidden="true" className="print-cover hidden print:flex">
       <div className="flex items-center gap-4">
         <BrandMark className="h-16 w-16" idPrefix="cover" />
-        <p className="text-4xl font-semibold tracking-tight text-slate-950">Dev<span className="text-indigo-700">Lens</span></p>
+        <p className="text-4xl font-semibold tracking-tight text-slate-950">Dev<span className="text-brand-700">Lens</span></p>
       </div>
 
       <div className="mt-auto">
-        <p className="text-sm font-semibold uppercase tracking-[0.2em] text-indigo-700">Portföy Analiz Raporu</p>
+        <p className="text-sm font-semibold uppercase tracking-[0.2em] text-brand-700">Portföy Analiz Raporu</p>
         <h1 className="mt-4 text-5xl font-semibold leading-tight tracking-tight text-slate-950">{displayName}</h1>
         <p className="mt-2 text-xl text-slate-600">@{user.username}</p>
 
@@ -50,7 +50,7 @@ export function PrintCover({ analysis, generatedAt, url }: PrintCoverProps) {
                   <span className="font-medium text-slate-800">{dimension.label}</span>
                   <span className="text-slate-600">{dimension.points_earned} / {dimension.points_possible}</span>
                 </div>
-                <div className="mt-1 h-2 rounded-full bg-slate-200"><div className="h-2 rounded-full bg-indigo-600" style={{ width: `${dimension.score}%` }} /></div>
+                <div className="mt-1 h-2 rounded-full bg-slate-200"><div className="h-2 rounded-full bg-brand-600" style={{ width: `${dimension.score}%` }} /></div>
               </li>
             ))}
           </ul>

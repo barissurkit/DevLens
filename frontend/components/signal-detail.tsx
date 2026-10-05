@@ -13,7 +13,7 @@ export function SignalDetail({ signalKey, repositories }: SignalDetailProps) {
 
   return (
     <details className="group mt-3">
-      <summary className="inline-flex min-h-9 cursor-pointer list-none items-center gap-1.5 rounded-md text-xs font-medium text-indigo-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600 focus-visible:ring-offset-2">
+      <summary className="inline-flex min-h-9 cursor-pointer list-none items-center gap-1.5 rounded-md text-xs font-medium text-brand-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2">
         <span aria-hidden="true" className="transition-transform group-open:rotate-90">›</span>
         Hangi repository&apos;lerde?
       </summary>
@@ -51,7 +51,7 @@ function RepositoryGroup({
                   href={result.repository.html_url}
                   target="_blank"
                   rel="noreferrer"
-                  className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 font-medium transition focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600 focus-visible:ring-offset-2 ${
+                  className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 font-medium transition focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2 ${
                     tone === "present"
                       ? "border-emerald-200 bg-emerald-50 text-emerald-800 hover:border-emerald-300"
                       : "border-amber-200 bg-amber-50 text-amber-900 hover:border-amber-300"

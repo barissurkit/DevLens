@@ -84,7 +84,7 @@ export function ComparisonView({ a, b }: ComparisonViewProps) {
   return (
     <div className="space-y-6">
       <header>
-        <p className="text-xs font-semibold uppercase tracking-[0.14em] text-indigo-700">Karşılaştırma</p>
+        <p className="text-xs font-semibold uppercase tracking-[0.14em] text-brand-700">Karşılaştırma</p>
         <h1 className="mt-2 text-3xl font-semibold tracking-tight text-slate-950 sm:text-4xl">İki portföyü yan yana gör</h1>
         <p className="mt-3 max-w-2xl leading-7 text-slate-600">Aynı deterministik kurallarla puanlanan iki herkese açık GitHub portföyünü karşılaştır; hangisi hangi alanda önde, neyi diğerinden öğrenebilir gör.</p>
       </header>
@@ -93,13 +93,13 @@ export function ComparisonView({ a, b }: ComparisonViewProps) {
         <div className="grid gap-3 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
           <label className="block text-sm font-medium text-slate-900">
             Birinci kullanıcı
-            <input value={first} onChange={(event) => setFirst(event.target.value)} placeholder="ör. octocat" disabled={loading} className="mt-2 min-h-12 w-full rounded-xl border border-slate-300 px-4 text-slate-950 outline-none placeholder:text-slate-400 focus:border-indigo-600 focus:ring-2 focus:ring-indigo-600/20 disabled:bg-slate-100" />
+            <input value={first} onChange={(event) => setFirst(event.target.value)} placeholder="ör. octocat" disabled={loading} className="mt-2 min-h-12 w-full rounded-xl border border-slate-300 px-4 text-slate-950 outline-none placeholder:text-slate-400 focus:border-brand-600 focus:ring-2 focus:ring-brand-600/20 disabled:bg-slate-100" />
           </label>
           <label className="block text-sm font-medium text-slate-900">
             İkinci kullanıcı
-            <input value={second} onChange={(event) => setSecond(event.target.value)} placeholder="ör. torvalds" disabled={loading} className="mt-2 min-h-12 w-full rounded-xl border border-slate-300 px-4 text-slate-950 outline-none placeholder:text-slate-400 focus:border-indigo-600 focus:ring-2 focus:ring-indigo-600/20 disabled:bg-slate-100" />
+            <input value={second} onChange={(event) => setSecond(event.target.value)} placeholder="ör. torvalds" disabled={loading} className="mt-2 min-h-12 w-full rounded-xl border border-slate-300 px-4 text-slate-950 outline-none placeholder:text-slate-400 focus:border-brand-600 focus:ring-2 focus:ring-brand-600/20 disabled:bg-slate-100" />
           </label>
-          <button type="submit" disabled={loading} className="min-h-12 rounded-xl bg-indigo-600 px-5 font-medium text-white transition hover:bg-primary-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:bg-slate-400">
+          <button type="submit" disabled={loading} className="min-h-12 rounded-xl bg-brand-600 px-5 font-medium text-white transition hover:bg-primary-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:bg-slate-400">
             {loading ? "Karşılaştırılıyor..." : "Karşılaştır"}
           </button>
         </div>
@@ -196,7 +196,7 @@ function ScoreCard({ analysis, side, comparison }: { analysis: GitHubPortfolioAn
   return (
     <article className={`${card} ${leads ? "ring-2 ring-emerald-500/60" : ""}`}>
       <div className="flex items-center justify-between gap-3">
-        <a href={userPath(analysis.user.username)} className="min-w-0 truncate text-lg font-semibold tracking-tight text-slate-950 hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600">
+        <a href={userPath(analysis.user.username)} className="min-w-0 truncate text-lg font-semibold tracking-tight text-slate-950 hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-600">
           {analysis.user.name || `@${analysis.user.username}`}
         </a>
         {leads && <span className="shrink-0 rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-semibold text-emerald-800">Önde</span>}
@@ -216,7 +216,7 @@ function Bar({ name, value, winner }: { name: string; value: number | null; winn
         <span className={winner ? "font-semibold text-emerald-700" : "text-slate-500"}>{value === null ? "—" : `${value}%`}{winner && <span className="sr-only"> (önde)</span>}</span>
       </div>
       <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-slate-100" role="presentation">
-        <div className={`h-full rounded-full ${winner ? "bg-emerald-500" : "bg-indigo-400"}`} style={{ width: `${value ?? 0}%` }} />
+        <div className={`h-full rounded-full ${winner ? "bg-emerald-500" : "bg-brand-400"}`} style={{ width: `${value ?? 0}%` }} />
       </div>
     </div>
   );

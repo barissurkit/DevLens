@@ -9,8 +9,8 @@ import { AnalysisHistory } from "./analysis-history";
 import { useAuth } from "./auth-provider";
 import { ownProfileAnalysisHref } from "./user-menu";
 
-const primaryLink = "inline-flex min-h-11 items-center justify-center rounded-lg bg-indigo-600 px-5 text-sm font-medium text-white transition hover:bg-primary-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600 focus-visible:ring-offset-2";
-const secondaryLink = "inline-flex min-h-11 items-center justify-center rounded-lg border border-slate-300 bg-card px-5 text-sm font-medium text-slate-700 transition hover:bg-slate-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600 focus-visible:ring-offset-2";
+const primaryLink = "inline-flex min-h-11 items-center justify-center rounded-lg bg-brand-600 px-5 text-sm font-medium text-white transition hover:bg-primary-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2";
+const secondaryLink = "inline-flex min-h-11 items-center justify-center rounded-lg border border-slate-300 bg-card px-5 text-sm font-medium text-slate-700 transition hover:bg-slate-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2";
 
 /**
  * The signed-in person's own screen: progress over time, AI suggestions and the action plan. Unlike the profile

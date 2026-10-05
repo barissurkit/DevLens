@@ -27,7 +27,7 @@ export function ScoreMethodology({ dimensions, scoredRepositoryCount }: ScoreMet
 
   return (
     <details className="group mt-6 rounded-lg border border-slate-200 bg-slate-50">
-      <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 rounded-lg px-4 text-sm font-medium text-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600 focus-visible:ring-offset-2">
+      <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 rounded-lg px-4 text-sm font-medium text-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2">
         <span>Skor nasıl hesaplanır?</span>
         <span aria-hidden="true" className="text-lg leading-none text-slate-500 transition-transform group-open:rotate-90">›</span>
       </summary>

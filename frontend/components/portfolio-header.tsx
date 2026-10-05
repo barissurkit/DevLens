@@ -21,12 +21,12 @@ export const PortfolioHeader = forwardRef<HTMLHeadingElement, PortfolioHeaderPro
   const displayName = user.name || `@${user.username}`;
   return (
     <header className="reveal relative overflow-hidden rounded-2xl border border-slate-200 bg-card p-5 shadow-card sm:p-7">
-      <div aria-hidden="true" className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-indigo-500 via-indigo-400 to-emerald-400" />
+      <div aria-hidden="true" className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-brand-600 via-brand-500 to-brand-400" />
       <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex min-w-0 items-center gap-4">
           <Avatar url={user.avatar_url} name={displayName} />
           <div className="min-w-0">
-            <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${viewerContext.mode === "my_workspace" ? "bg-emerald-50 text-emerald-800" : "bg-indigo-50 text-indigo-700"}`}>{portfolioModeLabel(viewerContext)}</span>
+            <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${viewerContext.mode === "my_workspace" ? "bg-emerald-50 text-emerald-800" : "bg-brand-50 text-brand-700"}`}>{portfolioModeLabel(viewerContext)}</span>
             <h2 ref={headingRef} id="portfolio-dashboard" tabIndex={-1} className="mt-1.5 break-words text-2xl font-semibold tracking-tight text-slate-950 focus:outline-none sm:text-3xl">
               {displayName} portföyü
             </h2>
@@ -43,10 +43,10 @@ export const PortfolioHeader = forwardRef<HTMLHeadingElement, PortfolioHeaderPro
             <CopyLinkButton username={user.username} />
             <BadgeButton username={user.username} />
             <ReportMenu username={user.username} />
-            <a href={comparePath(user.username)} className="inline-flex min-h-10 items-center justify-center whitespace-nowrap rounded-lg border border-slate-300 bg-card px-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600 focus-visible:ring-offset-2">
+            <a href={comparePath(user.username)} className="inline-flex min-h-10 items-center justify-center whitespace-nowrap rounded-lg border border-slate-300 bg-card px-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2">
               Karşılaştır
             </a>
-            <a href={user.html_url} target="_blank" rel="noreferrer" className="inline-flex min-h-10 items-center justify-center whitespace-nowrap rounded-lg border border-slate-300 bg-card px-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600 focus-visible:ring-offset-2">
+            <a href={user.html_url} target="_blank" rel="noreferrer" className="inline-flex min-h-10 items-center justify-center whitespace-nowrap rounded-lg border border-slate-300 bg-card px-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2">
               GitHub profilini aç
             </a>
           </div>
@@ -69,7 +69,7 @@ function Meta({ label, value }: { label: string; value: number | undefined }) {
 
 function Avatar({ url, name }: { url: string | undefined; name: string }) {
   if (!url) {
-    return <span aria-hidden="true" className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-indigo-600 text-xl font-semibold text-white sm:h-20 sm:w-20">{name.replace(/^@/, "").charAt(0).toUpperCase()}</span>;
+    return <span aria-hidden="true" className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-brand-600 text-xl font-semibold text-white sm:h-20 sm:w-20">{name.replace(/^@/, "").charAt(0).toUpperCase()}</span>;
   }
   // eslint-disable-next-line @next/next/no-img-element -- small external GitHub avatar; no Image optimization domain config needed
   return <img src={url} alt="" width={80} height={80} className="h-16 w-16 shrink-0 rounded-2xl border border-slate-200 bg-slate-100 object-cover sm:h-20 sm:w-20" />;
