@@ -2,7 +2,7 @@
 
 ## Overview
 
-DevLens analyzes public GitHub portfolios using deterministic repository evidence and produces explainable portfolio signals, with an optional Gemini interpretation layer. It is designed to make repository quality signals easier to inspect without presenting them as a complete measure of developer ability.
+DevLens analyzes public GitHub portfolios using deterministic repository evidence and produces explainable portfolio signals, with an optional AI interpretation layer (Gemini or OpenRouter). It is designed to make repository quality signals easier to inspect without presenting them as a complete measure of developer ability.
 
 ## The Problem
 
@@ -18,7 +18,7 @@ The deterministic engine owns GitHub evidence collection, README/tree/manifest p
 
 ### Optional AI Interpretation
 
-Gemini receives a reduced, structured deterministic context. It may summarize patterns, explain supplied strengths and improvement areas, and recommend a bounded next project grounded in deterministic improvement signals. It cannot create evidence, invent repositories or technologies, alter scores, or override deterministic findings.
+The AI model receives a reduced, structured deterministic context. It may summarize patterns, explain supplied strengths and improvement areas, and recommend a bounded next project grounded in deterministic improvement signals. It cannot create evidence, invent repositories or technologies, alter scores, or override deterministic findings.
 
 The core principle is: **deterministic evidence first, optional AI interpretation second.**
 
@@ -47,7 +47,7 @@ The scoring model is versioned and uses repository evidence such as README secti
 8. Portfolio aggregation, scoring, findings, and limitations are produced.
 9. Snapshot persistence is attempted best-effort.
 10. The frontend renders deterministic results.
-11. The optional interpretation endpoint may call Gemini with structured deterministic context.
+11. The optional interpretation endpoint may call the configured AI provider with structured deterministic context.
 
 The full request flow and service boundaries are documented in [Architecture](architecture.md).
 
@@ -60,7 +60,7 @@ The production application is split into independently deployable frontend and b
 | Frontend | Next.js, React, TypeScript, Tailwind CSS | Render |
 | Backend | FastAPI, Python, Pydantic, Uvicorn | Render |
 | Persistence | PostgreSQL, SQLAlchemy, asyncpg, Alembic | Neon |
-| External providers | GitHub API, optional Gemini API | HTTPS provider boundaries |
+| External providers | GitHub API, optional AI provider (Gemini or OpenRouter) | HTTPS provider boundaries |
 
 ![DevLens production architecture](assets/architecture/production-architecture.svg)
 
@@ -76,7 +76,7 @@ Deterministic scoring provides:
 - straightforward regression testing,
 - consistent repository and portfolio semantics.
 
-This also means a Gemini outage does not remove the deterministic analysis. AI still adds value where generative models are useful: natural-language explanation, concise pattern summaries, and grounded recommendations. The two layers are complementary responsibilities rather than competing scoring systems.
+This also means an AI outage does not remove the deterministic analysis. AI still adds value where generative models are useful: natural-language explanation, concise pattern summaries, and grounded recommendations. The two layers are complementary responsibilities rather than competing scoring systems.
 
 ![Deterministic versus AI responsibility boundary](assets/architecture/deterministic-ai-boundary.svg)
 
@@ -110,7 +110,7 @@ DevLens uses no third-party analytics SDK, analytics cookies, browser fingerprin
 
 **Problem:** LLM-based scoring would weaken repeatability and evidence ownership.
 
-**Decision:** Keep scoring deterministic and constrain Gemini to interpretation.
+**Decision:** Keep scoring deterministic and constrain the AI model to interpretation.
 
 **Outcome:** Stable scoring semantics with optional natural-language explanation.
 
@@ -132,7 +132,7 @@ DevLens uses no third-party analytics SDK, analytics cookies, browser fingerprin
 
 ### Graceful Degradation
 
-**Problem:** Gemini and persistence are external or optional dependencies.
+**Problem:** The AI provider and persistence are external or optional dependencies.
 
 **Decision:** Keep deterministic analysis independent from optional interpretation and use supported fail-open/best-effort behavior.
 
@@ -155,11 +155,11 @@ The current deployment uses:
 - Neon Free PostgreSQL
 - one-shot Alembic migration
 - explicit production CORS configuration
-- backend-only GitHub and Gemini credentials
+- backend-only GitHub and AI provider credentials
 - `GET /health` liveness endpoint
-- Gemini default model `gemini-3.6-flash`
+- AI provider selected with `AI_PROVIDER`: Gemini (`gemini-3.6-flash`) or OpenRouter (`z-ai/glm-5.3-flash`, fallback `openai/gpt-6-luna`)
 
-Expected recurring infrastructure cost under the current free-tier configuration is approximately **$0/month**. This is not guaranteed: provider pricing, quotas, free-tier policies, and usage limits can change.
+Infrastructure (Render Free, Neon Free, the GitHub API) has no recurring cost under the current free-tier configuration; the AI layer is the variable cost (free with Gemini's free tier, about $0.001 per interpretation with OpenRouter, capped by a credit limit and a daily call cap). None of this is guaranteed: provider pricing, quotas, free-tier policies, and usage limits can change.
 
 See [Production Deployment](production-deployment.md) for the current operational topology, environment contract, migration order, verification, and rollback notes.
 
@@ -181,7 +181,7 @@ The architecture documentation pass also validated Markdown formatting, Mermaid 
 - The system does not measure complete developer ability, seniority, employability, or job fit.
 - Supported scoring dimensions cover observable repository documentation, testing/automation, and hygiene signals.
 - Popularity metrics are not engineering-quality evidence.
-- Gemini interpretation depends on external provider availability and configuration.
+- AI interpretation depends on external provider availability, credit and configuration.
 - Handled partial failures can reduce available evidence.
 - Cache reuse is finite and bounded by freshness and version compatibility.
 - Free-tier deployment can introduce provider limits and wake-up latency.
@@ -209,7 +209,7 @@ The architecture documentation pass also validated Markdown formatting, Mermaid 
 | Backend | Python 3.12, FastAPI, Pydantic, httpx, Uvicorn |
 | Database | PostgreSQL, SQLAlchemy, asyncpg |
 | External APIs | GitHub API |
-| AI | Google Gemini API, `gemini-3.6-flash` default |
+| AI | Gemini API (`gemini-3.6-flash`) or OpenRouter (`z-ai/glm-5.3-flash`), selectable |
 | Persistence | Alembic migrations, PostgreSQL JSONB snapshots |
 | Deployment | Docker, Docker Compose, Render, Neon |
 | Testing / CI | pytest, ESLint, TypeScript, GitHub Actions |

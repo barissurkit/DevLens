@@ -1,6 +1,6 @@
 # DevLens
 
-DevLens analyzes public GitHub portfolio signals with deterministic rules and uses Gemini to explain the structured findings and recommend a next project.
+DevLens analyzes public GitHub portfolio signals with deterministic rules and uses an AI model (Gemini or OpenRouter) to explain the structured findings and recommend a next project.
 
 Enter a GitHub username to inspect public profile and repository evidence. DevLens returns repository-level findings, portfolio-level scoring, measurable limitations, and an optional AI interpretation. It is designed for developers and engineers who want a clearer, evidence-based view of a public portfolio.
 
@@ -12,14 +12,20 @@ Enter a GitHub username to inspect public profile and repository evidence. DevLe
 - Evidence-backed deterministic repository and portfolio scoring
 - Repository evidence for documentation, structure, technologies, and engineering practices
 - Separate AI interpretation and evidence-grounded next-project recommendation
-- Graceful partial success when Gemini is unavailable
+- Graceful partial success when the AI provider is unavailable
 - Bounded asynchronous repository analysis
 - PostgreSQL-backed deterministic analysis cache
 - Live analysis progress streamed from the backend, and an explanation of exactly how the score is computed
 - Signal drill-down (which repositories have or lack each signal) and a ranked list of the steps that would raise the score most
 - Shareable result links (`/u/<username>`) with a social preview image
 - Cached results reuse their stored AI interpretation; a struggling AI provider is retried after a short cooldown
-- Light and dark themes, tabbed results, and an accessibility-checked interface
+- A calm teal interface with light and dark themes (one theme button), tabbed results, and an accessibility-checked design (contrast is tested)
+- A full scoring guide page (`/puanlama`) with every rule, its weight and what is checked, a worked example and the score bands; the rule table is test-checked against the backend policy
+- Product pages that work from every screen (`/nasil-calisir`, `/puanlama`, `/sss`)
+- A GitHub avatar menu for signed-in people (analyse my profile, workspace, sign out) and a workspace page (`/calisma-alani`) with score history, AI suggestions, the action plan and saved profiles
+- Saved profiles: keep up to 50 GitHub profiles in the workspace with the score of their latest stored analysis, and compare them with your own
+- Open source contributions: merged pull requests to other people's public repositories (for example high-star projects) in their own tab, with stars; never part of the score
+- Ready-made prompts for fixing a portfolio with your own AI assistant or coding agent: one for the whole account and one per repository, built in the browser from the analysis
 - Printable reports (summary and detailed) built from a fixed A4 template whose pages are filled by measuring the content, so no paragraph or card is ever split between pages (see [docs/report-template.md](docs/report-template.md))
 - A selectable AI provider (Gemini or OpenRouter with fallback models and a daily call cap; see [docs/ai-provider.md](docs/ai-provider.md))
 - A blind model-comparison tool for the AI interpretation (OpenRouter; see [docs/model-comparison.md](docs/model-comparison.md))
@@ -31,7 +37,7 @@ Enter a GitHub username to inspect public profile and repository evidence. DevLe
 2. The backend fetches public GitHub profile, repository, tree, and selected file evidence.
 3. Deterministic rules calculate repository findings and portfolio scores.
 4. Compatible deterministic results can be reused through the PostgreSQL snapshot cache.
-5. Structured analysis is passed to Gemini for interpretation when the optional AI layer is available.
+5. Structured analysis is passed to the configured AI provider for interpretation when the optional AI layer is available.
 6. The frontend renders deterministic results and the AI interpretation separately.
 
 ![DevLens analysis dashboard showing portfolio scoring, repository evidence, and analysis insights](docs/assets/screenshots/devlens-analysis-overview.png)
@@ -40,9 +46,9 @@ Enter a GitHub username to inspect public profile and repository evidence. DevLe
 
 ## Deterministic Analysis vs. AI Interpretation
 
-The deterministic layer owns repository evidence, measurable findings, repository scoring, and portfolio scoring. Gemini owns interpretation, explanation, and the next-project recommendation.
+The deterministic layer owns repository evidence, measurable findings, repository scoring, and portfolio scoring. The AI model owns interpretation, explanation, and the next-project recommendation.
 
-Gemini does not invent repository evidence, modify deterministic scores, or override measurable findings. Its structured response is validated against the deterministic signals, and an AI failure does not invalidate the deterministic analysis.
+The AI model does not invent repository evidence, modify deterministic scores, or override measurable findings. Its structured response is validated against the deterministic signals, and an AI failure does not invalidate the deterministic analysis.
 
 ![DevLens repository analysis showing deterministic evidence signals and score breakdown](docs/assets/screenshots/devlens-evidence-detail.png)
 
@@ -51,14 +57,14 @@ Gemini does not invent repository evidence, modify deterministic scores, or over
 - Typed GitHub API boundary with explicit timeout, upstream, not-found, and rate-limit handling
 - Bounded concurrent repository analysis to keep provider work controlled
 - PostgreSQL persistence and deterministic cache with analysis provenance and freshness metadata
-- Structured Gemini output validation, provider-specific error taxonomy, and bounded retry
+- Structured AI output validation, a provider-neutral error taxonomy, bounded retry, ordered fallback models and a hard daily call cap
 - Dockerized frontend, backend, and one-shot Alembic migration flow
 - Protected GitHub Actions quality gates for backend, PostgreSQL/Alembic, frontend, and Docker
 - Request IDs, structured JSON logs, provider diagnostics, and privacy-conscious outcome logging
 
 ## Production Deployment
 
-DevLens is deployed using Render Free frontend and backend services, Neon Free PostgreSQL, the authenticated GitHub API, and Gemini 3.6 Flash Free Tier. The current deployment has an expected recurring infrastructure cost of **$0/month**; this reflects the current free-tier configuration and is not a pricing guarantee.
+DevLens is deployed using Render Free frontend and backend services, Neon Free PostgreSQL, the authenticated GitHub API, and an AI provider selected with `AI_PROVIDER` (the live deployment uses OpenRouter with `z-ai/glm-5.3-flash` and `openai/gpt-6-luna` as fallback; Gemini remains available). The infrastructure (Render Free, Neon Free, the authenticated GitHub API) has no recurring cost under the current free-tier configuration. The AI layer is the one variable cost: with Gemini's free tier it is $0; with OpenRouter it is pay-as-you-go, about $0.001 per interpretation with the default models, capped by a prepaid credit limit on a dedicated key and by `AI_DAILY_CALL_LIMIT` (see [docs/ai-provider.md](docs/ai-provider.md)). None of this is a pricing guarantee: provider pricing, quotas, free-tier policies, and usage limits can change.
 
 The production frontend is available at the [Live Demo](https://devlens.barissurkit.com/). Production images use `next start` and Uvicorn, database migrations run as a separate one-shot service, and the backend exposes `GET /health` for liveness checks. Operational configuration, migration ordering, rollback guidance, and deployment boundaries are documented in [docs/production-deployment.md](docs/production-deployment.md).
 
@@ -67,12 +73,12 @@ The production frontend is available at the [Live Demo](https://devlens.barissur
 - **Frontend:** Next.js 16.3.2, React 19.1, TypeScript, Tailwind CSS
 - **Backend:** Python 3.12, FastAPI, Pydantic, httpx, Uvicorn
 - **Data:** PostgreSQL, SQLAlchemy, asyncpg, Alembic
-- **AI:** Google Gemini API; default model `gemini-3.6-flash`
+- **AI:** Gemini API (`gemini-3.6-flash`) or OpenRouter (default `z-ai/glm-5.3-flash`, fallback `openai/gpt-6-luna`), selected with `AI_PROVIDER`
 - **Infrastructure:** Docker, Docker Compose, GitHub Actions, Render, Neon
 
 ## Architecture Overview
 
-DevLens uses a direct browser → Next.js → FastAPI boundary. The backend combines public GitHub evidence with a deterministic analysis pipeline and a versioned PostgreSQL snapshot cache. Gemini receives only structured deterministic context for optional interpretation and a grounded next-project recommendation; Gemini does not determine or modify DevLens scores.
+DevLens uses a direct browser → Next.js → FastAPI boundary. The backend combines public GitHub evidence with a deterministic analysis pipeline and a versioned PostgreSQL snapshot cache. The AI provider receives only structured deterministic context for optional interpretation and a grounded next-project recommendation; it does not determine or modify DevLens scores.
 
 ![DevLens production architecture](docs/assets/architecture/production-architecture.svg)
 
@@ -80,7 +86,7 @@ Read the full [architecture and technical story](docs/architecture.md), includin
 
 Read the [portfolio case study](docs/case-study.md) for the product problem, engineering decisions, reliability model, and technical overview.
 
-The browser receives only the public frontend configuration. GitHub and Gemini credentials remain in the backend runtime environment.
+The browser receives only the public frontend configuration. GitHub and AI provider credentials remain in the backend runtime environment.
 
 ## Testing and CI
 
@@ -99,7 +105,7 @@ Test counts are intentionally not hardcoded here because they change as the suit
 
 - Server-generated request IDs are returned through `X-Request-ID`.
 - Application logs are emitted as structured JSON events.
-- Request lifecycle, GitHub, Gemini, cache, persistence, and rate-limit diagnostics expose allowlisted operational metadata.
+- Request lifecycle, GitHub, AI provider (model, duration, tokens and cost per attempt), cache, persistence, and rate-limit diagnostics expose allowlisted operational metadata.
 - Request/response bodies, prompts, provider payloads, DSNs, and secrets are not logged.
 
 ## Privacy-Conscious Instrumentation
@@ -110,7 +116,9 @@ DevLens processes GitHub username and public repository data for the analysis it
 
 - DevLens analyzes public GitHub portfolio signals only; it does not access private repositories.
 - It does not measure overall developer ability, total engineering skill, hiring suitability, or job fit.
-- AI interpretation is optional and depends on Gemini availability and provider limits.
+- AI interpretation is optional and depends on the AI provider's availability, limits and credit.
+- Open source contributions come from GitHub search and cover the most recently updated 300 merged pull requests; star counts are looked up for the twelve busiest repositories.
+- Forked and archived repositories are not scored; contributions merged into other people's repositories are shown separately instead.
 - Free-tier infrastructure may make the first request slower while services wake up.
 - CV matching and job recommendations are outside the V1 scope.
 
@@ -170,7 +178,7 @@ With PostgreSQL available and `DATABASE_URL` configured, run migrations from `ba
 alembic upgrade head
 ```
 
-Without `DATABASE_URL`, the API can run without persistence and cache. Without `GEMINI_API_KEY`, deterministic analysis remains available and the AI result is reported as unavailable.
+Without `DATABASE_URL`, the API can run without persistence and cache. Without an AI key (`GEMINI_API_KEY`, or `OPENROUTER_API_KEY` with `AI_PROVIDER=openrouter`), deterministic analysis remains available and the AI result is reported as unavailable. Saved profiles and the action plan need authentication and `DATABASE_URL`.
 
 ## Gereksinimler
 
@@ -235,11 +243,11 @@ Katkı rehberi için [CONTRIBUTING.md](CONTRIBUTING.md) dosyasına bakın.
 
 See [`.env.example`](.env.example) for the local configuration template.
 
-- **Backend runtime:** `ENVIRONMENT`, `AUTH_ENABLED`, `GITHUB_TOKEN`, `GITHUB_API_BASE_URL`, `GEMINI_API_KEY`, `GEMINI_MODEL`, `DATABASE_URL`, `CORS_ALLOWED_ORIGINS`, `FRONTEND_ORIGIN`, and `ANALYSIS_CACHE_TTL_SECONDS`. Production authentication additionally requires the complete GitHub OAuth tuple and a valid state-encryption key.
+- **Backend runtime:** `ENVIRONMENT`, `AUTH_ENABLED`, `GITHUB_TOKEN`, `GITHUB_API_BASE_URL`, `GEMINI_API_KEY`, `GEMINI_MODEL`, `AI_PROVIDER`, `OPENROUTER_API_KEY`, `OPENROUTER_MODEL`, `OPENROUTER_FALLBACK_MODELS`, `OPENROUTER_MAX_TOKENS`, `AI_DAILY_CALL_LIMIT`, `DATABASE_URL`, `CORS_ALLOWED_ORIGINS`, `FRONTEND_ORIGIN`, and `ANALYSIS_CACHE_TTL_SECONDS`. Production authentication additionally requires the complete GitHub OAuth tuple and a valid state-encryption key.
 - **Frontend build-time:** `NEXT_PUBLIC_API_BASE_URL`
 - **Local Compose:** `POSTGRES_DB`, `POSTGRES_USER`, and `POSTGRES_PASSWORD`
 
-`NEXT_PUBLIC_API_BASE_URL` is browser-visible configuration embedded at frontend build time. Backend secrets must never be placed in frontend code or `NEXT_PUBLIC_*` variables. The default Gemini model is `gemini-3.6-flash`; the deterministic cache freshness default is 900 seconds.
+`NEXT_PUBLIC_API_BASE_URL` is browser-visible configuration embedded at frontend build time. Backend secrets must never be placed in frontend code or `NEXT_PUBLIC_*` variables. `AI_PROVIDER` defaults to `gemini` (model `gemini-3.6-flash`); see [docs/ai-provider.md](docs/ai-provider.md) for OpenRouter. The deterministic cache freshness default is 900 seconds.
 
 Local examples use `ENVIRONMENT=development` and disabled authentication with localhost HTTP origins. Production must explicitly set `ENVIRONMENT=production` and `AUTH_ENABLED`; enabling authentication requires complete OAuth configuration, `DATABASE_URL`, HTTPS callback/frontend/CORS origins, and produces a Secure `__Host-devlens_session` cookie.
 
@@ -248,8 +256,25 @@ Local examples use `ENVIRONMENT=development` and disabled authentication with lo
 - `GET /health` (liveness plus booleans for the configured integrations)
 - `GET /api/v1/badge/<username>.svg` (score badge for a README; stored snapshots only, never calls GitHub or the AI provider)
 - `POST /api/v1/client-errors` (browser error reports, rate limited, logged as `client.error`)
+- `GET /api/v1/github/users/<username>/open-source` (merged pull requests to other people's public repositories; public data, cached, rate limited)
 - `POST /api/v1/analysis`
 - `POST /api/v1/interpretation`
 - `POST /api/v1/interpretation/stream` (same analysis as newline-delimited JSON: `progress` events with stage/completed/total, then `result` or `error`)
 
 `POST /api/v1/analysis` and `POST /api/v1/interpretation` accept an optional `refresh: true` to bypass the snapshot cache. The interpretation response includes `analysis_generated_at` and `cached` so clients can show how fresh a result is. A cached analysis also reuses its stored successful AI interpretation; a recent transient AI failure (rate limit, timeout, ...) is served for 60 seconds instead of asking the provider again, and `retry_interpretation: true` overrides that cooldown.
+
+## Pages
+
+- `/` landing page and analysis; `/u/<username>` shareable result (tabs: overview, repositories, AI interpretation, open source, actions); `/u/<username>/rapor` printable reports
+- `/karsilastir/<a>/<b>` side-by-side comparison of two portfolios
+- `/nasil-calisir`, `/puanlama`, `/sss` product pages
+- `/calisma-alani` the signed-in person's workspace (score history, AI suggestions, saved profiles, action plan)
+
+### Authenticated workspace API
+
+These endpoints need a session and, for writes, the application origin and `application/json`:
+
+- `GET /api/v1/workspace/analysis-history`
+- `GET/POST /api/v1/workspace/action-plan`, `PATCH/DELETE /api/v1/workspace/action-plan/<id>`
+- `POST /api/v1/workspace/ai-suggestions`
+- `GET/POST /api/v1/workspace/saved-profiles`, `DELETE /api/v1/workspace/saved-profiles/<id>` (at most 50; saving the same login again is a no-op)
