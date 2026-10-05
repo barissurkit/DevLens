@@ -12,6 +12,7 @@ import type {
   ActionPlanStatus,
   AISuggestionsResponse,
   HistoryResponse,
+  OpenSourceContributions,
   GuidedImprovement,
 } from "./types";
 
@@ -254,6 +255,31 @@ export async function getActionPlan(): Promise<ActionPlanResponse> {
   const payload = await actionPlanRequest(ACTION_PLAN_PATH);
   if (isActionPlanResponse(payload)) return payload;
   throw new ApiError("Aksiyon planı geçersiz bir yanıt döndürdü.", 200, "malformed_response");
+}
+
+function isOpenSourceContributions(value: unknown): value is OpenSourceContributions {
+  if (typeof value !== "object" || value === null) return false;
+  const body = value as Partial<OpenSourceContributions>;
+  return typeof body.username === "string"
+    && typeof body.total_merged === "number"
+    && typeof body.repository_count === "number"
+    && typeof body.is_truncated === "boolean"
+    && Array.isArray(body.contributions)
+    && body.contributions.every((item) => typeof item?.repository === "string" && typeof item.html_url === "string" && typeof item.merged_count === "number" && typeof item.latest_title === "string" && typeof item.latest_url === "string");
+}
+
+/** Merged pull requests the person made to other people's public repositories (public data, no sign-in). */
+export async function getOpenSourceContributions(username: string): Promise<OpenSourceContributions> {
+  let response: Response;
+  try { response = await fetch(getApiUrl(`/api/v1/github/users/${encodeURIComponent(username)}/open-source`)); }
+  catch { throw new ApiError("Açık kaynak katkılarına ulaşılamadı.", 0, "network_error"); }
+  const payload = await readJson(response);
+  if (!response.ok) {
+    if (isOperationalErrorResponse(payload)) throw new ApiError(payload.detail.message, response.status, payload.detail.code);
+    throw new ApiError("Açık kaynak katkıları yüklenemedi.", response.status, "open_source_error");
+  }
+  if (isOpenSourceContributions(payload)) return payload;
+  throw new ApiError("Açık kaynak servisi geçersiz bir yanıt döndürdü.", response.status, "malformed_response");
 }
 
 export async function getAnalysisHistory(): Promise<HistoryResponse> {

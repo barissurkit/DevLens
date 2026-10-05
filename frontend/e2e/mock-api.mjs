@@ -171,6 +171,24 @@ http
           : { authenticated: false, user: null },
       );
     }
+    const openSource = path.match(/^\/api\/v1\/github\/users\/([^/]+)\/open-source$/);
+    if (openSource) {
+      const login = decodeURIComponent(openSource[1]);
+      if (login === "ghost") return json(404, { detail: { code: "github_user_not_found", message: "GitHub kullanıcısı bulunamadı." } });
+      if (login === "bos") return json(200, { username: login, total_merged: 0, repository_count: 0, contributions: [], is_truncated: false });
+      if (login === "hatali") return json(503, { detail: { code: "github_unavailable", message: "GitHub'a geçici olarak erişilemiyor." } });
+      return json(200, {
+        username: login,
+        total_merged: 5,
+        repository_count: 3,
+        is_truncated: false,
+        contributions: [
+          { repository: "vercel/next.js", html_url: "https://github.com/vercel/next.js", stars: 128000, merged_count: 2, latest_title: "Fix docs for the app router", latest_url: "https://github.com/vercel/next.js/pull/1", latest_merged_at: "2026-09-12T10:00:00Z" },
+          { repository: "pallets/flask", html_url: "https://github.com/pallets/flask", stars: 68000, merged_count: 2, latest_title: "Clarify the testing guide", latest_url: "https://github.com/pallets/flask/pull/2", latest_merged_at: "2026-07-03T10:00:00Z" },
+          { repository: "someone/tiny-lib", html_url: "https://github.com/someone/tiny-lib", stars: null, merged_count: 1, latest_title: "Add an option", latest_url: "https://github.com/someone/tiny-lib/pull/3", latest_merged_at: null },
+        ],
+      });
+    }
     if (path === "/api/v1/client-errors") {
       response.writeHead(204, cors);
       return response.end();

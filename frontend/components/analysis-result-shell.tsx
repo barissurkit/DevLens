@@ -10,6 +10,7 @@ import { AISuggestedActions } from "./ai-suggested-actions";
 import { AnalysisHistory } from "./analysis-history";
 import { RepositoryAnalysisSection } from "./repository-analysis-section";
 import { GuidedImprovementSection } from "./guided-improvement-section";
+import { OpenSourceSection } from "./open-source-section";
 import { PortfolioHeader } from "./portfolio-header";
 import { PortfolioOverview } from "./portfolio-overview";
 import { PrintCover } from "./print-cover";
@@ -40,6 +41,7 @@ export function AnalysisResultShell({ result, onReanalyze, onRetryInterpretation
       { id: "overview", label: "Genel Bakış" },
       { id: "repositories", label: "Repository'ler", badge: repositories.length },
       { id: "ai", label: "AI Yorumu", warning: interpretation.status === "unavailable" ? "şu anda kullanılamıyor" : undefined },
+      { id: "open-source", label: "Açık Kaynak" },
     ];
     list.push({
       id: "actions",
@@ -92,6 +94,10 @@ export function AnalysisResultShell({ result, onReanalyze, onRetryInterpretation
 
         <TabPanel id="ai" activeId={activeTab} title="AI Yorumu">
           <PortfolioInterpretationSection analysis={analysis} interpretation={interpretation} onRetry={onRetryInterpretation} />
+        </TabPanel>
+
+        <TabPanel id="open-source" activeId={activeTab} title="Açık Kaynak Katkıları" hideInPrint>
+          <OpenSourceSection key={user.username} username={user.username} active={activeTab === "open-source"} />
         </TabPanel>
 
         <TabPanel id="actions" activeId={activeTab} title="Aksiyonlar" hideInPrint={!hasActions}>
