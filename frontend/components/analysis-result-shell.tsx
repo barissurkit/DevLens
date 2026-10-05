@@ -89,7 +89,7 @@ export function AnalysisResultShell({ result, onReanalyze, onRetryInterpretation
         </TabPanel>
 
         <TabPanel id="repositories" activeId={activeTab} title="Repository'ler">
-          <RepositoryAnalysisSection repositories={repositories} failures={analysis.repository_analysis.failures} excluded={selection.excluded} />
+          <RepositoryAnalysisSection repositories={repositories} failures={analysis.repository_analysis.failures} excluded={selection.excluded} owner={user.username} />
         </TabPanel>
 
         <TabPanel id="ai" activeId={activeTab} title="AI Yorumu">

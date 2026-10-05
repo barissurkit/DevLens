@@ -399,6 +399,22 @@ test.describe("navigation, account menu and workspace", () => {
     await expect(page.getByRole("button", { name: "Yeniden dene" })).toBeVisible();
   });
 
+  test("each repository card has its own prompt for fixing just that repository", async ({ page }) => {
+    await page.goto(`/u/${OWNER}`);
+    await page.getByRole("tab", { name: /Repository'ler/ }).click();
+    const card = page.locator("details").filter({ hasText: "Repository Kanıt Skoru" }).first();
+    await card.locator("summary").click();
+    const name = (await card.locator("summary span.font-semibold").first().innerText()).trim();
+
+    await card.getByRole("button", { name: `İstemi göster: ${name}` }).click();
+
+    const prompt = card.getByRole("textbox", { name: `${name} için düzeltme istemi` });
+    await expect(prompt).toHaveValue(new RegExp(`# Görev: ${OWNER}/${name} repository'sini iyileştir`));
+    await expect(prompt).toHaveValue(/tek bir pull request/);
+    await expect(prompt).not.toHaveValue(/Eksik olan repository'ler/);
+    await expectNoHorizontalOverflow(page);
+  });
+
   test("the theme is one button that opens a list and remembers the choice", async ({ page }) => {
     await page.goto("/");
     const button = page.getByRole("button", { name: /^Tema: / }).first();

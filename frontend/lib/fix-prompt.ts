@@ -1,8 +1,8 @@
 import { scoreTone } from "./presentation";
 import { topImprovements } from "./priorities";
 import { SCORING_GUIDE } from "./scoring-guide";
-import { absenceMayBeIncomplete, splitRepositoriesBySignal } from "./signals";
-import type { GitHubPortfolioAnalysis } from "./types";
+import { absenceMayBeIncomplete, repositoryHasSignal, splitRepositoriesBySignal } from "./signals";
+import type { GitHubPortfolioAnalysis, PortfolioRepositoryResult } from "./types";
 
 /** At most this many repositories are listed per rule; the rest is only counted, to keep the prompt readable. */
 const MAX_REPOSITORIES_PER_RULE = 12;
@@ -88,5 +88,49 @@ export function buildFixPrompt(analysis: GitHubPortfolioAnalysis): string | null
     "Repository başına ne değiştirdiğini, hangi doğrulamaları yaptığını ve benden beklediğin kararları (ör. lisans) kısa bir listeyle özetle.",
   );
 
+  return lines.join("\n");
+}
+
+/**
+ * The same kind of prompt for one repository: every rule it is missing, the heaviest first. Returns null when the
+ * repository already shows every signal.
+ */
+export function buildRepositoryFixPrompt(owner: string, result: PortfolioRepositoryResult): string | null {
+  const gaps = SCORING_GUIDE.flatMap((dimension) => dimension.rules)
+    .filter((rule) => repositoryHasSignal(result, rule.key) === false)
+    .sort((left, right) => right.weight - left.weight || left.label.localeCompare(right.label, "tr"));
+  if (gaps.length === 0) return null;
+
+  const { repository, score } = result;
+  const lines: string[] = [];
+  lines.push(`# Görev: ${owner}/${repository.name} repository'sini iyileştir`, "");
+  lines.push(
+    `Ben @${owner}. DevLens, ${repository.html_url} repository'sini deterministik kurallarla inceledi ve aşağıdaki eksikleri buldu. Görevin, bu eksikleri gerçek ve doğru içerikle kapatmak.`,
+    "",
+  );
+  lines.push("## Mevcut durum", "");
+  lines.push(`- Repository skoru: ${score.overall_score} / 100 (${scoreTone(score.overall_score).label})`);
+  if (repository.primary_language) lines.push(`- Ana dil: ${repository.primary_language}`);
+  lines.push(`- Varsayılan dal: ${repository.default_branch}`, "");
+
+  lines.push("## Yapılacaklar (puan değeri en yüksek önce)", "");
+  gaps.forEach((rule, index) => {
+    const uncertain = absenceMayBeIncomplete(result, rule.key) ? " (dosya listesi eksik alındı; önce var olup olmadığını kontrol et)" : "";
+    lines.push(`### ${index + 1}. ${rule.label} (${rule.weight} puanlık kural)${uncertain}`, "");
+    lines.push(`Ne yapılacak: ${TASKS[rule.key] ?? rule.label}`, "");
+  });
+
+  lines.push("## Kurallar", "");
+  lines.push(
+    `- ${repository.default_branch} dalından yeni bir dal aç ve tek bir pull request hazırla; ${repository.default_branch} dalına doğrudan yazma.`,
+    "- İçeriği uydurma. README, test ve açıklamaları repository'nin gerçek koduna bakarak yaz; emin olmadığın şeyi bana sor.",
+    "- Yalnızca yukarıdaki eksikleri kapat. Zaten sağlanan kurallara ve ilgisiz koda dokunma; mevcut dosyaları silme veya baştan yazma.",
+    "- Eklediğin komutları ve testleri çalıştırıp doğrula; çalışmayan bir şeyi ekleme.",
+    "- Gizli bilgi (anahtar, parola, .env içeriği) ekleme veya paylaşma.",
+    "",
+    "## Bitince",
+    "",
+    "Ne değiştirdiğini, hangi doğrulamaları yaptığını ve benden beklediğin kararları (ör. lisans) kısa bir listeyle özetle.",
+  );
   return lines.join("\n");
 }

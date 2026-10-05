@@ -4,9 +4,10 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { FixPromptSection } from "../components/fix-prompt-section";
-import { buildFixPrompt } from "../lib/fix-prompt";
+import { buildFixPrompt, buildRepositoryFixPrompt } from "../lib/fix-prompt";
 import { topImprovements } from "../lib/priorities";
 import { SCORING_GUIDE } from "../lib/scoring-guide";
+import { repositoryHasSignal } from "../lib/signals";
 import type { GitHubPortfolioAnalysis } from "../lib/types";
 
 const copyTextMock = vi.hoisted(() => vi.fn());
@@ -127,5 +128,52 @@ describe("FixPromptSection", () => {
     const { container } = render(<FixPromptSection analysis={{ ...analysis, score: { ...analysis.score, is_available: false, overall_score: null } }} />);
 
     expect(container).toBeEmptyDOMElement();
+  });
+});
+
+describe("buildRepositoryFixPrompt", () => {
+  const repositories = analysis.repository_analysis.repositories;
+  const owner = analysis.user.username;
+  const result = repositories[0];
+  const allRuleKeys = SCORING_GUIDE.flatMap((dimension) => dimension.rules);
+
+  it("is about one repository: its link, its score, and one pull request", () => {
+    const prompt = buildRepositoryFixPrompt(owner, result) as string;
+
+    expect(prompt).toContain(`# Görev: ${owner}/${result.repository.name} repository'sini iyileştir`);
+    expect(prompt).toContain(result.repository.html_url);
+    expect(prompt).toContain(`Repository skoru: ${result.score.overall_score} / 100`);
+    expect(prompt).toContain("tek bir pull request");
+    expect(prompt).toContain(`${result.repository.default_branch} dalına doğrudan yazma`);
+  });
+
+  it("lists exactly the rules this repository is missing, the heaviest first", () => {
+    const prompt = buildRepositoryFixPrompt(owner, result) as string;
+    const missing = allRuleKeys.filter((rule) => repositoryHasSignal(result, rule.key) === false);
+    const headings = [...prompt.matchAll(/^### \d+\. (.+?) \((\d+) puanlık kural\)/gm)].map((match) => [match[1], Number(match[2])] as const);
+
+    expect(headings.map(([label]) => label).sort()).toEqual(missing.map((rule) => rule.label).sort());
+    const weights = headings.map(([, weight]) => weight);
+    expect(weights).toEqual([...weights].sort((a, b) => b - a));
+  });
+
+  it("does not mention rules the repository already satisfies", () => {
+    const present = allRuleKeys.filter((rule) => repositoryHasSignal(result, rule.key) === true);
+    const prompt = buildRepositoryFixPrompt(owner, result) as string;
+
+    expect(present.length).toBeGreaterThan(0);
+    for (const rule of present) expect(prompt).not.toContain(`. ${rule.label} (`);
+  });
+
+  it("is null for a repository that shows every signal", () => {
+    const readme = { ...result.analysis.readme, exists: true, has_title: true, has_description: true, has_installation: true, has_usage: true, has_technologies: true, has_requirements: true };
+    const structure = { ...result.analysis.structure, has_tests: true, has_ci: true, has_gitignore: true, has_license: true, has_contributing: true };
+    const perfect = {
+      ...result,
+      repository: { ...result.repository, description: "Açıklama", topics: ["konu"], updated_at: new Date().toISOString() },
+      analysis: { ...result.analysis, readme, structure },
+    };
+
+    expect(buildRepositoryFixPrompt(owner, perfect)).toBeNull();
   });
 });
