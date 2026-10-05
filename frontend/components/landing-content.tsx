@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export function HeroCopy() {
   return (
     <div className="mb-8 reveal">
@@ -129,6 +131,10 @@ export function ScoringOverview({ as: Heading = "h2" }: { as?: HeadingLevel }) {
           </li>
         ))}
       </ul>
+      <Link href="/puanlama" className="mt-6 inline-flex items-center gap-1.5 rounded-lg text-sm font-semibold text-brand-700 hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2">
+        Bütün kuralları ve ağırlıkları gör
+        <span aria-hidden="true">→</span>
+      </Link>
     </div>
     <ul className="space-y-3">
       {dimensionRows.map((row) => (
