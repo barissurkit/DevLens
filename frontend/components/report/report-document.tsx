@@ -29,7 +29,8 @@ const MODE_LABEL = { ozet: "Özet rapor", detay: "Ayrıntılı rapor" } as const
 export function ReportDocument({ model, createdAt, url, onLayout }: ReportDocumentProps) {
   const blocks = useMemo(() => buildReportBlocks(model), [model]);
   const measureRef = useRef<HTMLDivElement>(null);
-  const [plan, setPlan] = useState<PagePlan | null>(null);
+  // The plan holds indexes into the blocks it was measured for, so the two are kept together.
+  const [layout, setLayout] = useState<{ blocks: typeof blocks; plan: PagePlan } | null>(null);
   const [zoom, setZoom] = useState(1);
 
   // Measure every block at its final width and pack whole blocks into pages. Done after the fonts are ready,
@@ -51,7 +52,7 @@ export function ReportDocument({ model, createdAt, url, onLayout }: ReportDocume
         CONTENT_HEIGHT_PX,
         { continuationHeight: CONTINUATION_HEIGHT_PX },
       );
-      setPlan(next);
+      setLayout({ blocks, plan: next });
       onLayout?.(next);
     };
     const fonts = typeof document !== "undefined" ? document.fonts : undefined;
@@ -68,6 +69,9 @@ export function ReportDocument({ model, createdAt, url, onLayout }: ReportDocume
     return () => window.removeEventListener("resize", update);
   }, []);
 
+  // Right after the report type changes the old plan still refers to the old blocks; show only the cover until the
+  // new plan is measured instead of reading blocks that no longer exist.
+  const plan = layout && layout.blocks === blocks ? layout.plan : null;
   const totalPages = (plan?.pages.length ?? 0) + 1;
 
   return (
