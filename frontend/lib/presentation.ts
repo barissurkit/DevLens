@@ -15,6 +15,8 @@ export interface ScoreTone {
   label: string;
   text: string;
   stroke: string;
+  /** Solid background for bars. */
+  fill: string;
   badge: string;
 }
 
@@ -23,9 +25,9 @@ export const SCORE_STRONG_MIN = 75;
 export const SCORE_MODERATE_MIN = 50;
 
 export function scoreTone(score: number): ScoreTone {
-  if (score >= SCORE_STRONG_MIN) return { label: "Güçlü", text: "text-emerald-700", stroke: "stroke-emerald-500", badge: "bg-emerald-50 text-emerald-800" };
-  if (score >= SCORE_MODERATE_MIN) return { label: "Gelişebilir", text: "text-amber-700", stroke: "stroke-amber-500", badge: "bg-amber-50 text-amber-800" };
-  return { label: "Zayıf", text: "text-rose-700", stroke: "stroke-rose-500", badge: "bg-rose-50 text-rose-800" };
+  if (score >= SCORE_STRONG_MIN) return { label: "Güçlü", text: "text-emerald-700", stroke: "stroke-emerald-500", fill: "bg-emerald-500", badge: "bg-emerald-50 text-emerald-800" };
+  if (score >= SCORE_MODERATE_MIN) return { label: "Gelişebilir", text: "text-amber-700", stroke: "stroke-amber-500", fill: "bg-amber-500", badge: "bg-amber-50 text-amber-800" };
+  return { label: "Zayıf", text: "text-rose-700", stroke: "stroke-rose-500", fill: "bg-rose-500", badge: "bg-rose-50 text-rose-800" };
 }
 
 export function categoryLabel(category: string): string {

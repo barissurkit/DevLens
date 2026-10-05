@@ -1,5 +1,6 @@
 import type { GitHubPortfolioAnalysis, PortfolioInsight, PortfolioRepositoryResult, PortfolioScoreDimensionResult } from "../lib/types";
 import { categoryLabel, scoreTone } from "../lib/presentation";
+import { SCORE_BANDS } from "../lib/scoring-guide";
 import { ImprovementPriorities } from "./improvement-priorities";
 import { ScoreDimension } from "./score-dimension";
 import { ScoreMethodology } from "./score-methodology";
@@ -85,16 +86,35 @@ function ScoreCard({ analysis, className = "" }: { analysis: GitHubPortfolioAnal
           <p className="mt-1 text-sm text-slate-500">
             {score.is_available ? `${score.scored_repository_count} başarılı repository üzerinden hesaplandı.` : score.limitations[0] || "Yeterli başarılı repository bulunmadığı için skor hesaplanamadı."}
           </p>
+          {hasScore && <ScoreBands score={score.overall_score} />}
         </div>
       </div>
       {dimensions.length > 0
-        ? <div className="mt-6 grid gap-4 border-t border-slate-100 pt-6 md:grid-cols-3">{dimensions.map((dimension) => <ScoreDimension key={dimension.key} label={DIMENSION_LABELS[dimension.key] || dimension.label} score={dimension.score} pointsEarned={dimension.points_earned} pointsPossible={dimension.points_possible} description={DIMENSION_DESCRIPTIONS[dimension.key] || dimension.label} />)}</div>
+        ? <div className="mt-6 grid gap-4 border-t border-slate-100 pt-6 sm:grid-cols-2 xl:grid-cols-4">{dimensions.map((dimension) => <ScoreDimension key={dimension.key} label={DIMENSION_LABELS[dimension.key] || dimension.label} score={dimension.score} pointsEarned={dimension.points_earned} pointsPossible={dimension.points_possible} description={DIMENSION_DESCRIPTIONS[dimension.key] || dimension.label} />)}</div>
         : <p className="mt-6 rounded-lg bg-slate-50 px-4 py-3 text-sm text-slate-600">Skor kullanılabilir olduğunda boyut dağılımı burada görünecek.</p>}
       <ScoreMethodology
         dimensions={dimensions.map((dimension) => ({ ...dimension, label: DIMENSION_LABELS[dimension.key] || dimension.label }))}
         scoredRepositoryCount={score.scored_repository_count}
       />
     </section>
+  );
+}
+
+/** The three bands next to the score, with the one this score falls into marked, so the colour is never a mystery. */
+function ScoreBands({ score }: { score: number | null }) {
+  if (score === null) return null;
+  const current = scoreTone(score).label;
+  return (
+    <ul aria-label="Skor aralıkları" className="mt-4 flex flex-wrap gap-2 text-xs">
+      {SCORE_BANDS.map((band) => {
+        const active = band.label === current;
+        return (
+          <li key={band.key} aria-current={active ? "true" : undefined} className={`rounded-full px-2.5 py-1 font-medium ${active ? `${band.badge} ring-1 ring-current` : "bg-slate-100 text-slate-600"}`}>
+            {band.label} <span className="font-normal">{band.range}</span>
+          </li>
+        );
+      })}
+    </ul>
   );
 }
 

@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type { PortfolioScoreDimensionResult, PortfolioScoreRuleResult } from "../lib/types";
 import { SCORE_MODERATE_MIN, SCORE_STRONG_MIN } from "../lib/presentation";
 
@@ -13,6 +14,11 @@ export function rulePoints(rule: PortfolioScoreRuleResult): number {
   return rule.analyzed_repository_count > 0
     ? (rule.weight * rule.detected_repository_count) / rule.analyzed_repository_count
     : 0;
+}
+
+/** A rule is a strength when the signal is in at least half of the analyzed repositories (the backend policy). */
+export function isStrength(rule: PortfolioScoreRuleResult): boolean {
+  return rule.analyzed_repository_count > 0 && rule.detected_repository_count * 2 >= rule.analyzed_repository_count;
 }
 
 /** Picks a rule that is present in some but not all repositories, so the worked example is instructive. */
@@ -58,6 +64,7 @@ export function ScoreMethodology({ dimensions, scoredRepositoryCount }: ScoreMet
                     <tr className="border-b border-slate-200 text-xs text-slate-500">
                       <th scope="col" className="py-1.5 pr-3 font-medium">Kural</th>
                       <th scope="col" className="py-1.5 pr-3 font-medium">Sinyali olan repository</th>
+                      <th scope="col" className="py-1.5 pr-3 font-medium">Durum</th>
                       <th scope="col" className="py-1.5 text-right font-medium">Puan</th>
                     </tr>
                   </thead>
@@ -66,6 +73,7 @@ export function ScoreMethodology({ dimensions, scoredRepositoryCount }: ScoreMet
                       <tr key={rule.key} className="border-b border-slate-100 last:border-0">
                         <th scope="row" className="py-1.5 pr-3 font-normal text-slate-800">{rule.label}</th>
                         <td className="py-1.5 pr-3 text-slate-600">{rule.detected_repository_count} / {rule.analyzed_repository_count}</td>
+                        <td className={`py-1.5 pr-3 text-xs font-medium ${isStrength(rule) ? "text-emerald-700" : "text-amber-700"}`}>{isStrength(rule) ? "Güçlü yön" : "Gelişim alanı"}</td>
                         <td className="py-1.5 text-right font-medium text-slate-900">{formatPoints(rulePoints(rule))} / {rule.weight}</td>
                       </tr>
                     ))}
@@ -78,6 +86,11 @@ export function ScoreMethodology({ dimensions, scoredRepositoryCount }: ScoreMet
             </p>
           </div>
         )}
+
+        <p>
+          Bir sinyal repository&apos;lerin en az yarısında varsa güçlü yön, yarısından azında varsa gelişim alanı sayılır; gelişim alanları da kısmi puan getirebilir.{" "}
+          <Link href="/puanlama" className="font-semibold text-brand-700 underline-offset-2 hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-600">Bütün kuralları ve ağırlıkları gör →</Link>
+        </p>
 
         <ul className="list-disc space-y-1.5 pl-5">
           <li>Skor için en az iki repository&apos;nin başarıyla analiz edilmesi gerekir{scoredRepositoryCount > 0 ? ` (bu skor ${scoredRepositoryCount} repository üzerinden hesaplandı)` : ""}.</li>

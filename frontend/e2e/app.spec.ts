@@ -310,7 +310,7 @@ test.describe("navigation, account menu and workspace", () => {
 
     await links.getByRole("link", { name: "Puanlama" }).click();
     await expect(page).toHaveURL(/\/puanlama$/);
-    await expect(page.getByRole("heading", { level: 1, name: "Şeffaf puanlama" })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1, name: "Puanlama nasıl çalışır?" })).toBeVisible();
 
     await links.getByRole("link", { name: "Sık sorulanlar" }).click();
     await expect(page).toHaveURL(/\/sss$/);
@@ -320,6 +320,23 @@ test.describe("navigation, account menu and workspace", () => {
     await expect(page).toHaveURL(/\/nasil-calisir$/);
     await expect(page.getByRole("heading", { level: 1, name: "Nasıl çalışır?" })).toBeVisible();
     await expect(links.getByRole("link", { name: "Nasıl çalışır" })).toHaveAttribute("aria-current", "page");
+    await expectNoHorizontalOverflow(page);
+  });
+
+  test("the score card names the bands and leads to the full scoring guide", async ({ page }) => {
+    await page.goto(`/u/${OWNER}`);
+    const bands = page.getByRole("list", { name: "Skor aralıkları" });
+    await expect(bands).toBeVisible();
+    // The recorded portfolio scores 44, which is in the lowest band.
+    await expect(bands.locator('[aria-current="true"]')).toContainText("Zayıf");
+
+    await page.getByText("Skor nasıl hesaplanır?").click();
+    await expect(page.getByRole("cell", { name: "Güçlü yön" }).first()).toBeVisible();
+    await page.getByRole("link", { name: /Bütün kuralları ve ağırlıkları gör/ }).first().click();
+
+    await expect(page).toHaveURL(/\/puanlama$/);
+    await expect(page.getByRole("heading", { level: 2, name: "Bütün kurallar" })).toBeVisible();
+    await expect(page.getByRole("row", { name: /Test yapısı/ })).toBeVisible();
     await expectNoHorizontalOverflow(page);
   });
 
