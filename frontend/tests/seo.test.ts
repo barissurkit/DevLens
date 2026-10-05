@@ -9,8 +9,14 @@ describe("search engine files", () => {
     expect(robots()).toEqual({ rules: [{ userAgent: "*", allow: "/" }], sitemap: `${SITE_URL}/sitemap.xml` });
   });
 
-  it("lists the landing page and the example results only", () => {
+  it("lists the landing page, its information pages and the example results only", () => {
     const urls = sitemap().map((entry) => entry.url);
-    expect(urls).toEqual([SITE_URL, ...EXAMPLE_USERNAMES.map((name) => `${SITE_URL}/u/${name}`)]);
+    expect(urls).toEqual([
+      SITE_URL,
+      `${SITE_URL}/nasil-calisir`,
+      `${SITE_URL}/puanlama`,
+      `${SITE_URL}/sss`,
+      ...EXAMPLE_USERNAMES.map((name) => `${SITE_URL}/u/${name}`),
+    ]);
   });
 });

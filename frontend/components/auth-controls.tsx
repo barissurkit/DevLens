@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { getAuthStartUrl } from "../lib/api";
 import { useAuth } from "./auth-provider";
+import { UserMenu } from "./user-menu";
 
 const controlClassName = "min-h-11 rounded-lg px-3 py-2 text-sm font-medium transition focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2";
 
@@ -22,28 +23,10 @@ export function AuthControls() {
     }
 
     return (
-      <div className="flex flex-wrap items-center justify-end gap-2">
-        <a
-          href={`/?workspace=1&username=${encodeURIComponent(user.github_login)}`}
-          aria-label="Çalışma Alanım"
-          className={`${controlClassName} whitespace-nowrap border border-slate-300 bg-card text-slate-700 hover:bg-slate-100`}
-        >
-          <span aria-hidden="true" className="sm:hidden">Alanım</span>
-          <span aria-hidden="true" className="hidden sm:inline">Çalışma Alanım</span>
-        </a>
-        <span className="hidden max-w-36 truncate text-sm font-medium text-slate-700 lg:inline" title={user.display_name ?? user.github_login}>
-          {user.display_name ?? `@${user.github_login}`}
-        </span>
-        <button
-          type="button"
-          onClick={() => void handleLogout()}
-          disabled={isLoggingOut}
-          className={`${controlClassName} whitespace-nowrap border border-slate-300 bg-card text-slate-700 hover:bg-slate-100 disabled:cursor-wait disabled:opacity-60`}
-        >
-          {isLoggingOut ? "Çıkış yapılıyor…" : "Çıkış yap"}
-        </button>
+      <div className="flex flex-col items-end gap-1">
+        <UserMenu user={user} onLogout={() => void handleLogout()} busy={isLoggingOut} />
         {errorMessage && (
-          <p role="alert" className="w-full text-right text-xs text-amber-800">{errorMessage}</p>
+          <p role="alert" className="max-w-56 text-right text-xs text-amber-800">{errorMessage}</p>
         )}
       </div>
     );

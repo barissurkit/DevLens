@@ -300,3 +300,75 @@ test.describe("printed report", () => {
     await expect(page.locator(".print-section-title").first()).toBeHidden();
   });
 });
+
+test.describe("navigation, account menu and workspace", () => {
+  test("the product links open their own pages from a result screen", async ({ page, isMobile }) => {
+    await page.goto(`/u/${OWNER}`);
+    await expect(page.getByRole("tab", { name: /Genel Bakış/ })).toBeVisible();
+    // The header links are hidden on a phone; the footer carries the same links.
+    const links = page.getByRole("navigation", { name: isMobile ? "Ürün" : "Ana gezinme" });
+
+    await links.getByRole("link", { name: "Puanlama" }).click();
+    await expect(page).toHaveURL(/\/puanlama$/);
+    await expect(page.getByRole("heading", { level: 1, name: "Şeffaf puanlama" })).toBeVisible();
+
+    await links.getByRole("link", { name: "Sık sorulanlar" }).click();
+    await expect(page).toHaveURL(/\/sss$/);
+    await expect(page.getByRole("heading", { level: 1, name: "Sık sorulan sorular" })).toBeVisible();
+
+    await links.getByRole("link", { name: "Nasıl çalışır" }).click();
+    await expect(page).toHaveURL(/\/nasil-calisir$/);
+    await expect(page.getByRole("heading", { level: 1, name: "Nasıl çalışır?" })).toBeVisible();
+    await expect(links.getByRole("link", { name: "Nasıl çalışır" })).toHaveAttribute("aria-current", "page");
+    await expectNoHorizontalOverflow(page);
+  });
+
+  test("the theme is one button that opens a list and remembers the choice", async ({ page }) => {
+    await page.goto("/");
+    const button = page.getByRole("button", { name: /^Tema: / }).first();
+    await expect(button).toBeVisible();
+    await expect(page.getByRole("button", { name: "Koyu tema" })).toHaveCount(0);
+
+    await button.click();
+    await page.getByRole("button", { name: "Koyu tema" }).click();
+
+    await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+    await expect(page.getByRole("button", { name: "Koyu tema" })).toHaveCount(0);
+    await page.reload();
+    await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+  });
+
+  test("a signed-in person uses the avatar menu for the profile analysis, the workspace and signing out", async ({ page }) => {
+    await signInAs(page);
+    await page.goto("/");
+    const menuButton = page.getByRole("button", { name: /^Hesap menüsü: / });
+    await expect(menuButton).toBeVisible();
+    // The old loose buttons are gone from the top bar.
+    await expect(page.getByRole("link", { name: "Çalışma Alanım" })).toHaveCount(0);
+
+    await menuButton.click();
+    const menu = page.getByRole("group", { name: "Hesap menüsü" });
+    await expect(menu.getByRole("link", { name: "Profilimi analiz et" })).toHaveAttribute("href", `/?workspace=1&username=${OWNER}`);
+    await expect(menu.getByRole("button", { name: "Çıkış yap" })).toBeVisible();
+
+    await menu.getByRole("link", { name: "Çalışma alanım" }).click();
+    await expect(page).toHaveURL(/\/calisma-alani$/);
+    await expect(page.getByRole("heading", { level: 1, name: "Test Sahibi" })).toBeVisible();
+    // The workspace is its own screen: progress, AI suggestions and the action plan, without starting an analysis.
+    await expect(page.getByRole("heading", { name: "İlerleme" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Öneri oluştur" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /Aksiyon Planı/ })).toBeVisible();
+    await expect(page.getByRole("tab", { name: /Genel Bakış/ })).toHaveCount(0);
+
+    await page.getByRole("link", { name: "Profilimi analiz et" }).first().click();
+    await expect(page.getByText("Senin portföyün")).toBeVisible();
+  });
+
+  test("the workspace asks a visitor to sign in", async ({ page }) => {
+    await page.goto("/calisma-alani");
+
+    await expect(page.getByRole("heading", { level: 1, name: "Çalışma alanı" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "GitHub ile giriş yap" }).last()).toBeVisible();
+    await expect(page.getByRole("button", { name: "Öneri oluştur" })).toHaveCount(0);
+  });
+});
