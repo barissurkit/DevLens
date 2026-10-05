@@ -6,6 +6,7 @@ import { userPath } from "../lib/share";
 import { ActionPlan } from "./action-plan";
 import { AISuggestedActions } from "./ai-suggested-actions";
 import { AnalysisHistory } from "./analysis-history";
+import { SavedProfiles } from "./saved-profiles";
 import { useAuth } from "./auth-provider";
 import { ownProfileAnalysisHref } from "./user-menu";
 
@@ -64,6 +65,7 @@ export function WorkspaceView() {
 
       <AnalysisHistory key={`history-${user.github_login}`} visible />
       <AISuggestedActions key={`suggestions-${user.github_login}`} username={user.github_login} />
+      <SavedProfiles />
       <ActionPlan />
     </div>
   );

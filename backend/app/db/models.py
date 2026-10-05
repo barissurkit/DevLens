@@ -133,3 +133,22 @@ class PortfolioAnalysisHistory(Base):
     category_scores: Mapped[list[dict[str, object]]] = mapped_column(JSONB, nullable=False)
     passed_checks: Mapped[list[str]] = mapped_column(JSONB, nullable=False)
     failed_checks: Mapped[list[str]] = mapped_column(JSONB, nullable=False)
+
+
+class SavedProfile(Base):
+    """A GitHub profile a signed-in person keeps in their workspace to come back to and compare."""
+
+    __tablename__ = "saved_profiles"
+    __table_args__ = (
+        UniqueConstraint("user_id", "github_username_normalized", name="uq_saved_profiles_user_username"),
+        CheckConstraint("length(trim(github_username)) > 0", name="ck_saved_profiles_username_not_blank"),
+        Index("ix_saved_profiles_user_created_at", "user_id", text("created_at DESC")),
+    )
+
+    id: Mapped[UUID] = mapped_column(PostgreSQLUUID(as_uuid=True), primary_key=True, default=uuid4)
+    user_id: Mapped[UUID] = mapped_column(
+        PostgreSQLUUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+    )
+    github_username: Mapped[str] = mapped_column(String(39), nullable=False)
+    github_username_normalized: Mapped[str] = mapped_column(String(39), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=func.now())

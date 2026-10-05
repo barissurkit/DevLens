@@ -415,6 +415,43 @@ test.describe("navigation, account menu and workspace", () => {
     await expectNoHorizontalOverflow(page);
   });
 
+  test("a signed-in person saves a profile from its result page and manages it in the workspace", async ({ page }) => {
+    // The mock always shows the owner's portfolio, so another person is signed in to make it "someone else's".
+    await signInAs(page);
+    await page.route("**/api/v1/auth/me", (route) => route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      headers: { "access-control-allow-origin": page.url().startsWith("http") ? new URL(page.url()).origin : "http://localhost:3100", "access-control-allow-credentials": "true" },
+      body: JSON.stringify({ authenticated: true, user: { github_login: "someone", display_name: "Biri", avatar_url: null, github_html_url: "https://github.com/someone" } }),
+    }));
+    await page.goto(`/u/${OWNER}`);
+    await page.getByRole("button", { name: "Kaydet", exact: true }).click();
+    await expect(page.getByRole("button", { name: "Kayıtlı" })).toHaveAttribute("aria-pressed", "true");
+
+    await page.goto("/calisma-alani");
+    const list = page.getByRole("region", { name: "Kayıtlı profiller" });
+    const row = list.getByRole("listitem").filter({ hasText: `@${OWNER}` });
+    await expect(row).toContainText("61 / 100");
+    await expect(row.getByRole("link", { name: "Benimle karşılaştır" })).toHaveAttribute("href", `/karsilastir/someone/${OWNER}`);
+
+    await list.getByLabel("Kaydedilecek GitHub kullanıcı adı").fill("https://github.com/torvalds");
+    await list.getByRole("button", { name: "Profili kaydet" }).click();
+    const added = list.getByRole("listitem").filter({ hasText: "@torvalds" });
+    await expect(added).toContainText("Skor yok");
+
+    await added.getByRole("button", { name: "@torvalds profilini kaldır" }).click();
+    await expect(added).toHaveCount(0);
+    await row.getByRole("button", { name: `@${OWNER} profilini kaldır` }).click();
+    await expect(list.getByText(/Henüz kayıtlı profil yok/)).toBeVisible();
+    await expectNoHorizontalOverflow(page);
+  });
+
+  test("a visitor does not see the save button", async ({ page }) => {
+    await page.goto("/u/octocat");
+    await expect(page.getByRole("tab", { name: /Genel Bakış/ })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Kaydet", exact: true })).toHaveCount(0);
+  });
+
   test("the theme is one button that opens a list and remembers the choice", async ({ page }) => {
     await page.goto("/");
     const button = page.getByRole("button", { name: /^Tema: / }).first();

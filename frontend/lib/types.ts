@@ -432,3 +432,18 @@ export interface OpenSourceContributions {
   contributions: OpenSourceContribution[];
   is_truncated: boolean;
 }
+
+/** A GitHub profile kept in the signed-in person's workspace. */
+export interface SavedProfile {
+  id: string;
+  username: string;
+  saved_at: string;
+  /** From the latest stored analysis of that profile; null when it has not been analysed (or has no score) yet. */
+  latest_score: number | null;
+  latest_analyzed_at: string | null;
+}
+
+export interface SavedProfilesResponse {
+  profiles: SavedProfile[];
+  limit: number;
+}
