@@ -1,6 +1,7 @@
 import type { GitHubPortfolioAnalysis, PortfolioInsight, PortfolioRepositoryResult, PortfolioScoreDimensionResult } from "../lib/types";
 import { categoryLabel, scoreTone } from "../lib/presentation";
 import { SCORE_BANDS } from "../lib/scoring-guide";
+import { FixPromptSection } from "./fix-prompt-section";
 import { ImprovementPriorities } from "./improvement-priorities";
 import { ScoreDimension } from "./score-dimension";
 import { ScoreMethodology } from "./score-methodology";
@@ -45,6 +46,8 @@ export function PortfolioOverview({ analysis }: { analysis: GitHubPortfolioAnaly
       </div>
 
       {score.is_available && <ImprovementPriorities dimensions={score.dimensions} overallScore={score.overall_score} />}
+
+      <FixPromptSection analysis={analysis} />
 
       <div className="grid gap-6 lg:grid-cols-2">
         <InsightSection id="strengths-heading" title="Güçlü Kanıt Sinyalleri" tone="positive" items={intelligence.strength_signals} repositories={repositories} emptyMessage="Portföy genelinde tekrar eden güçlü kanıt sinyali belirlenmedi." />
