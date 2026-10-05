@@ -13,7 +13,7 @@ export function InfoPage({ children }: { children: ReactNode }) {
             <h2 className="text-lg font-semibold text-slate-950">Kendi portföyünü dene</h2>
             <p className="mt-1 text-sm text-slate-600">Bir GitHub kullanıcı adı yeterli; giriş yapmana gerek yok.</p>
           </div>
-          <Link href="/" className="inline-flex min-h-11 items-center justify-center rounded-lg bg-indigo-600 px-5 text-sm font-medium text-white transition hover:bg-primary-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600 focus-visible:ring-offset-2">
+          <Link href="/" className="inline-flex min-h-11 items-center justify-center rounded-lg bg-brand-600 px-5 text-sm font-medium text-white transition hover:bg-primary-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2">
             Analiz et
           </Link>
         </section>

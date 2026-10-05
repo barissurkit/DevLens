@@ -130,7 +130,7 @@ function Cover({ model, createdAt, url }: { model: ReportModel; createdAt: Date;
       </div>
 
       <div className="mt-auto">
-        <p className="text-[10pt] font-semibold uppercase tracking-[0.22em] text-indigo-700">Portföy Analiz Raporu</p>
+        <p className="text-[10pt] font-semibold uppercase tracking-[0.22em] text-brand-700">Portföy Analiz Raporu</p>
         <p className="mt-1 text-[10pt] text-slate-500">{MODE_LABEL[model.mode]}</p>
         <div className="mt-8 flex items-center gap-5">
           {model.avatarUrl && (
@@ -156,7 +156,7 @@ function Cover({ model, createdAt, url }: { model: ReportModel; createdAt: Date;
             {model.dimensions.map((dimension) => (
               <li key={dimension.key}>
                 <div className="flex justify-between text-[10pt]"><span className="font-medium text-slate-800">{dimension.label}</span><span className="text-slate-600">{dimension.earned.toLocaleString("tr-TR", { maximumFractionDigits: 1 })} / {dimension.possible}</span></div>
-                <div className="mt-1 h-2 rounded-full bg-slate-200"><div className="h-2 rounded-full bg-indigo-600" style={{ width: `${dimension.percent}%` }} /></div>
+                <div className="mt-1 h-2 rounded-full bg-slate-200"><div className="h-2 rounded-full bg-brand-600" style={{ width: `${dimension.percent}%` }} /></div>
               </li>
             ))}
           </ul>

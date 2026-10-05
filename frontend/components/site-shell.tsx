@@ -6,13 +6,13 @@ import { BrandMark, BrandWordmark } from "./brand-mark";
 import { NavLinks } from "./nav-links";
 import { ThemeToggle } from "./theme-toggle";
 
-const focusRing = "focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600 focus-visible:ring-offset-2";
+const focusRing = "focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2";
 
 /** Application chrome shared by the landing page and shareable result pages. */
 export function SiteShell({ children }: { children: ReactNode }) {
   return (
     <div className="flex min-h-screen flex-col">
-      <a href="#main-content" className="sr-only rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50">
+      <a href="#main-content" className="sr-only rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50">
         Ana içeriğe geç
       </a>
       <header className="sticky top-0 z-30 print:hidden border-b border-slate-200/80 bg-card/85 backdrop-blur-md">

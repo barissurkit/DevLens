@@ -93,7 +93,7 @@ export function ThemeToggle({ placement = "down" }: { placement?: "down" | "up" 
         aria-controls={listId}
         title="Tema"
         onClick={() => setOpen((value) => !value)}
-        className="flex h-9 items-center gap-1.5 rounded-lg border border-slate-300 bg-card px-2.5 text-slate-600 transition hover:bg-slate-100 hover:text-slate-950 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600"
+        className="flex h-9 items-center gap-1.5 rounded-lg border border-slate-300 bg-card px-2.5 text-slate-600 transition hover:bg-slate-100 hover:text-slate-950 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-600"
       >
         <Icon>{current.icon}</Icon>
         <svg aria-hidden="true" viewBox="0 0 24 24" className={`h-3.5 w-3.5 transition ${open ? "rotate-180" : ""}`} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9l6 6 6-6" /></svg>
@@ -119,7 +119,7 @@ export function ThemeToggle({ placement = "down" }: { placement?: "down" | "up" 
                   close();
                   buttonRef.current?.focus();
                 }}
-                className={`flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm font-medium transition focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600 ${pressed ? "bg-indigo-50 text-indigo-800" : "text-slate-700 hover:bg-slate-100"}`}
+                className={`flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm font-medium transition focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 ${pressed ? "bg-brand-50 text-brand-800" : "text-slate-700 hover:bg-slate-100"}`}
               >
                 <Icon>{option.icon}</Icon>
                 <span className="flex-1 text-left">{option.short}</span>

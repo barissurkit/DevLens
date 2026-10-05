@@ -93,3 +93,22 @@ describe("muted text contrast (WCAG AA, 4.5:1)", () => {
     }
   });
 });
+
+describe("brand colour contrast (WCAG AA, 4.5:1)", () => {
+  const light = block("@theme {");
+  const dark = block(':root[data-theme="dark"]');
+  const white: Rgb = [1, 1, 1];
+
+  it("keeps white button text readable on the brand fill and on its hover tone", () => {
+    expect(contrast(white, colorValue(light, "--color-brand-600"))).toBeGreaterThanOrEqual(AA_NORMAL_TEXT);
+    expect(contrast(white, colorValue(light, "--color-brand-700"))).toBeGreaterThanOrEqual(AA_NORMAL_TEXT);
+    expect(contrast(white, colorValue(dark, "--color-primary-hover"))).toBeGreaterThanOrEqual(AA_NORMAL_TEXT);
+  });
+
+  it("keeps brand coloured text readable on cards and on the tinted brand backgrounds", () => {
+    expect(contrast(colorValue(light, "--color-brand-700"), colorValue(light, "--color-card"))).toBeGreaterThanOrEqual(AA_NORMAL_TEXT);
+    expect(contrast(colorValue(light, "--color-brand-700"), colorValue(light, "--color-brand-50"))).toBeGreaterThanOrEqual(AA_NORMAL_TEXT);
+    expect(contrast(colorValue(dark, "--color-brand-700"), colorValue(dark, "--color-card"))).toBeGreaterThanOrEqual(AA_NORMAL_TEXT);
+    expect(contrast(colorValue(dark, "--color-brand-700"), colorValue(dark, "--color-brand-50"))).toBeGreaterThanOrEqual(AA_NORMAL_TEXT);
+  });
+});

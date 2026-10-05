@@ -9,7 +9,7 @@ export const NAV_LINKS: Array<{ href: string; label: string }> = [
   { href: "/sss", label: "Sık sorulanlar" },
 ];
 
-const focusRing = "focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600 focus-visible:ring-offset-2";
+const focusRing = "focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2";
 
 /** The product links of the header and footer. They are real pages, so they work from every screen. */
 export function NavLinks({ variant }: { variant: "header" | "footer" }) {

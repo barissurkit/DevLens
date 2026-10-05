@@ -10,7 +10,7 @@ const BENEFITS: Array<{ title: string; text: string }> = [
 ];
 
 const primaryLinkClass =
-  "inline-flex min-h-11 items-center rounded-xl bg-indigo-600 px-5 text-sm font-medium text-white transition hover:bg-primary-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600 focus-visible:ring-offset-2";
+  "inline-flex min-h-11 items-center rounded-xl bg-brand-600 px-5 text-sm font-medium text-white transition hover:bg-primary-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2";
 
 function signInUrl(): string | null {
   try {
@@ -28,7 +28,7 @@ export function ActionsLockedPanel() {
 
   return (
     <section aria-labelledby="actions-locked-heading" className="rounded-2xl border border-slate-200 bg-card p-6 shadow-card sm:p-8">
-      <p className="text-xs font-semibold uppercase tracking-[0.14em] text-indigo-700">Kendi portföyün için</p>
+      <p className="text-xs font-semibold uppercase tracking-[0.14em] text-brand-700">Kendi portföyün için</p>
       <h3 id="actions-locked-heading" className="mt-2 text-2xl font-semibold tracking-tight text-slate-950">
         {isSignedIn ? "Aksiyonlar yalnızca kendi portföyünde açılır" : "Aksiyonların kilidini aç"}
       </h3>

@@ -43,7 +43,7 @@ function Paragraph({ children, muted = false }: { children: ReactNode; muted?: b
   return <p className={`text-[10pt] leading-relaxed ${muted ? "text-slate-500" : "text-slate-800"}`}>{children}</p>;
 }
 
-function Bar({ percent, tone = "bg-indigo-600" }: { percent: number; tone?: string }) {
+function Bar({ percent, tone = "bg-brand-600" }: { percent: number; tone?: string }) {
   return (
     <div className="h-2 overflow-hidden rounded-full bg-slate-200">
       <div className={`h-full rounded-full ${tone}`} style={{ width: `${Math.min(100, Math.max(0, percent))}%` }} />
@@ -179,7 +179,7 @@ export function buildReportBlocks(model: ReportModel): ReportBlockSpec[] {
   if (model.priorities.length === 0) add("priorities-empty", <Paragraph muted>Skoru artıracak belirgin bir eksik bulunmadı.</Paragraph>);
   model.priorities.forEach((item, index) => add(`priority-${item.key}`, (
     <div className="flex items-center gap-3 rounded-lg border border-slate-200 px-4 py-2.5">
-      <span aria-hidden="true" className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-indigo-600 text-[9pt] font-semibold text-white">{index + 1}</span>
+      <span aria-hidden="true" className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand-600 text-[9pt] font-semibold text-white">{index + 1}</span>
       <div className="min-w-0 flex-1">
         <p className="text-[10pt] font-semibold text-slate-900">{item.label}</p>
         <p className="text-[8.5pt] text-slate-500">{item.analyzedRepositories} repository&apos;nin {item.missingRepositories} tanesinde eksik</p>

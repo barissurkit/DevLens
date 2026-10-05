@@ -23,7 +23,7 @@ function errorMessage(error: unknown): string {
   return "Rapor hazırlanamadı.";
 }
 
-const buttonClass = "inline-flex min-h-10 items-center justify-center whitespace-nowrap rounded-lg border px-3.5 text-sm font-medium transition focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600 focus-visible:ring-offset-2";
+const buttonClass = "inline-flex min-h-10 items-center justify-center whitespace-nowrap rounded-lg border px-3.5 text-sm font-medium transition focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2";
 
 /** The printable report page: a toolbar (screen only) above the A4 sheets filled from the analysis. */
 export function ReportView({ username, mode }: { username: string; mode: ReportMode }) {
@@ -80,13 +80,13 @@ export function ReportView({ username, mode }: { username: string; mode: ReportM
                   href={`${userPath(username)}/rapor?tur=${item.mode}`}
                   aria-current={item.mode === mode ? "page" : undefined}
                   title={item.description}
-                  className={`rounded-md px-3 py-1.5 text-sm font-medium transition focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600 ${item.mode === mode ? "bg-indigo-600 text-white" : "text-slate-600 hover:bg-slate-100"}`}
+                  className={`rounded-md px-3 py-1.5 text-sm font-medium transition focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 ${item.mode === mode ? "bg-brand-600 text-white" : "text-slate-600 hover:bg-slate-100"}`}
                 >
                   {item.label}
                 </Link>
               ))}
             </nav>
-            <button type="button" onClick={() => window.print()} disabled={state.status !== "ready"} className={`${buttonClass} border-indigo-600 bg-indigo-600 text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:border-slate-300 disabled:bg-slate-300`}>
+            <button type="button" onClick={() => window.print()} disabled={state.status !== "ready"} className={`${buttonClass} border-brand-600 bg-brand-600 text-white hover:bg-brand-700 disabled:cursor-not-allowed disabled:border-slate-300 disabled:bg-slate-300`}>
               Yazdır / PDF olarak kaydet
             </button>
           </div>

@@ -6,7 +6,19 @@
      theme redefines this variable below, so it is unaffected. */
   --color-slate-500: oklch(51% 0.046 257.417);
   --color-card: #ffffff;
-  --color-primary-hover: var(--color-indigo-700);
+  /* Brand colour: a calm teal. Shade 600 carries white text (5.5:1), 700 is the hover/text tone. */
+  --color-brand-50: oklch(98.4% 0.014 180.72);
+  --color-brand-100: oklch(95.3% 0.051 180.801);
+  --color-brand-200: oklch(91% 0.096 180.426);
+  --color-brand-300: oklch(85.5% 0.138 181.071);
+  --color-brand-400: oklch(70.4% 0.14 182.503);
+  --color-brand-500: oklch(60% 0.118 184.704);
+  --color-brand-600: oklch(51.1% 0.096 186.391);
+  --color-brand-700: oklch(43.7% 0.078 188.216);
+  --color-brand-800: oklch(38.6% 0.063 188.416);
+  --color-brand-900: oklch(27.7% 0.046 192.524);
+  --color-brand-950: oklch(21% 0.034 193);
+  --color-primary-hover: var(--color-brand-700);
   --shadow-card: 0 1px 2px rgba(16, 24, 40, 0.05), 0 1px 3px rgba(16, 24, 40, 0.04);
   --shadow-raised: 0 4px 12px rgba(16, 24, 40, 0.06), 0 12px 32px rgba(16, 24, 40, 0.06);
 }
@@ -34,14 +46,14 @@
     --color-slate-800: oklch(96.8% 0.007 247.896);
     --color-slate-900: oklch(98.4% 0.003 247.858);
     --color-slate-950: oklch(98.4% 0.003 247.858);
-    --color-indigo-50: oklch(25.7% 0.09 281.288);
-    --color-indigo-100: oklch(35.9% 0.144 278.697);
-    --color-indigo-200: oklch(39.8% 0.195 277.366);
-    --color-indigo-300: oklch(45.7% 0.24 277.023);
-    --color-indigo-700: oklch(78.5% 0.115 274.713);
-    --color-indigo-800: oklch(87% 0.065 274.039);
-    --color-indigo-900: oklch(93% 0.034 272.788);
-    --color-indigo-950: oklch(96.2% 0.018 272.314);
+    --color-brand-50: oklch(26% 0.05 190);
+    --color-brand-100: oklch(33% 0.065 189);
+    --color-brand-200: oklch(38.6% 0.063 188.416);
+    --color-brand-300: oklch(43.7% 0.078 188.216);
+    --color-brand-700: oklch(85.5% 0.138 181.071);
+    --color-brand-800: oklch(91% 0.096 180.426);
+    --color-brand-900: oklch(95.3% 0.051 180.801);
+    --color-brand-950: oklch(98.4% 0.014 180.72);
     --color-emerald-50: oklch(26.2% 0.051 172.552);
     --color-emerald-100: oklch(37.8% 0.077 168.94);
     --color-emerald-200: oklch(43.2% 0.095 166.913);
@@ -75,7 +87,7 @@
     --color-red-900: oklch(93.6% 0.032 17.717);
     --color-red-950: oklch(97.1% 0.013 17.38);
     --color-card: oklch(20.8% 0.042 265.755);
-    --color-primary-hover: oklch(58.5% 0.233 277.117);
+    --color-primary-hover: oklch(46% 0.09 187);
     --background: oklch(12.9% 0.042 264.695);
     --foreground: oklch(98.4% 0.003 247.858);
     --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.4);
@@ -97,14 +109,14 @@
   --color-slate-800: oklch(96.8% 0.007 247.896);
   --color-slate-900: oklch(98.4% 0.003 247.858);
   --color-slate-950: oklch(98.4% 0.003 247.858);
-  --color-indigo-50: oklch(25.7% 0.09 281.288);
-  --color-indigo-100: oklch(35.9% 0.144 278.697);
-  --color-indigo-200: oklch(39.8% 0.195 277.366);
-  --color-indigo-300: oklch(45.7% 0.24 277.023);
-  --color-indigo-700: oklch(78.5% 0.115 274.713);
-  --color-indigo-800: oklch(87% 0.065 274.039);
-  --color-indigo-900: oklch(93% 0.034 272.788);
-  --color-indigo-950: oklch(96.2% 0.018 272.314);
+  --color-brand-50: oklch(26% 0.05 190);
+  --color-brand-100: oklch(33% 0.065 189);
+  --color-brand-200: oklch(38.6% 0.063 188.416);
+  --color-brand-300: oklch(43.7% 0.078 188.216);
+  --color-brand-700: oklch(85.5% 0.138 181.071);
+  --color-brand-800: oklch(91% 0.096 180.426);
+  --color-brand-900: oklch(95.3% 0.051 180.801);
+  --color-brand-950: oklch(98.4% 0.014 180.72);
   --color-emerald-50: oklch(26.2% 0.051 172.552);
   --color-emerald-100: oklch(37.8% 0.077 168.94);
   --color-emerald-200: oklch(43.2% 0.095 166.913);
@@ -138,7 +150,7 @@
   --color-red-900: oklch(93.6% 0.032 17.717);
   --color-red-950: oklch(97.1% 0.013 17.38);
   --color-card: oklch(20.8% 0.042 265.755);
-  --color-primary-hover: oklch(58.5% 0.233 277.117);
+  --color-primary-hover: oklch(46% 0.09 187);
   --background: oklch(12.9% 0.042 264.695);
   --foreground: oklch(98.4% 0.003 247.858);
   --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.4);
@@ -182,7 +194,7 @@ h1, h2, h3 {
 }
 
 ::selection {
-  background: color-mix(in oklch, var(--color-indigo-600) 25%, transparent);
+  background: color-mix(in oklch, var(--color-brand-600) 25%, transparent);
 }
 
 /* Subtle page backdrop for the landing hero: a soft brand glow plus a faint grid. Colors come from the
@@ -199,7 +211,7 @@ h1, h2, h3 {
   height: 34rem;
   z-index: -1;
   background:
-    radial-gradient(40rem 22rem at 18% 0%, color-mix(in oklch, var(--color-indigo-500) 16%, transparent), transparent 70%),
+    radial-gradient(40rem 22rem at 18% 0%, color-mix(in oklch, var(--color-brand-500) 16%, transparent), transparent 70%),
     radial-gradient(34rem 20rem at 88% 8%, color-mix(in oklch, var(--color-emerald-500) 10%, transparent), transparent 70%);
   pointer-events: none;
 }

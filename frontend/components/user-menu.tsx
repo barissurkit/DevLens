@@ -12,7 +12,7 @@ export function ownProfileAnalysisHref(login: string): string {
   return `/?workspace=1&username=${encodeURIComponent(login)}`;
 }
 
-const itemClass = "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-medium text-slate-700 transition hover:bg-slate-100 hover:text-slate-950 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600 disabled:cursor-wait disabled:opacity-60";
+const itemClass = "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-medium text-slate-700 transition hover:bg-slate-100 hover:text-slate-950 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 disabled:cursor-wait disabled:opacity-60";
 
 function Avatar({ user, size }: { user: AuthenticatedUser; size: "sm" | "md" }) {
   const box = size === "sm" ? "h-9 w-9 text-sm" : "h-11 w-11 text-base";
@@ -20,7 +20,7 @@ function Avatar({ user, size }: { user: AuthenticatedUser; size: "sm" | "md" }) 
     // eslint-disable-next-line @next/next/no-img-element -- small external GitHub avatar
     return <img src={user.avatar_url} alt="" width={44} height={44} className={`${box} rounded-full border border-slate-200 object-cover`} />;
   }
-  return <span aria-hidden="true" className={`${box} flex items-center justify-center rounded-full bg-indigo-600 font-semibold uppercase text-white`}>{user.github_login.slice(0, 1)}</span>;
+  return <span aria-hidden="true" className={`${box} flex items-center justify-center rounded-full bg-brand-600 font-semibold uppercase text-white`}>{user.github_login.slice(0, 1)}</span>;
 }
 
 function MenuIcon({ children }: { children: React.ReactNode }) {
@@ -49,7 +49,7 @@ export function UserMenu({ user, onLogout, busy }: { user: AuthenticatedUser; on
         aria-expanded={open}
         aria-controls={menuId}
         onClick={() => setOpen((value) => !value)}
-        className="flex items-center gap-1.5 rounded-full p-0.5 transition hover:bg-slate-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600 focus-visible:ring-offset-2"
+        className="flex items-center gap-1.5 rounded-full p-0.5 transition hover:bg-slate-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2"
       >
         <Avatar user={user} size="sm" />
         <svg aria-hidden="true" viewBox="0 0 24 24" className={`mr-1 hidden h-3.5 w-3.5 text-slate-500 transition sm:block ${open ? "rotate-180" : ""}`} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9l6 6 6-6" /></svg>

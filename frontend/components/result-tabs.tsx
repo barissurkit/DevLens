@@ -62,7 +62,7 @@ export function ResultTabs({ tabs, activeId, onChange, idPrefix }: ResultTabsPro
               tabIndex={selected ? 0 : -1}
               onClick={() => onChange(tab.id)}
               onKeyDown={(event) => handleKeyDown(event, index)}
-              className={`relative inline-flex min-h-12 shrink-0 items-center gap-2 px-4 text-sm font-medium transition focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-indigo-600 ${selected ? "text-indigo-700" : "text-slate-600 hover:text-slate-950"}`}
+              className={`relative inline-flex min-h-12 shrink-0 items-center gap-2 px-4 text-sm font-medium transition focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand-600 ${selected ? "text-brand-700" : "text-slate-600 hover:text-slate-950"}`}
             >
               {tab.label}
               {tab.locked && (
@@ -78,9 +78,9 @@ export function ResultTabs({ tabs, activeId, onChange, idPrefix }: ResultTabsPro
                 </>
               )}
               {tab.badge !== undefined && (
-                <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${selected ? "bg-indigo-50 text-indigo-700" : "bg-slate-200/70 text-slate-600"}`}>{tab.badge}</span>
+                <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${selected ? "bg-brand-50 text-brand-700" : "bg-slate-200/70 text-slate-600"}`}>{tab.badge}</span>
               )}
-              <span aria-hidden="true" className={`absolute inset-x-3 bottom-0 h-0.5 rounded-full transition ${selected ? "bg-indigo-600" : "bg-transparent"}`} />
+              <span aria-hidden="true" className={`absolute inset-x-3 bottom-0 h-0.5 rounded-full transition ${selected ? "bg-brand-600" : "bg-transparent"}`} />
             </button>
           );
         })}

@@ -49,21 +49,21 @@ export function ReportMenu({ username }: { username: string }) {
         aria-expanded={open}
         aria-controls={barId}
         onClick={() => setOpen((value) => !value)}
-        className="inline-flex min-h-10 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg border border-slate-300 bg-card px-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600 focus-visible:ring-offset-2"
+        className="inline-flex min-h-10 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg border border-slate-300 bg-card px-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2"
       >
         <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M7 9V4h10v5M7 17H5a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-2M7 14h10v6H7z" /></svg>
         Yazdır / PDF
         <svg aria-hidden="true" viewBox="0 0 24 24" className={`h-4 w-4 transition ${open ? "rotate-180" : ""}`} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9l6 6 6-6" /></svg>
       </button>
       {open && (
-        <div ref={barRef} id={barId} role="group" aria-label="Rapor türü" className="order-last !flex-none basis-full w-0 min-w-full rounded-xl border border-indigo-200 bg-indigo-50/60 p-2">
+        <div ref={barRef} id={barId} role="group" aria-label="Rapor türü" className="order-last !flex-none basis-full w-0 min-w-full rounded-xl border border-brand-200 bg-brand-50/60 p-2">
           <p className="px-2 pb-1.5 pt-1 text-xs font-medium text-slate-600">Hangi raporu oluşturalım? Rapor sayfasında yazdırabilir veya PDF olarak kaydedebilirsiniz.</p>
           <ul className="grid gap-2 sm:grid-cols-2">
             {REPORT_MODES.map((item) => (
               <li key={item.mode}>
                 <a
                   href={reportPath(username, item.mode)}
-                  className="block h-full rounded-lg border border-slate-200 bg-card px-3 py-2.5 transition hover:border-indigo-400 hover:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600"
+                  className="block h-full rounded-lg border border-slate-200 bg-card px-3 py-2.5 transition hover:border-brand-400 hover:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-600"
                 >
                   <span className="block text-sm font-semibold text-slate-950">{item.label}</span>
                   <span className="mt-0.5 block text-xs leading-snug text-slate-600">{item.description}</span>
