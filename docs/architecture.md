@@ -21,8 +21,8 @@ The production frontend and backend run as separate Render services. `NEXT_PUBLI
 7. README, tree, and manifest evidence produces deterministic signals and repository scores.
 8. Portfolio aggregation, portfolio score, intelligence, and limitations are produced.
 9. The deterministic analysis is written best-effort to PostgreSQL and can be returned by `/api/v1/analysis`.
-10. `/api/v1/interpretation` builds a reduced structured context and calls Gemini when configured.
-11. Gemini output is schema- and signal-reference-validated; an unavailable result does not invalidate deterministic analysis.
+10. `/api/v1/interpretation` builds a reduced structured context and calls the configured AI provider (Gemini or OpenRouter, see [ai-provider.md](ai-provider.md)) when it is configured.
+11. The AI output is schema- and signal-reference-validated (a model that only returns the explanations in a different order has them put back in order; a skipped or invented signal is rejected); an unavailable result does not invalidate deterministic analysis.
 12. The frontend renders deterministic findings and optional AI interpretation separately.
 
 ## Deterministic Analysis Pipeline
@@ -35,7 +35,7 @@ Repository and portfolio scoring use version `v1`. Stars, forks, commit count, t
 
 ![DevLens deterministic versus AI responsibility boundary](assets/architecture/deterministic-ai-boundary.svg)
 
-| Responsibility | Deterministic Engine | Gemini |
+| Responsibility | Deterministic Engine | AI model |
 | --- | --- | --- |
 | GitHub evidence collection | Owns | Not used |
 | README/tree/manifest parsing | Owns | Not used |
@@ -48,7 +48,7 @@ Repository and portfolio scoring use version `v1`. Stars, forks, commit count, t
 | Evidence creation | Must not occur | Must not occur |
 | Score modification | Must not occur | Must not occur |
 
-Gemini does not calculate, modify, or override DevLens scores. Its structured response is constrained to supplied deterministic signals, validated against their keys and order, and written in Turkish for user-facing natural language while preserving technical names and identifiers.
+The AI model does not calculate, modify, or override DevLens scores. Its structured response is constrained to supplied deterministic signals, validated against their keys and order, and written in Turkish for user-facing natural language while preserving technical names and identifiers.
 
 ## PostgreSQL Snapshot Cache
 
@@ -60,7 +60,7 @@ The persisted row may also contain an optional interpretation payload. This is p
 
 GitHub not-found, rate-limit, timeout, unavailable, and upstream conditions map to public API error contracts. Handled repository-analysis failures are represented as partial evidence where supported by the domain pipeline; the response preserves failure metadata and limitations. This is not an absolute guarantee that every unexpected parser or programmer error is isolated.
 
-Gemini may be not configured, insufficiently evidenced, timed out, rate-limited, unavailable, upstream-failed, or invalid. In each supported case the API can return a stable unavailable state while retaining a successful deterministic analysis. Database cache and persistence failures are operationally best-effort, not a blanket suppression of all errors.
+The AI provider may be not configured, insufficiently evidenced, timed out, rate-limited, unavailable, upstream-failed, or invalid. In each supported case the API can return a stable unavailable state while retaining a successful deterministic analysis. Database cache and persistence failures are operationally best-effort, not a blanket suppression of all errors.
 
 ## Observability and Privacy
 
@@ -71,7 +71,7 @@ DevLens has no third-party analytics SDK, analytics cookies, persistent client a
 ## Key Architecture Decisions
 
 1. **Deterministic scoring instead of LLM scoring.** Problem: LLM scores are difficult to reproduce. Decision: observable evidence owns scoring. Trade-off: less open-ended nuance, but clearer auditability.
-2. **Optional constrained Gemini interpretation.** Problem: AI providers are not always available. Decision: Gemini explains a validated deterministic context only. Trade-off: an additional provider boundary, with graceful degradation.
+2. **Optional constrained AI interpretation.** Problem: AI providers are not always available or may be replaced. Decision: a provider-neutral boundary (Gemini or OpenRouter with fallback models and a daily call cap) explains a validated deterministic context only. Trade-off: an additional provider boundary, with graceful degradation.
 3. **Bounded repository concurrency.** Problem: serial analysis is slow and unbounded work pressures GitHub. Decision: repository work uses a semaphore. Trade-off: controlled latency over maximum parallelism.
 4. **Versioned PostgreSQL snapshot cache.** Problem: repeated GitHub work and stale results. Decision: TTL plus schema and engine compatibility gates. Trade-off: snapshot lifecycle and migration responsibility.
 5. **Partial-success and best-effort persistence.** Problem: one supported upstream or database issue should not erase useful output. Decision: preserve handled failures and keep persistence optional. Trade-off: responses explicitly carry limitations and partial evidence.
@@ -81,7 +81,7 @@ DevLens has no third-party analytics SDK, analytics cookies, persistent client a
 - The system evaluates public GitHub portfolio evidence only.
 - It does not measure complete developer ability, seniority, employability, or job fit.
 - Stars, forks, popularity, and technology choice are not quality evidence.
-- AI interpretation depends on Gemini configuration and provider availability.
+- AI interpretation depends on the AI provider's configuration, availability and credit.
 - Handled partial failures can reduce available evidence.
 - Cache reuse is time- and version-bounded.
 

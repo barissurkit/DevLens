@@ -12,7 +12,7 @@ Render Free — Next.js production frontend
 Render Free — FastAPI/Uvicorn backend
       ├── HTTPS → GitHub API
       ├── PostgreSQL/TLS → Neon Free PostgreSQL
-      └── HTTPS → Gemini API (optional interpretation)
+      └── HTTPS → AI provider: Gemini API or OpenRouter (optional interpretation)
 
 Separate release operation:
 backend image/environment → Alembic one-shot migration → Neon schema
@@ -37,7 +37,7 @@ The backend is deployed as a Render Docker runtime with Uvicorn's trusted-proxy 
 | Database | Neon Free PostgreSQL | Persistent PostgreSQL-compatible storage |
 | Migration | One-shot backend image operation | `alembic upgrade head` before backend rollout |
 | GitHub | GitHub API | Public evidence; optional backend-only token |
-| AI | Gemini API | Optional interpretation, model `gemini-3.6-flash` |
+| AI | Gemini API or OpenRouter | Optional interpretation; `AI_PROVIDER` selects it (default `gemini`, model `gemini-3.6-flash`; OpenRouter default `z-ai/glm-5.3-flash` with `openai/gpt-6-luna` as fallback), see [ai-provider.md](ai-provider.md) |
 
 ## Environment Variables
 
@@ -114,11 +114,11 @@ Normal application responses include a server-generated `X-Request-ID`. Structur
 
 ## Interpretation Verification
 
-`POST /api/v1/interpretation` reuses deterministic analysis where available, then may invoke Gemini again. A persisted interpretation payload is not described as a reusable AI cache authority. Gemini output is schema- and signal-reference-validated, and unavailable AI leaves deterministic analysis usable.
+`POST /api/v1/interpretation` reuses deterministic analysis where available, then may invoke the AI provider again. A persisted interpretation payload is not described as a reusable AI cache authority. The AI output is schema- and signal-reference-validated, and unavailable AI leaves deterministic analysis usable.
 
 `POST /api/v1/workspace/ai-suggestions` keeps suggestions ephemeral. Grounding is bounded to complete evidence items (maximum 40 items, 600 Unicode characters per value, and 24,000 serialized characters), output is bounded to 1,200 tokens, and each provider attempt has a 20-second timeout. At most two provider attempts are made, with one fixed 500ms retry for transient failures. Provider quota errors (`ai_provider_rate_limited`) are distinct from the application limiter's `rate_limited` response and do not include `Retry-After`. Structured output and evidence references are validated server-side as a whole response. The frontend preserves existing suggestions on failure and offers manual retry; a valid empty result clears them.
 
-The configured default model is `gemini-3.6-flash`. Natural-language output is Turkish while repository names, technology names, package names, URLs, and technical identifiers are preserved.
+The Gemini default model is `gemini-3.6-flash`; the OpenRouter default is `z-ai/glm-5.3-flash` with `openai/gpt-6-luna` as fallback. Natural-language output is Turkish while repository names, technology names, package names, URLs, and technical identifiers are preserved.
 
 ## Rollback / Safety Notes
 
@@ -131,7 +131,7 @@ The configured default model is `gemini-3.6-flash`. Natural-language output is T
 
 ## Cost Assumptions
 
-Expected recurring infrastructure cost under the current free-tier configuration: **$0/month**. This is not a guaranteed operating cost; provider pricing, quotas, free-tier policies, and usage limits may change.
+Expected recurring infrastructure cost under the current free-tier configuration: **$0/month** (Render Free, Neon Free, the GitHub API). The AI layer is the variable cost: $0 with Gemini's free tier; with OpenRouter about $0.001 per interpretation, bounded by a credit limit on a dedicated key and by `AI_DAILY_CALL_LIMIT` (default 500 provider calls per UTC day, at most about $0.65 per day). This is not a guaranteed operating cost; provider pricing, quotas, free-tier policies, and usage limits may change.
 
 ## Related Documentation
 
