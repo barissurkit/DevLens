@@ -1,3 +1,4 @@
+import asyncio
 import base64
 import binascii
 import logging
@@ -26,6 +27,7 @@ REPOSITORIES_PER_PAGE = 100
 MAX_REPOSITORY_PAGES = 10
 MAX_FILE_SIZE_BYTES = 1_048_576
 MAX_PROVIDER_REQUESTS = 250
+MAX_PULL_REQUEST_SEARCH_PAGES = 3
 MAX_TREE_ENTRIES = 10_000
 
 
@@ -278,6 +280,62 @@ class GitHubClient:
             raise GitHubMalformedResponseError(
                 "GitHub user response has an invalid shape."
             ) from error
+
+    async def search_merged_pull_requests(self, username: str) -> tuple[list[dict[str, Any]], bool]:
+        """Merged pull requests by ``username`` to public repositories owned by someone else.
+
+        Returns the found items (at most ``MAX_PULL_REQUEST_SEARCH_PAGES`` pages) and whether more exist.
+        """
+
+        query = f"type:pr author:{username} is:merged is:public -user:{username}"
+        items: list[dict[str, Any]] = []
+        total = 0
+        async with self._create_http_client() as client:
+            for page in range(1, MAX_PULL_REQUEST_SEARCH_PAGES + 1):
+                response = await self._request(
+                    client,
+                    operation="search_pull_requests",
+                    method="GET",
+                    url="search/issues",
+                    params={"q": query, "sort": "updated", "order": "desc", "per_page": 100, "page": page},
+                )
+                if response.status_code == httpx.codes.UNPROCESSABLE_ENTITY:
+                    # GitHub cannot search for this account (it does not exist or is not searchable).
+                    return [], False
+                response.raise_for_status()
+                try:
+                    payload = response.json()
+                    page_items = payload["items"]
+                    total = int(payload["total_count"])
+                except (ValueError, KeyError, TypeError) as error:
+                    raise GitHubMalformedResponseError("GitHub search response has an invalid shape.") from error
+                if not isinstance(page_items, list):
+                    raise GitHubMalformedResponseError("GitHub search items must be a JSON array.")
+                items.extend(item for item in page_items if isinstance(item, dict))
+                if len(page_items) < 100 or len(items) >= total:
+                    break
+        return items, total > len(items)
+
+    async def get_star_counts(self, full_names: list[str]) -> dict[str, int]:
+        """Stargazer counts for ``owner/name`` repositories; a repository that cannot be read is left out."""
+
+        counts: dict[str, int] = {}
+        semaphore = asyncio.Semaphore(5)
+
+        async def fetch(client: httpx.AsyncClient, full_name: str) -> None:
+            async with semaphore:
+                try:
+                    response = await self._request(client, operation="repository", method="GET", url=f"repos/{full_name}")
+                    response.raise_for_status()
+                    stars = response.json().get("stargazers_count")
+                except (httpx.HTTPError, ValueError, AttributeError, GitHubRequestBudgetExceeded):
+                    return
+                if isinstance(stars, int) and not isinstance(stars, bool) and stars >= 0:
+                    counts[full_name] = stars
+
+        async with self._create_http_client() as client:
+            await asyncio.gather(*(fetch(client, name) for name in full_names))
+        return counts
 
     async def get_authenticated_user(self, access_token: str) -> GitHubUser:
         headers = {

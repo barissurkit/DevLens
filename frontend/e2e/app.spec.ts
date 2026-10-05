@@ -354,6 +354,51 @@ test.describe("navigation, account menu and workspace", () => {
     await expectNoHorizontalOverflow(page);
   });
 
+  test("open source contributions load when their tab is opened and are not part of the score", async ({ page }) => {
+    const requests: string[] = [];
+    page.on("request", (request) => { if (request.url().includes("/open-source")) requests.push(request.url()); });
+    await page.goto(`/u/${OWNER}`);
+    await expect(page.getByRole("tab", { name: /Genel Bakış/ })).toBeVisible();
+    expect(requests).toEqual([]);
+
+    await page.getByRole("tab", { name: "Açık Kaynak" }).click();
+
+    await expect(page.getByRole("heading", { name: "Açık kaynak katkıları" })).toBeVisible();
+    await expect(page.getByText("skora katılmaz")).toBeVisible();
+    const first = page.getByRole("link", { name: "vercel/next.js" });
+    await expect(first).toHaveAttribute("href", "https://github.com/vercel/next.js");
+    await expect(page.getByText("128.000")).toBeVisible();
+    await expect(page.getByRole("link", { name: "Fix docs for the app router" })).toBeVisible();
+    await expect(page.getByText("Birleştirilen pull request", { exact: true })).toBeVisible();
+    expect(requests).toHaveLength(1);
+    await expectNoHorizontalOverflow(page);
+  });
+
+  test("open source says so when there is nothing, and when GitHub cannot be reached", async ({ page }) => {
+    // The result page always shows the same portfolio, so the two answers are given by intercepting the request.
+    await page.route("**/open-source", (route) => route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      headers: { "access-control-allow-origin": "*" },
+      body: JSON.stringify({ username: OWNER, total_merged: 0, repository_count: 0, contributions: [], is_truncated: false }),
+    }));
+    await page.goto(`/u/${OWNER}`);
+    await page.getByRole("tab", { name: "Açık Kaynak" }).click();
+    await expect(page.getByText("birleştirilmiş bir pull request bulunamadı")).toBeVisible();
+
+    await page.unroute("**/open-source");
+    await page.route("**/open-source", (route) => route.fulfill({
+      status: 503,
+      contentType: "application/json",
+      headers: { "access-control-allow-origin": "*" },
+      body: JSON.stringify({ detail: { code: "github_unavailable", message: "GitHub'a geçici olarak erişilemiyor." } }),
+    }));
+    await page.goto(`/u/${OWNER}`);
+    await page.getByRole("tab", { name: "Açık Kaynak" }).click();
+    await expect(pageAlert(page).filter({ hasText: "GitHub'a geçici olarak erişilemiyor." })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Yeniden dene" })).toBeVisible();
+  });
+
   test("the theme is one button that opens a list and remembers the choice", async ({ page }) => {
     await page.goto("/");
     const button = page.getByRole("button", { name: /^Tema: / }).first();

@@ -413,3 +413,22 @@ export interface GitHubPortfolioInterpretationResponse {
   /** True when the analysis came from the server-side snapshot cache. */
   cached?: boolean;
 }
+
+/** Merged pull requests to other people's public repositories; shown next to the portfolio and never scored. */
+export interface OpenSourceContribution {
+  repository: string;
+  html_url: string;
+  stars: number | null;
+  merged_count: number;
+  latest_title: string;
+  latest_url: string;
+  latest_merged_at: string | null;
+}
+
+export interface OpenSourceContributions {
+  username: string;
+  total_merged: number;
+  repository_count: number;
+  contributions: OpenSourceContribution[];
+  is_truncated: boolean;
+}
