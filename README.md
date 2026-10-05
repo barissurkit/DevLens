@@ -172,6 +172,65 @@ alembic upgrade head
 
 Without `DATABASE_URL`, the API can run without persistence and cache. Without `GEMINI_API_KEY`, deterministic analysis remains available and the AI result is reported as unavailable.
 
+## Gereksinimler
+
+- Python 3.12 (backend `Dockerfile` ve CI `python:3.12` kullanır) ve `backend/requirements.txt` içindeki paketler
+- Node.js 22 (CI `22.18.0` kullanır) ve npm; frontend Next.js 16.3.8, React 19 ile çalışır
+- Docker ve Docker Compose Plugin (yalnızca Docker Compose seçeneği için)
+- İsteğe bağlı: PostgreSQL (kalıcılık ve cache için `DATABASE_URL`), `GITHUB_TOKEN`, `GEMINI_API_KEY` veya OpenRouter anahtarı. Bunlar olmadan deterministik analiz çalışmaya devam eder.
+
+## Kurulum
+
+```bash
+git clone https://github.com/barissurkit/DevLens.git
+cd DevLens
+cp .env.example .env
+
+cd backend
+python3 -m venv .venv
+source .venv/bin/activate   # Windows: .venv\Scripts\activate
+pip install -r requirements.txt
+
+cd ../frontend
+npm ci
+```
+
+`.env` içindeki anahtarları (`GITHUB_TOKEN`, `GEMINI_API_KEY` vb.) yalnızca kendi yerel dosyanıza yazın; asla commit etmeyin.
+
+## Kullanım
+
+Backend'i başlatın (`backend` dizininden):
+
+```bash
+uvicorn app.main:app --reload --port 8000
+```
+
+Sağlık kontrolü, hiçbir entegrasyon yapılandırılmamışken şu yanıtı verir:
+
+```bash
+curl http://localhost:8000/health
+```
+
+```json
+{"status":"ok","github_token_configured":false,"ai_configured":false,"database_configured":false}
+```
+
+Başka bir terminalde arayüzü başlatın (`frontend` dizininden):
+
+```bash
+npm run dev
+```
+
+[http://localhost:3000](http://localhost:3000) adresini açın, bir GitHub kullanıcı adı girin; DevLens herkese açık repository kanıtlarını analiz edip repository ve portföy skorlarını gösterir. Docker Compose ile tüm yığını çalıştırmak için yukarıdaki "Local Development" bölümüne bakın.
+
+## Katkı
+
+Katkı rehberi için [CONTRIBUTING.md](CONTRIBUTING.md) dosyasına bakın.
+
+## Lisans
+
+[MIT](LICENSE)
+
 ## Environment Configuration
 
 See [`.env.example`](.env.example) for the local configuration template.
