@@ -340,6 +340,20 @@ test.describe("navigation, account menu and workspace", () => {
     await expectNoHorizontalOverflow(page);
   });
 
+  test("the result offers one ready prompt for the person's own AI that lists every gap", async ({ page }) => {
+    await page.goto(`/u/${OWNER}`);
+    await expect(page.getByRole("heading", { name: "Yapay zekâ ile düzelt" })).toBeVisible();
+    await expect(page.getByRole("textbox", { name: "Yapay zekâ için düzeltme istemi" })).toHaveCount(0);
+
+    await page.getByRole("button", { name: "İstemi göster" }).click();
+    const prompt = page.getByRole("textbox", { name: "Yapay zekâ için düzeltme istemi" });
+    await expect(prompt).toHaveValue(/# Görev: GitHub portföyümü iyileştir/);
+    await expect(prompt).toHaveValue(new RegExp(`Ben @${OWNER}`));
+    await expect(prompt).toHaveValue(/### 1\. Test Yapısı \(\+11,3 puan\)/);
+    await expect(prompt).toHaveValue(/ayrı bir pull request/);
+    await expectNoHorizontalOverflow(page);
+  });
+
   test("the theme is one button that opens a list and remembers the choice", async ({ page }) => {
     await page.goto("/");
     const button = page.getByRole("button", { name: /^Tema: / }).first();
