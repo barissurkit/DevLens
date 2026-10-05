@@ -9,12 +9,16 @@ import type {
   ExcludedPortfolioRepository,
 } from "../lib/types";
 import { categoryLabel, scoreTone } from "../lib/presentation";
+import { buildRepositoryFixPrompt } from "../lib/fix-prompt";
+import { PromptBox } from "./prompt-box";
 import { ScoreDimension } from "./score-dimension";
 
 interface RepositoryAnalysisSectionProps {
   repositories: PortfolioRepositoryResult[];
   failures: PortfolioRepositoryFailure[];
   excluded: ExcludedPortfolioRepository[];
+  /** Login of the portfolio's owner; enables the per-repository prompt for fixing a repository. */
+  owner?: string;
 }
 
 const STRUCTURE_LABELS: Array<[keyof RepositoryStructureSignals, string]> = [
@@ -64,7 +68,7 @@ function sortRepositories(repositories: PortfolioRepositoryResult[], sort: SortK
   return sorted;
 }
 
-export function RepositoryAnalysisSection({ repositories, failures, excluded }: RepositoryAnalysisSectionProps) {
+export function RepositoryAnalysisSection({ repositories, failures, excluded, owner }: RepositoryAnalysisSectionProps) {
   const hasAnyRepositoryState = repositories.length > 0 || failures.length > 0 || excluded.length > 0;
   const [sort, setSort] = useState<SortKey>("default");
   const [onlyPartial, setOnlyPartial] = useState(false);
@@ -98,7 +102,7 @@ export function RepositoryAnalysisSection({ repositories, failures, excluded }: 
       {repositories.length === 0 ? (
         <EmptyRepositoryState message="Başarılı repository analizi bulunmuyor." />
       ) : visibleRepositories.length > 0 ? (
-        <div className="space-y-4">{visibleRepositories.map((repository) => <RepositoryCard key={repository.repository.html_url} result={repository} />)}</div>
+        <div className="space-y-4">{visibleRepositories.map((repository) => <RepositoryCard key={repository.repository.html_url} result={repository} owner={owner} />)}</div>
       ) : <EmptyRepositoryState message="Seçilen filtrelerle eşleşen repository yok." />}
 
       {failures.length > 0 && <FailureSection failures={failures} />}
@@ -144,8 +148,9 @@ function RepositoryControls({ sort, onSortChange, onlyPartial, onOnlyPartialChan
   );
 }
 
-function RepositoryCard({ result }: { result: PortfolioRepositoryResult }) {
+function RepositoryCard({ result, owner }: { result: PortfolioRepositoryResult; owner?: string }) {
   const { repository, analysis, score } = result;
+  const fixPrompt = useMemo(() => (owner ? buildRepositoryFixPrompt(owner, result) : null), [owner, result]);
   const technologies = analysis.technologies.technologies;
   const categories = analysis.classification.categories;
 
@@ -180,6 +185,15 @@ function RepositoryCard({ result }: { result: PortfolioRepositoryResult }) {
           <ChipList title="Proje Kategorileri" items={categories.map((category) => categoryLabel(category.category))} emptyMessage="Bu repository için kategori sinyali bulunmuyor." />
         </div>
         <div className="mt-6"><RuleBreakdown dimensions={score.dimensions} /></div>
+        {fixPrompt && (
+          <div className="mt-6 rounded-xl border border-slate-200 bg-slate-50 p-4 print:hidden">
+            <h4 className="text-sm font-semibold text-slate-950">Yapay zekâ ile düzelt</h4>
+            <p className="mt-1 text-sm leading-6 text-slate-600">Yalnızca bu repository&apos;nin eksikleri için hazır bir istem; kendi yapay zekâ asistanına ya da kod ajanına ver.</p>
+            <div className="mt-3">
+              <PromptBox prompt={fixPrompt} subject={repository.name} textLabel={`${repository.name} için düzeltme istemi`} />
+            </div>
+          </div>
+        )}
       </div>
     </details>
   );
